@@ -1,0 +1,10 @@
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+
+#cmakedefine HAVE_INTTYPES_H
+#cmakedefine HAVE_STDINT_H
+#cmakedefine HAVE_STDDEF_H
+#cmakedefine HAVE_PTHREAD_H
+
+#endif
+
