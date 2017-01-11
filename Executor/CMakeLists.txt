@@ -48,7 +48,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
  set(OPTFLAGS "-fpic -pedantic")
  #general compiler flags for gcc compiler
  ##You can enable additional warnings for paranoics: -Wunsuffixed-float-constants -Wpadded
- set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -Wshadow -Wstrict-overflow=5 -Wwrite-strings -Winit-self -Wmissing-include-dirs -Wbad-function-cast -Wc++-compat -Wcast-qual -Wcast-align -Wconversion -Wlogical-op -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wdisabled-optimization -Woverlength-strings -Wfloat-equal -Wswitch-default ${OPTFLAGS}")
+ set(CMAKE_C_FLAGS "-std=gnu99 -Wall -Wextra -Wshadow -Wstrict-overflow=5 -Wwrite-strings -Winit-self -Wmissing-include-dirs -Wbad-function-cast -Wc++-compat -Wcast-qual -Wcast-align -Wconversion -Wlogical-op -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wdisabled-optimization -Woverlength-strings -Wfloat-equal -Wswitch-default ${OPTFLAGS}")
  #set build-type dependent additional flags
  set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
  set(CMAKE_C_FLAGS_DEBUG "-DDEBUG -ggdb")
@@ -92,7 +92,7 @@ if(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
 endif(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
 
 #executor util, must be static
-add_executable(executor.bin${ARCHSUFFIX} executor.c)
+add_executable(executor.bin${ARCHSUFFIX} logger.c executor.c)
 set_property(TARGET executor.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
 target_link_libraries(executor.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
 

@@ -1,6 +1,6 @@
 #include "config.h"
+#include "logger.h"
 #include <string.h>
-//#include <logger.h>
 
 #define MAXARGLEN 256
 

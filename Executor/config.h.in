@@ -6,5 +6,7 @@
 #cmakedefine HAVE_STDDEF_H
 #cmakedefine HAVE_PTHREAD_H
 
-#endif
+#define LOG_FILENAMESZ 4095
+#define LOG_OUTBUFSZ 4095
 
+#endif
