@@ -8,5 +8,6 @@
 
 #define LOG_FILENAMESZ 4095
 #define LOG_OUTBUFSZ 4095
+#define DATABUFSZ 65536
 
 #endif

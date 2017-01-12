@@ -1,5 +1,9 @@
 #include "hash.h"
 
+//local prototypes to satisfy -Wmissing-prototypes
+uint32_t read_hash(const uint8_t* buffer, int32_t offset);
+void write_hash(uint8_t* const buffer, int32_t offset, uint32_t hash);
+
 uint32_t get_hash(uint32_t seed, const uint8_t* data, int32_t offset, int32_t len)
 {
     uint32_t k=0u; //key
@@ -36,4 +40,38 @@ uint32_t get_hash(uint32_t seed, const uint8_t* data, int32_t offset, int32_t le
     hash *= 0xc2b2ae35;
     hash ^= hash >> 16;
     return hash;
+}
+
+uint32_t read_hash(const uint8_t* buffer, int32_t offset)
+{
+    return *((const uint32_t*)(buffer+offset));
+}
+
+void write_hash(uint8_t* const buffer, int32_t offset, uint32_t hash)
+{
+    *((uint32_t* const)(buffer+offset))=hash;
+}
+
+uint8_t verify_hash(uint32_t seed, const uint8_t* buffer, int32_t offset, int32_t full_len)
+{
+    if(full_len<HASHSZ)
+        return 0;
+    if(read_hash(buffer,offset+(full_len-HASHSZ))==get_hash(seed,buffer,offset,full_len-HASHSZ))
+        return 1;
+    return 0;
+}
+
+int32_t append_hash(uint32_t seed, uint8_t* const buffer, int32_t offset, int32_t orig_len)
+{
+    if(orig_len<0)
+        return orig_len;
+    write_hash(buffer,offset+orig_len,get_hash(seed,buffer,offset,orig_len));
+    return orig_len+HASHSZ;
+}
+
+int32_t get_hpl_len(int32_t full_len)
+{
+    if(full_len<HASHSZ)
+        return -1;
+    return full_len-HASHSZ;
 }
