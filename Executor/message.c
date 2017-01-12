@@ -4,15 +4,12 @@
 #include "message.h"
 #include <string.h>
 
-//local prototypes to satisfy -Wmissing-prototypes
-void msg_write_pl_len(uint8_t* const buffer, int32_t offset, uint16_t len);
-
 uint16_t msg_get_pl_len(const uint8_t* buffer, int32_t offset)
 {
     return *((const uint16_t*)(buffer+offset));
 }
 
-void msg_write_pl_len(uint8_t* const buffer, int32_t offset, uint16_t len)
+static void msg_write_pl_len(uint8_t* const buffer, int32_t offset, uint16_t len)
 {
     *((uint16_t* const)(buffer+offset))=len;
 }

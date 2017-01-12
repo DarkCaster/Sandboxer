@@ -1,9 +1,5 @@
 #include "hash.h"
 
-//local prototypes to satisfy -Wmissing-prototypes
-uint32_t read_hash(const uint8_t* buffer, int32_t offset);
-void write_hash(uint8_t* const buffer, int32_t offset, uint32_t hash);
-
 uint32_t get_hash(uint32_t seed, const uint8_t* data, int32_t offset, int32_t len)
 {
     uint32_t k=0u; //key
@@ -42,12 +38,12 @@ uint32_t get_hash(uint32_t seed, const uint8_t* data, int32_t offset, int32_t le
     return hash;
 }
 
-uint32_t read_hash(const uint8_t* buffer, int32_t offset)
+static uint32_t read_hash(const uint8_t* buffer, int32_t offset)
 {
     return *((const uint32_t*)(buffer+offset));
 }
 
-void write_hash(uint8_t* const buffer, int32_t offset, uint32_t hash)
+static void write_hash(uint8_t* const buffer, int32_t offset, uint32_t hash)
 {
     *((uint32_t* const)(buffer+offset))=hash;
 }

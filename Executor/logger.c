@@ -74,9 +74,7 @@ void log_stdout(const LogDef log_instance, const uint8_t enable_output)
     }
 }
 
-void log_closefile(LogInstance* log);
-
-void log_closefile(LogInstance* log)
+static void log_closefile(LogInstance* log)
 {
     if(log->logfile!=NULL)
     {
