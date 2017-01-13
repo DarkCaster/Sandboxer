@@ -50,6 +50,12 @@ int main(void)
     log_message(log,LOG_INFO,"dict_count should be 0, actual = %i", LI(dict_count(dict)));
     free(two);
 
+    dict_set(dict,"one",(uint8_t*)&one);
+    log_message(log,LOG_INFO,"dict_count should be 1, actual = %i", LI(dict_count(dict)));
+    dict_set(dict,"one",(uint8_t*)&one);
+    log_message(log,LOG_INFO,"dict_count should be 1, actual = %i", LI(dict_count(dict)));
+    dict_deinit(dict);
+
     log_headline(log,"TEST UTILITY EXIT");
     log_deinit(log);
 }
