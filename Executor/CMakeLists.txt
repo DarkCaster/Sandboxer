@@ -91,8 +91,12 @@ if(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
  include_directories("${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES}")
 endif(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
 
-#executor util, must be static
+#test util
+add_executable(test.bin${ARCHSUFFIX} dictionary.c hash.c message.c logger.c test.c)
+set_property(TARGET test.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
+target_link_libraries(test.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
+
+#executor util, static
 add_executable(executor.bin${ARCHSUFFIX} dictionary.c hash.c message.c logger.c executor.c)
 set_property(TARGET executor.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
 target_link_libraries(executor.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
-
