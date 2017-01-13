@@ -6,6 +6,11 @@
 #cmakedefine HAVE_STDDEF_H
 #cmakedefine HAVE_PTHREAD_H
 
+#cmakedefine HAVE_SYSTYPES_H
+#cmakedefine HAVE_SYSWAIT_H
+#cmakedefine HAVE_SIGNAL_H
+#cmakedefine HAVE_UNISTD_H
+
 #define LOG_FILENAMESZ 4095
 #define LOG_OUTBUFSZ 4095
 #define DATABUFSZ 65536
