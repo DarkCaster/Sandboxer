@@ -26,6 +26,15 @@ static void teardown(int code)
 
 #define MAXARGLEN 4095
 
+static uint8_t arg_is_numeric(const char* arg)
+{
+    size_t len=strnlen(arg,MAXARGLEN);
+    for(size_t i=0;i<len;++i)
+        if(!isdigit((int)arg[i]))
+            return 0;
+    return 1;
+}
+
 //params: <control dir> <channel-name> <security key> [logfile, none for disable] [term signal] [term signal] [term signal] ...
 
 int main(int argc, char* argv[])
@@ -37,87 +46,89 @@ int main(int argc, char* argv[])
     log_headline(logger,"Executor startup");
     log_message(logger,LOG_INFO,"Parsing startup params");
 
-    if(argc<3)
+    if(argc<4)
     {
         log_message(logger,LOG_ERROR,"<control-dir> or <channel-name> or <security-key> parameters missing");
         log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> [logfile, relative to control dir, none to disable] [term signal num] [term signal num] [term signal num] ...");
-        teardown(-1);
+        teardown(10);
     }
-
-    if(strnlen(argv[0], MAXARGLEN)>=MAXARGLEN)
-    {
-        log_message(logger,LOG_ERROR,"<control-dir> param too long. Max characters allowed = %i",LI(MAXARGLEN));
-        teardown(-2);
-    }
-    //control-dir
-    const char* ctldir=argv[0];
 
     if(strnlen(argv[1], MAXARGLEN)>=MAXARGLEN)
     {
         log_message(logger,LOG_ERROR,"<control-dir> param too long. Max characters allowed = %i",LI(MAXARGLEN));
-        teardown(-3);
+        teardown(11);
     }
-    //channel-name
-    const char* channel=argv[1];
+    //control-dir
+    const char* ctldir=argv[1];
 
     if(strnlen(argv[2], MAXARGLEN)>=MAXARGLEN)
     {
-        log_message(logger,LOG_ERROR,"<security-key> param too long. Max characters allowed = %i",LI(MAXARGLEN));
-        teardown(-4);
+        log_message(logger,LOG_ERROR,"<channel-name> param too long. Max characters allowed = %i",LI(MAXARGLEN));
+        teardown(12);
     }
+    //channel-name
+    const char* channel=argv[2];
+
+    if(strnlen(argv[3], MAXARGLEN)>=MAXARGLEN)
+    {
+        log_message(logger,LOG_ERROR,"<security-key> param too long. Max characters allowed = %i",LI(MAXARGLEN));
+        teardown(13);
+    }
+
     //security key
     uint32_t seed;
-    if (isdigit(argv[2]))
-        seed=(uint32_t)strtol(argv[2], NULL, 10);
+    if(arg_is_numeric(argv[3]))
+        seed=(uint32_t)strtol(argv[3], NULL, 10);
     else
     {
         log_message(logger,LOG_ERROR,"<security-key> param is incorrect");
-        teardown(-5);
+        teardown(14);
     }
 
-    if(argc>3)
+    if(argc>4)
     {
-        if(strnlen(argv[3], MAXARGLEN)>=MAXARGLEN)
+        if(strnlen(argv[4], MAXARGLEN)>=MAXARGLEN)
         {
             log_message(logger,LOG_ERROR,"[logfile] param too long. Max characters allowed = %i",LI(MAXARGLEN));
-            teardown(-6);
+            teardown(15);
         }
-        log_message(logger,LOG_INFO,"Enabling logfile %s",LS(argv[3]));
-        log_logfile(logger,argv[3]);
+        log_message(logger,LOG_INFO,"Enabling logfile %s",LS(argv[4]));
+        log_logfile(logger,argv[4]);
     }
 
     int sig_count=0;
     int* sig_map=NULL;
 
-    if(argc>4)
+    if(argc>5)
     {
-        sig_count=argc-4;
+        sig_count=argc-5;
         sig_map=(int*)calloc((size_t)sig_count,sizeof(int));
         for(int i=0;i<sig_count;++i)
         {
-            if(isdigit(argv[4+i]))
+            if(arg_is_numeric(argv[5+i]))
             {
-                sig_map[i]=(int)strtol(argv[4+i], NULL, 10);
+                sig_map[i]=(int)strtol(argv[5+i], NULL, 10);
                 if(sig_map[i]==0)
                 {
                     log_message(logger,LOG_ERROR,"[term signal num] param is zero");
-                    teardown(-7);
+                    teardown(16);
                 }
                 log_message(logger,LOG_INFO,"Signal %i is registered for program termination",LI(sig_map[i]));
             }
             else
             {
                 log_message(logger,LOG_ERROR,"[term signal num] param is incorrect");
-                teardown(-7);
+                teardown(17);
             }
         }
     }
 
     if(sig_count==0)
     {
-        sig_count=1;
-        sig_map=(int*)calloc(1,sizeof(int));
+        sig_count=2;
+        sig_map=(int*)calloc(2,sizeof(int));
         sig_map[0]=15;
+        sig_map[1]=2;
     }
 
     log_message(logger,LOG_INFO,"Secutity key is set to %i",LI(seed));
