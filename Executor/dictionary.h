@@ -35,6 +35,8 @@ uint8_t* dict_set(const DictDef dict_instance, const char *key, uint8_t* data);
 uint8_t dict_check(const DictDef dict_instance, const char* key);
 //remove stored data assosiated with selected key, return data that was removed from dict
 uint8_t* dict_del(const DictDef dict_instance, const char* key);
+//get key\ptr elements count
+int32_t dict_count(const DictDef dict_instance);
 
 #ifdef __cplusplus
 }

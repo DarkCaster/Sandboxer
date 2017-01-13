@@ -34,13 +34,20 @@ int main(void)
     log_message(log,LOG_INFO,"dict_check should be 1, actual = %i", LI(dict_check(dict,"two")));
     dict_set(dict,"three",NULL);
     log_message(log,LOG_INFO,"dict_check should be 1, actual = %i", LI(dict_check(dict,"three")));
+    log_message(log,LOG_INFO,"dict_count should be 3, actual = %i", LI(dict_count(dict)));
     int* two_d=(int*)dict_del(dict,"two");
     log_message(log,LOG_INFO,"dict_check should be 0, actual = %i", LI(dict_check(dict,"two")));
     log_message(log,LOG_INFO,"two addr is %p, two_d addr is %p", two, two_d);
     int* null_d=(int*)dict_del(dict,"three");
     log_message(log,LOG_INFO,"dict_check should be 0, actual = %i", LI(dict_check(dict,"three")));
+    dict_del(dict,"three");
+    log_message(log,LOG_INFO,"dict_check should be 0, actual = %i", LI(dict_check(dict,"three")));
     log_message(log,LOG_INFO,"null_d should be nil, actual is %p", null_d);
-
+    log_message(log,LOG_INFO,"dict_count should be 1, actual = %i", LI(dict_count(dict)));
+    dict_del(dict,"one");
+    log_message(log,LOG_INFO,"dict_count should be 0, actual = %i", LI(dict_count(dict)));
+    dict_del(dict,"one");
+    log_message(log,LOG_INFO,"dict_count should be 0, actual = %i", LI(dict_count(dict)));
     free(two);
 
     log_headline(log,"TEST UTILITY EXIT");

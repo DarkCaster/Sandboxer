@@ -29,6 +29,7 @@ struct strNlist {
 
 struct strDict {
     NList* hashtab[256];
+    int32_t count;
     pthread_mutex_t global_lock;
 };
 
@@ -37,14 +38,28 @@ DictDef dict_init(void)
     Dict* result=(Dict*)calloc(1,sizeof(Dict));
     for(int i=0;i<256;++i)
         result->hashtab[i]=NULL;
+    result->count=0;
     pthread_mutex_init(&(result->global_lock),NULL);
     return (DictDef)result;
 }
 
 void dict_deinit(DictDef dict_instance)
 {
-    pthread_mutex_unlock(&(((Dict*)dict_instance)->global_lock));
-    pthread_mutex_destroy(&(((Dict*)dict_instance)->global_lock));
+    Dict* const dict=(Dict*)dict_instance;
+    pthread_mutex_unlock(&(dict->global_lock));
+    pthread_mutex_destroy(&(dict->global_lock));
+    for(int i=0;i<256;++i)
+    {
+        NList* cur=dict->hashtab[i];
+        while(cur!=NULL)
+        {
+            NList* next=cur->next;
+            free(cur->key);
+            free(cur);
+            cur=next;
+        }
+    }
+    dict->count=0;
     free((Dict*)dict_instance);
 }
 
@@ -97,6 +112,7 @@ static uint8_t* _dict_del(const DictDef dict_instance, const char* key)
             uint8_t* result=cur->data;
             free(cur->key);
             free(cur);
+            dict->count--;
             return result;
         }
         prev=cur;
@@ -119,6 +135,7 @@ static void _dict_set(const DictDef dict_instance, const char* key, uint8_t* dat
     NList* head=dict->hashtab[hash];
     dict->hashtab[hash]=el;
     el->next=head;
+    dict->count++;
 }
 
 //store (or update) pointer, referenced by key, return OLD data that was replaced (null, if nothing replaced)
@@ -152,6 +169,14 @@ uint8_t* dict_del(const DictDef dict_instance, const char* key)
 {
     dict_lock(dict_instance);
     uint8_t* result=_dict_del(dict_instance,key);
+    dict_unlock(dict_instance);
+    return result;
+}
+
+int32_t dict_count(const DictDef dict_instance)
+{
+    dict_lock(dict_instance);
+    int32_t result=((Dict*)dict_instance)->count;
     dict_unlock(dict_instance);
     return result;
 }
