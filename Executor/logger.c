@@ -206,12 +206,15 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
    }
 
    if (log->stdout_active)
+   {
        printf("\n");
+       fflush(stdout);
+   }
    if (log->logfile!=NULL)
    {
        if(fwrite((void*)log->nl,strnlen(log->nl,4),1,log->logfile)!=1)
            log_logfile(log_instance,NULL);
-       //fflush(log->logfile);
+       fflush(log->logfile);
    }
 }
 
@@ -220,13 +223,17 @@ void log_headline (const LogDef log_instance, const char * const text)
     LogInstance* const log=(LogInstance*)log_instance;
     //Print header
     if(log->stdout_active)
+    {
         puts(text);
+        fflush(stdout);
+    }
     if(log->logfile!=NULL)
     {
         if(fwrite((const void*)text,strnlen(text,LOG_OUTBUFSZ),1,log->logfile)!=1)
             log_logfile(log_instance,NULL);
         if(fwrite((void*)log->nl,strnlen(log->nl,4),1,log->logfile)!=1)
             log_logfile(log_instance,NULL);
+        fflush(log->logfile);
     }
 }
 
