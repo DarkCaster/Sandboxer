@@ -35,7 +35,7 @@ struct strDict {
 
 DictDef dict_init(void)
 {
-    Dict* result=(Dict*)calloc(1,sizeof(Dict));
+    Dict* result=(Dict*)safe_alloc(1,sizeof(Dict));
     for(int i=0;i<256;++i)
         result->hashtab[i]=NULL;
     result->count=0;
@@ -126,10 +126,10 @@ static void _dict_set(const DictDef dict_instance, const char* key, uint8_t* dat
     Dict* const dict=(Dict*)dict_instance;
     uint8_t hash=crc8_hash((const uint8_t*)key,(int32_t)strnlen(key,MAXKEYLEN));
     //create new element
-    NList* el=(NList*)calloc(1,sizeof(NList));
+    NList* el=(NList*)safe_alloc(1,sizeof(NList));
     el->data=data;
     size_t len=strnlen(key,MAXKEYLEN);
-    el->key=(char*)calloc(1,len+1);
+    el->key=(char*)safe_alloc(1,len+1);
     el->key[len]='\0';//as precaution
     strncpy(el->key,key,len);
     NList* head=dict->hashtab[hash];

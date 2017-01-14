@@ -1,4 +1,4 @@
-#include "config.h"
+#include "helper_macro.h"
 
 #include "dictionary.h"
 #include "hash.h"
@@ -22,7 +22,7 @@ int main(void)
     DictDef dict=dict_init();
 
     int one=1;
-    int* two=(int*)calloc(1,sizeof(int));
+    int* two=(int*)safe_alloc(1,sizeof(int));
     *two=2;
     log_message(log,LOG_INFO,"dict_check should be 0, actual = %i", LI(dict_check(dict,"one")));
     dict_set(dict,"one",(uint8_t*)&one);

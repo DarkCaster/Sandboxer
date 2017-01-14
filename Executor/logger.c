@@ -8,20 +8,6 @@
 #include <string.h>
 #include <pthread.h>
 
-#ifdef __GNUC__
-    #ifndef always_inline
-        #ifdef  __always_inline
-            #define always_inline __always_inline
-        #else
-            #define always_inline __inline
-        #endif
-    #endif
-#else
-    #ifndef always_inline
-        #define always_inline inline
-    #endif
-#endif
-
 struct strLogInstance {
     uint8_t level;
     uint8_t stdout_active;
@@ -37,7 +23,7 @@ const char LOG_TYPE[5][10]= {"UNKNOWN","INFO","WARNING","STATUS","ERROR"};
 
 LogDef log_init(void)
 {
-    LogInstance* result=(LogInstance*)calloc(1,sizeof(LogInstance));
+    LogInstance* result=(LogInstance*)safe_alloc(1,sizeof(LogInstance));
     result->level=LOG_INFO;
     result->stdout_active=0u;
     result->filename[LOG_FILENAMESZ]='\0';

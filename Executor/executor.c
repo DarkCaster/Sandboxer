@@ -1,4 +1,4 @@
-#include "config.h"
+#include "helper_macro.h"
 #include "logger.h"
 #include "executor_worker.h"
 
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     if(argc>5)
     {
         sig_count=argc-5;
-        sig_map=(int*)calloc((size_t)sig_count,sizeof(int));
+        sig_map=(int*)safe_alloc((size_t)sig_count,sizeof(int));
         for(int i=0;i<sig_count;++i)
         {
             if(arg_is_numeric(argv[5+i]))
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     if(sig_count==0)
     {
         sig_count=2;
-        sig_map=(int*)calloc(2,sizeof(int));
+        sig_map=(int*)safe_alloc(2,sizeof(int));
         sig_map[0]=15;
         sig_map[1]=2;
     }
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 
     while(1)
     {
-        WorkerDef main_worker=launch_worker(logger,ctldir,channel,seed);
+        WorkerDef main_worker=worker_launch(logger,ctldir,channel,seed);
         if(main_worker==NULL)
         {
             log_message(logger,LOG_ERROR,"Failed to start main worker for %s channel",LS(channel));
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
             if (sig_map[i]==sig)
             {
                 log_message(logger,LOG_INFO,"Performing termination sequence");
-                shutdown_worker(main_worker);
+                worker_shutdown(main_worker);
                 free(sig_map);
                 teardown(0);
             }
