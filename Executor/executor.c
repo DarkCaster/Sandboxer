@@ -1,5 +1,6 @@
 #include "config.h"
 #include "logger.h"
+#include "executor_worker.h"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -35,7 +36,7 @@ static uint8_t arg_is_numeric(const char* arg)
     return 1;
 }
 
-//params: <control dir> <channel-name> <security key> [logfile, none for disable] [term signal] [term signal] [term signal] ...
+//params: <control dir> <channel-name> <security key> [logfile, none for disable, path relative to control dir] [term signal] [term signal] [term signal] ...
 
 int main(int argc, char* argv[])
 {
@@ -83,6 +84,12 @@ int main(int argc, char* argv[])
     {
         log_message(logger,LOG_ERROR,"<security-key> param is incorrect");
         teardown(14);
+    }
+
+    if(chdir(ctldir)!=0)
+    {
+        log_message(logger,LOG_ERROR,"Error changing dir to %s",LS(ctldir));
+        teardown(20);
     }
 
     if(argc>4)
@@ -135,28 +142,34 @@ int main(int argc, char* argv[])
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
     log_message(logger,LOG_INFO,"Channel name is set to %s",LS(channel));
 
-    chdir("/");
+    if(chdir("/")!=0)
+    {
+        log_message(logger,LOG_ERROR,"Error changing dir to /");
+        teardown(21);
+    }
 
     sigset_t set;
-    int sig;
-    int shutdown=0;
-
     sigfillset(&set);
-    sigprocmask(SIG_BLOCK, &set, NULL);
+    sigprocmask(SIG_BLOCK,&set,NULL);
 
-    while(!shutdown)
+    while(1)
     {
-        sigwait(&set, &sig);
+        WorkerDef main_worker=launch_worker(logger,ctldir,channel,seed);
+        if(main_worker==NULL)
+        {
+            log_message(logger,LOG_ERROR,"Failed to start main worker for %s channel",LS(channel));
+            teardown(22);
+        }
+        int sig;
+        sigwait(&set,&sig);
         log_message(logger,LOG_INFO,"Received signal %i",LI(sig));
         for (int i=0;i<sig_count;++i)
             if (sig_map[i]==sig)
             {
                 log_message(logger,LOG_INFO,"Performing termination sequence");
-                shutdown=1;
-                break;
+                shutdown_worker(main_worker);
+                free(sig_map);
+                teardown(0);
             }
     }
-
-    free(sig_map);
-    teardown(0);
 }
