@@ -59,8 +59,19 @@ void log_deinit(LogDef log_instance)
     free((LogInstance*)log_instance);
 }
 
+static void log_lock(const LogDef log_instance)
+{
+    pthread_mutex_lock( &(((LogInstance*)log_instance)->global_lock) );
+}
+
+static void log_unlock(const LogDef log_instance)
+{
+    pthread_mutex_unlock( &(((LogInstance*)log_instance)->global_lock) );
+}
+
 void log_stdout(const LogDef log_instance, const uint8_t enable_output)
 {
+    log_lock(log_instance);
     LogInstance* const log=(LogInstance*)log_instance;
     if (enable_output!=0u)
     {
@@ -72,6 +83,7 @@ void log_stdout(const LogDef log_instance, const uint8_t enable_output)
         if (log->stdout_active==1u)
             log->stdout_active=0u;
     }
+    log_unlock(log_instance);
 }
 
 static void log_closefile(LogInstance* log)
@@ -83,7 +95,7 @@ static void log_closefile(LogInstance* log)
     }
 }
 
-void log_logfile(const LogDef log_instance, const char * filename)
+static void _log_logfile(const LogDef log_instance, const char * filename)
 {
     LogInstance* const log=(LogInstance*)log_instance;
     if(filename!=NULL)
@@ -98,24 +110,26 @@ void log_logfile(const LogDef log_instance, const char * filename)
         log_closefile(log);
 }
 
-void log_lock(const LogDef log_instance)
+void log_logfile(const LogDef log_instance, const char * filename)
 {
-    pthread_mutex_lock( &(((LogInstance*)log_instance)->global_lock) );
-}
-
-void log_unlock(const LogDef log_instance)
-{
-    pthread_mutex_unlock( &(((LogInstance*)log_instance)->global_lock) );
+    log_lock(log_instance);
+    _log_logfile(log_instance,filename);
+    log_unlock(log_instance);
 }
 
 void log_message(const LogDef log_instance, uint8_t msg_type, const char * const format_message, ...)
 {
+    log_lock(log_instance);
     const char * format=format_message;
 
     LogInstance* const log=(LogInstance*)log_instance;
     if (msg_type>LOG_ERROR) msg_type=0u;
 
-    if ((msg_type<log->level)&&(msg_type!=0u)) return;
+    if ((msg_type<log->level)&&(msg_type!=0u))
+    {
+        log_unlock(log_instance);
+        return;
+    }
 
     char buffer[LOG_OUTBUFSZ+1];
     buffer[LOG_OUTBUFSZ]='\0';
@@ -128,10 +142,14 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
     {
         snprintf(buffer,LOG_OUTBUFSZ,"[%s] ",LOG_TYPE[msg_type]);
         if(fwrite((void*)buffer,strnlen(buffer,LOG_OUTBUFSZ),1,log->logfile)!=1)
-            log_logfile(log_instance,NULL);
+            _log_logfile(log_instance,NULL);
     }
 
-    if (format==LOG_ENDL) return;
+    if (format==LOG_ENDL)
+    {
+        log_unlock(log_instance);
+        return;
+    }
 
     if (*(format)!='\0')
     {
@@ -183,7 +201,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
                 if (log->logfile!=NULL)
                 {
                     if(fwrite((void*)buffer,strnlen(buffer,LOG_OUTBUFSZ),1,log->logfile)!=1)
-                        log_logfile(log_instance,NULL);
+                        _log_logfile(log_instance,NULL);
                 }
 
                 bpos=0;
@@ -191,6 +209,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
 
             format++;
         }while(*(format)!='\0');
+
         if(bpos)
         {
             *(buffer+bpos)='\0';
@@ -199,7 +218,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
             if (log->logfile!=NULL)
             {
                 if(fwrite((void*)buffer,strnlen(buffer,LOG_OUTBUFSZ),1,log->logfile)!=1)
-                    log_logfile(log_instance,NULL);
+                    _log_logfile(log_instance,NULL);
             }
         }
         va_end(vl);
@@ -213,13 +232,15 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
    if (log->logfile!=NULL)
    {
        if(fwrite((void*)log->nl,strnlen(log->nl,4),1,log->logfile)!=1)
-           log_logfile(log_instance,NULL);
+           _log_logfile(log_instance,NULL);
        fflush(log->logfile);
    }
+   log_unlock(log_instance);
 }
 
 void log_headline (const LogDef log_instance, const char * const text)
 {
+    log_lock(log_instance);
     LogInstance* const log=(LogInstance*)log_instance;
     //Print header
     if(log->stdout_active)
@@ -230,17 +251,20 @@ void log_headline (const LogDef log_instance, const char * const text)
     if(log->logfile!=NULL)
     {
         if(fwrite((const void*)text,strnlen(text,LOG_OUTBUFSZ),1,log->logfile)!=1)
-            log_logfile(log_instance,NULL);
+            _log_logfile(log_instance,NULL);
         if(fwrite((void*)log->nl,strnlen(log->nl,4),1,log->logfile)!=1)
-            log_logfile(log_instance,NULL);
+            _log_logfile(log_instance,NULL);
         fflush(log->logfile);
     }
+    log_unlock(log_instance);
 }
 
 void log_setlevel(const LogDef log_instance,const uint8_t level)
 {
+    log_lock(log_instance);
     if((level<LOG_INFO)||(level>LOG_ERROR))
         ((LogInstance*)log_instance)->level=LOG_INFO;
     else
         ((LogInstance*)log_instance)->level=level;
+    log_unlock(log_instance);
 }
