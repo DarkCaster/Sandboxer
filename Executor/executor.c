@@ -47,6 +47,8 @@ int main(int argc, char* argv[])
     log_headline(logger,"Executor startup");
     log_message(logger,LOG_INFO,"Parsing startup params");
 
+    worker_set_logger(logger);
+
     if(argc<4)
     {
         log_message(logger,LOG_ERROR,"<control-dir> or <channel-name> or <security-key> parameters missing");
@@ -86,7 +88,7 @@ int main(int argc, char* argv[])
         teardown(14);
     }
 
-    if(chdir(ctldir)!=0)
+    if(chdir("/")!=0 || chdir(ctldir)!=0)
     {
         log_message(logger,LOG_ERROR,"Error changing dir to %s",LS(ctldir));
         teardown(20);
@@ -154,7 +156,7 @@ int main(int argc, char* argv[])
 
     while(1)
     {
-        WorkerDef main_worker=worker_launch(logger,ctldir,channel,seed);
+        WorkerDef main_worker=worker_launch(ctldir,channel,seed);
         if(main_worker==NULL)
         {
             log_message(logger,LOG_ERROR,"Failed to start main worker for %s channel",LS(channel));
