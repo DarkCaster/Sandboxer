@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "pthread.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -21,23 +22,29 @@ struct strWorker
 
 #define Worker struct strWorker
 
+static LogDef logger=NULL;
+
 static Worker* worker_init(void)
 {
     Worker* result=(Worker*)safe_alloc(1,sizeof(Worker));
     pthread_mutex_init(&(result->access_lock),NULL);
+    result->fifo_path=NULL;
     return result;
 }
 
 static void worker_deinit(Worker* woker)
 {
     if(woker->fifo_path!=NULL)
+    {
+        int ec=remove(woker->fifo_path);
+        if(ec!=0)
+            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(woker->fifo_path),LI(ec));
         free(woker->fifo_path);
+    }
     pthread_mutex_unlock(&(woker->access_lock));
     pthread_mutex_destroy(&(woker->access_lock));
     free((void*)woker);
 }
-
-static LogDef logger=NULL;
 
 void worker_set_logger(LogDef _logger)
 {
@@ -99,14 +106,10 @@ WorkerDef worker_launch(const char* ctldir, const char* channel, uint32_t key)
     worker_lock(worker);
     worker->key=key;
     worker->shutdown=0;
-    worker->fifo_path=NULL;
+    worker->fifo_path=(char*)safe_alloc(ctl+pl+chl+1,sizeof(char));
+    worker->fifo_path[ctl+pl+chl]='\0';
+    strcpy(worker->fifo_path,filename);
     int ec=pthread_create(&(worker->thread),NULL,worker_thread,worker);
-    if(ec==0)
-    {
-        worker->fifo_path=(char*)safe_alloc(ctl+pl+chl+1,sizeof(char));
-        worker->fifo_path[ctl+pl+chl]='\0';
-        strcpy(worker->fifo_path,filename);
-    }
     worker_unlock(worker);
     if(ec!=0)
     {
