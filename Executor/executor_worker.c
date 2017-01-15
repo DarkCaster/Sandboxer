@@ -10,6 +10,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <poll.h>
 
 struct strWorker
 {
@@ -65,20 +67,57 @@ static void * worker_thread (void* param)
 {
     Worker* worker=(Worker*)param;
     worker_lock(worker);
-    char* fifo=worker->fifo_path;
+    const char* fifo=worker->fifo_path;
     uint32_t seed=worker->key;
+    uint8_t shutdown=worker->shutdown;
     log_message(logger,LOG_INFO,"Started new worker thread for %s pipe",LS(fifo));
     worker_unlock(worker);
-    uint8_t shutdown=0;
-    do
+    struct pollfd fds;
+    int fd=open(fifo,O_RDWR);
+    if(fd<0)
     {
         worker_lock(worker);
         shutdown=worker->shutdown;
         worker_unlock(worker);
-        usleep(500000);
-        log_message(logger,LOG_INFO,"TICK! shutdown=%i",LI(shutdown));
-    }while(!shutdown);
+        if(!shutdown)
+            log_message(logger,LOG_ERROR,"Failed to open %s pipe",LS(fifo));
+        else
+            log_message(logger,LOG_WARNING,"Failed to open %s pipe because of shutdown",LS(fifo));
+        shutdown=1;
+    }
+    else
+    {
+        fds.fd=fd;
+        fds.events=POLLIN;
+    }
+
+    if(!shutdown)
+        log_message(logger,LOG_INFO,"Worker is entering main loop");
+
+    while(!shutdown)
+    {
+        //read and process message, TODO
+        char buf[10];
+        //set_cmd_timeout(&timeout);
+        int ec=poll(&fds,1,250);
+        /*int rv=select(fd + 1, &set, &set, &set, &timeout);*/
+        if(ec<0)
+            log_message(logger,LOG_ERROR,"Error while reading file");
+        else if(ec == 0)
+            log_message(logger,LOG_INFO,"Timeout!");
+        else
+        {
+            ssize_t r=read(fd,buf,10);
+            log_message(logger,LOG_INFO,"Bytes read %i",LI(r));
+        }
+
+        worker_lock(worker);
+        shutdown=worker->shutdown;
+        worker_unlock(worker);
+    };
     log_message(logger,LOG_INFO,"Worker thread for %s pipe is shuting down",LS(fifo));
+    if(fd>=0 && close(fd)!=0)
+        log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(fifo));
     return NULL;
 }
 
