@@ -1,5 +1,7 @@
 #include "helper_macro.h"
 #include "logger.h"
+#include "cmd_defs.h"
+#include "message.h"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -10,6 +12,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <poll.h>
 
 static LogDef logger=NULL;
 
@@ -35,7 +42,21 @@ static uint8_t arg_is_numeric(const char* arg)
     return 1;
 }
 
-//params: <control-dir> <channel-name> <security-key> <operation-mode> [command] [param1] [param2] ...
+static uint8_t sndbuf[DATABUFSZ];
+static uint32_t seed;
+
+static uint8_t message_send(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t len)
+{
+    int32_t sndlen=msg_encode(sndbuf,0,cmdbuf,offset,len,seed);
+    if(sndlen<0)
+        return 1;
+    if(write(fd,sndbuf,(size_t)sndlen)!=(ssize_t)sndlen)
+        return 2;
+    return 0;
+}
+
+//params: <control-dir> <channel-name> <security-key> <operation-code> [command] [param1] [param2] ...
+
 
 int main(int argc, char* argv[])
 {
@@ -46,10 +67,10 @@ int main(int argc, char* argv[])
     log_headline(logger,"Commander startup");
     log_message(logger,LOG_INFO,"Parsing startup params");
 
-    if(argc<6)
+    if(argc<5)
     {
-        log_message(logger,LOG_ERROR,"<control-dir>, <channel-name>, <security-key> or <operation-mode> or <command> parameters missing");
-        log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> <operation-mode> <command> [param1] [param2] ...");
+        log_message(logger,LOG_ERROR,"<control-dir>, <channel-name>, <security-key> or <operation-code> parameters missing");
+        log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> <operation-code> [command] [param1] [param2] ...");
         teardown(10);
     }
 
@@ -76,7 +97,6 @@ int main(int argc, char* argv[])
     }
 
     //security key
-    uint32_t seed;
     if(arg_is_numeric(argv[3]))
         seed=(uint32_t)strtol(argv[3], NULL, 10);
     else
@@ -85,9 +105,21 @@ int main(int argc, char* argv[])
         teardown(14);
     }
 
-    //argv[4] - operation mode
+    if(!arg_is_numeric(argv[4]))
+    {
+        log_message(logger,LOG_ERROR,"<operation-code> param must be a number");
+        teardown(14);
+    }
 
-    int exec_count=exec_count=argc-5;
+    uint32_t op_test=(uint32_t)strtol(argv[4], NULL, 10);
+    if(op_test>255)
+    {
+        log_message(logger,LOG_ERROR,"<operation-code> param must be a number between 0 and 255");
+        teardown(15);
+    }
+    uint8_t op_code=(uint8_t)op_test;
+
+    int exec_count=argc-5;
 
     log_message(logger,LOG_INFO,"Secutity key is set to %i",LI(seed));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
@@ -99,6 +131,46 @@ int main(int argc, char* argv[])
         teardown(21);
     }
 
+    int fd=open(channel,O_RDWR);
+    if(fd<0)
+    {
+        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel));
+        teardown(22);
+    }
+
+    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    CMDHDR cmd;
+    cmd.cmd_type=op_code;
+
+    int32_t cmdlen=0;
+    uint8_t err=0;
+    switch(op_code)
+    {
+    case 0:
+        cmdhdr_write(cmdbuf,0,cmd);
+        cmdlen+=(int32_t)CMDHDRSZ;
+        err=message_send(fd,cmdbuf,0,cmdlen);
+        break;
+    default:
+        log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
+        teardown(22);
+        break;
+    }
+
+    //write comand request
+    if(err!=0)
+    {
+       log_message(logger,LOG_ERROR,"Error sending request for channel %s",LS(channel));
+       close(fd);
+       teardown(30);
+    }
+
+    if(close(fd)!=0)
+        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel));
+    free(cmdbuf);
+
+    //TODO: move signal handling logic to bg thread, when needed
+    /*
     sigset_t set;
     sigfillset(&set);
     sigprocmask(SIG_BLOCK,&set,NULL);
@@ -110,5 +182,6 @@ int main(int argc, char* argv[])
     {
         log_message(logger,LOG_INFO,"Performing termination sequence");
         teardown(0);
-    }
+    }*/
+    teardown(0);
 }
