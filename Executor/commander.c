@@ -47,18 +47,53 @@ static uint8_t recbuf[DATABUFSZ];
 static uint32_t seed;
 static volatile uint8_t shutdown;
 
-static uint8_t message_send(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t len)
+static int fd_wait(int fd, int timeout, short int events)
+{
+    struct pollfd fds;
+    int cur_time=0;
+    while(cur_time<timeout)
+    {
+        fds.fd=fd;
+        fds.events=events;
+        fds.revents=0;
+        int ec=poll(&fds,1,50);
+        if(ec<0) //Error
+            return -1;
+        else if(ec == 0) //TIMEOUT
+            cur_time+=50;
+        else
+            break;
+        if(shutdown)
+            break;
+    }
+    return cur_time;
+}
+
+static uint8_t message_send(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t len, int timeout)
 {
     int32_t sndlen=msg_encode(sndbuf,0,cmdbuf,offset,len,seed);
     if(sndlen<0)
         return 1;
+    int op_time=fd_wait(fd,timeout,POLLOUT);
+    if(op_time<0)
+        return 2; //Error
+    if(shutdown)
+        return 255;
+    if(op_time>=timeout)
+        return 3;
     if(write(fd,sndbuf,(size_t)sndlen)!=(ssize_t)sndlen)
-        return 2;
+        return 4;
     return 0;
 }
 
-static uint8_t message_read(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t* len)
+static uint8_t message_read(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t* len, int timeout)
 {
+    int cur_time=0;
+    //read msg_header
+
+
+
+
     /*ssize_t rlen=read(fd,recbuf,DATABUFSZ);
 
     int32_t sndlen=msg_encode(sndbuf,0,cmdbuf,offset,len,seed);
@@ -96,7 +131,7 @@ static uint8_t operation_0(int fd)
     cmd.cmd_type=0;
     cmdhdr_write(cmdbuf,0,cmd);
     int32_t cmdlen=(int32_t)CMDHDRSZ;
-    uint8_t ec=message_send(fd,cmdbuf,0,cmdlen);
+    uint8_t ec=message_send(fd,cmdbuf,0,cmdlen,REQ_TIMEOUT_MS);
     if(ec!=0)
         return ec;
     cmdlen=0;
