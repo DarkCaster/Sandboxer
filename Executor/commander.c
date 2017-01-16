@@ -43,7 +43,9 @@ static uint8_t arg_is_numeric(const char* arg)
 }
 
 static uint8_t sndbuf[DATABUFSZ];
+static uint8_t recbuf[DATABUFSZ];
 static uint32_t seed;
+static volatile uint8_t shutdown;
 
 static uint8_t message_send(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t len)
 {
@@ -55,15 +57,69 @@ static uint8_t message_send(int fd, const uint8_t* cmdbuf, int32_t offset, int32
     return 0;
 }
 
+static uint8_t message_read(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t* len)
+{
+    /*ssize_t rlen=read(fd,recbuf,DATABUFSZ);
+
+    int32_t sndlen=msg_encode(sndbuf,0,cmdbuf,offset,len,seed);
+    if(sndlen<0)
+        return 1;
+    if(write(fd,sndbuf,(size_t)sndlen)!=(ssize_t)sndlen)
+        return 2;
+
+
+    struct pollfd fds;
+    fds.fd=fd;
+    fds.events=POLLIN;
+
+    int ec=poll(&fds,1,250);
+    if(ec<0)
+    {
+        log_message(logger,LOG_ERROR,"Error while reading responce");
+        return 3;
+    }
+    else if(ec == 0)
+    {
+        log_message(logger,LOG_ERROR,"Timeout while reading responce");
+        return 3;
+    }*/
+    return 0;
+}
+
+
+
+static uint8_t operation_0(int fd)
+{
+    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ+1,1);
+    cmdbuf[DATABUFSZ]='\0';
+    CMDHDR cmd;
+    cmd.cmd_type=0;
+    cmdhdr_write(cmdbuf,0,cmd);
+    int32_t cmdlen=(int32_t)CMDHDRSZ;
+    uint8_t ec=message_send(fd,cmdbuf,0,cmdlen);
+    if(ec!=0)
+        return ec;
+    cmdlen=0;
+    ec=message_read(fd,cmdbuf,0,&cmdlen);
+    if(ec!=0)
+        return ec;
+    cmdbuf[cmdlen]='\0';
+    puts((char*)cmdbuf);
+    free(cmdbuf);
+    return 0;
+}
+
 //params: <control-dir> <channel-name> <security-key> <operation-code> [command] [param1] [param2] ...
 
 
 int main(int argc, char* argv[])
 {
+    shutdown=0;
+
     //logger
     logger=log_init();
     log_setlevel(logger,LOG_INFO);
-    log_stdout(logger,1u);
+    log_stdout(logger,2u);
     log_headline(logger,"Commander startup");
     log_message(logger,LOG_INFO,"Parsing startup params");
 
@@ -138,18 +194,11 @@ int main(int argc, char* argv[])
         teardown(22);
     }
 
-    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    CMDHDR cmd;
-    cmd.cmd_type=op_code;
-
-    int32_t cmdlen=0;
-    uint8_t err=0;
+    uint8_t err;
     switch(op_code)
     {
     case 0:
-        cmdhdr_write(cmdbuf,0,cmd);
-        cmdlen+=(int32_t)CMDHDRSZ;
-        err=message_send(fd,cmdbuf,0,cmdlen);
+        err=operation_0(fd);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
@@ -160,14 +209,13 @@ int main(int argc, char* argv[])
     //write comand request
     if(err!=0)
     {
-       log_message(logger,LOG_ERROR,"Error sending request for channel %s",LS(channel));
+       log_message(logger,LOG_ERROR,"Operation %i was failed",LI(op_code));
        close(fd);
        teardown(30);
     }
 
     if(close(fd)!=0)
         log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel));
-    free(cmdbuf);
 
     //TODO: move signal handling logic to bg thread, when needed
     /*
