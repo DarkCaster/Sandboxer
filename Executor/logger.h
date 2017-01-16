@@ -49,7 +49,7 @@ LogDef log_init (void);
 
 void log_deinit (LogDef log_instance);
 
-void log_stdout(const LogDef log_instance, const uint8_t enable_output);
+void log_stdout(const LogDef log_instance, const uint8_t enable_output); //0 - disable output, 1 - stdout, 2 - stderr
 void log_logfile(const LogDef log_instance, const char * filename);
 void log_setlevel(const LogDef log_instance, const uint8_t level);
 void log_headline(const LogDef log_instance, const char * const text);

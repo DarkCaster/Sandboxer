@@ -12,6 +12,7 @@ struct strLogInstance {
     uint8_t level;
     uint8_t stdout_active;
     FILE* logfile;
+    FILE* stdstream;
     char filename[LOG_FILENAMESZ+1];
     char nl[4];
     pthread_mutex_t global_lock;
@@ -26,6 +27,7 @@ LogDef log_init(void)
     LogInstance* result=(LogInstance*)safe_alloc(1,sizeof(LogInstance));
     result->level=LOG_INFO;
     result->stdout_active=0u;
+    result->stdstream=stdout;
     result->filename[LOG_FILENAMESZ]='\0';
     result->logfile=NULL;
     result->nl[0]='\r';
@@ -59,16 +61,16 @@ void log_stdout(const LogDef log_instance, const uint8_t enable_output)
 {
     log_lock(log_instance);
     LogInstance* const log=(LogInstance*)log_instance;
-    if (enable_output!=0u)
+    if(enable_output!=0u)
     {
-        if (log->stdout_active==0u)
-            log->stdout_active=1;
+       log->stdout_active=1u;
+       if(enable_output==1u)
+           log->stdstream=stdout;
+       if(enable_output==2u)
+           log->stdstream=stderr;
     }
     else
-    {
-        if (log->stdout_active==1u)
-            log->stdout_active=0u;
-    }
+        log->stdout_active=0u;
     log_unlock(log_instance);
 }
 
@@ -122,7 +124,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
 
     //Print header
     if(log->stdout_active)
-        printf("[%s] ",LOG_TYPE[msg_type]);
+        fprintf(log->stdstream,"[%s] ",LOG_TYPE[msg_type]);
 
     if (log->logfile!=NULL)
     {
@@ -183,7 +185,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
                     snprintf(buffer+bpos,LOG_OUTBUFSZ-bpos,"%c",*(format));
                 }
                 if (log->stdout_active)
-                    printf(buffer);
+                    fprintf(log->stdstream,buffer);
                 if (log->logfile!=NULL)
                 {
                     if(fwrite((void*)buffer,strnlen(buffer,LOG_OUTBUFSZ),1,log->logfile)!=1)
@@ -200,7 +202,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
         {
             *(buffer+bpos)='\0';
             if (log->stdout_active)
-                printf(buffer);
+                fprintf(log->stdstream,buffer);
             if (log->logfile!=NULL)
             {
                 if(fwrite((void*)buffer,strnlen(buffer,LOG_OUTBUFSZ),1,log->logfile)!=1)
@@ -212,8 +214,8 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
 
    if (log->stdout_active)
    {
-       printf("\n");
-       fflush(stdout);
+       fprintf(log->stdstream,"\n");
+       fflush(log->stdstream);
    }
    if (log->logfile!=NULL)
    {
@@ -231,8 +233,9 @@ void log_headline (const LogDef log_instance, const char * const text)
     //Print header
     if(log->stdout_active)
     {
-        puts(text);
-        fflush(stdout);
+        fprintf(log->stdstream,text);
+        fprintf(log->stdstream,"\n");
+        fflush(log->stdstream);
     }
     if(log->logfile!=NULL)
     {
