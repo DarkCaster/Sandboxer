@@ -52,6 +52,7 @@ static uint8_t operation_0(int fd, uint32_t seed)
     cmd.cmd_type=0;
     cmdhdr_write(cmdbuf,0,cmd);
     int32_t cmdlen=(int32_t)CMDHDRSZ;
+    log_message(logger,LOG_INFO,"Sending request");
     uint8_t ec=message_send(fd,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
     if(ec!=0)
     {
@@ -60,6 +61,7 @@ static uint8_t operation_0(int fd, uint32_t seed)
         return ec;
     }
     cmdlen=0;
+    log_message(logger,LOG_INFO,"Reading response");
     ec=message_read(fd,tmpbuff,cmdbuf,0,&cmdlen,seed,REQ_TIMEOUT_MS);
     if(ec!=0)
     {
@@ -68,7 +70,6 @@ static uint8_t operation_0(int fd, uint32_t seed)
         return ec;
     }
     cmdbuf[cmdlen]='\0';
-    puts((char*)cmdbuf);
     free(cmdbuf);
     free(tmpbuff);
     return 0;

@@ -81,7 +81,7 @@ uint8_t message_read(int fd, uint8_t* const tmpbuf, uint8_t* cmdbuf, int32_t off
     *len=msg_decode(cmdbuf,offset,tmpbuf,0,seed);
     if(*len<0)
     {
-        len=0;
+        *len=0;
         return 5;
     }
     return 0;
