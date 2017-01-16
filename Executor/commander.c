@@ -86,38 +86,43 @@ static uint8_t message_send(int fd, const uint8_t* cmdbuf, int32_t offset, int32
     return 0;
 }
 
-static uint8_t message_read(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t* len, int timeout)
+static uint8_t message_read(int fd, uint8_t* cmdbuf, int32_t offset, int32_t* len, int timeout)
 {
     int cur_time=0;
-    //read msg_header
-
-
-
-
-    /*ssize_t rlen=read(fd,recbuf,DATABUFSZ);
-
-    int32_t sndlen=msg_encode(sndbuf,0,cmdbuf,offset,len,seed);
-    if(sndlen<0)
-        return 1;
-    if(write(fd,sndbuf,(size_t)sndlen)!=(ssize_t)sndlen)
+    //wait for msg_header
+    int op_time=fd_wait(fd,timeout,POLLIN);
+    if(op_time<0)
         return 2;
-
-
-    struct pollfd fds;
-    fds.fd=fd;
-    fds.events=POLLIN;
-
-    int ec=poll(&fds,1,250);
-    if(ec<0)
-    {
-        log_message(logger,LOG_ERROR,"Error while reading responce");
+    if(shutdown)
+        return 255;
+    cur_time+=op_time;
+    if(cur_time>=timeout)
         return 3;
+    //read msg_header
+    if(read(fd,recbuf,MSGHDRSZ)!=(ssize_t)MSGHDRSZ)
+        return 4;
+    MSGLENTYPE pl_len=msg_get_pl_len(recbuf,0);
+    int32_t pl_offset=msg_get_pl_offset(0);
+    //read msg payload
+    //wait for msg payload
+    op_time=fd_wait(fd,timeout-cur_time,POLLIN);
+    if(op_time<0)
+        return 2;
+    if(shutdown)
+        return 255;
+    cur_time+=op_time;
+    if(cur_time>=timeout)
+        return 3;
+    //read msg payload
+    if(read(fd,(recbuf+pl_offset),pl_len)!=(ssize_t)pl_len)
+        return 4;
+    //decode payload
+    *len=msg_decode(cmdbuf,offset,recbuf,0,seed);
+    if(*len<0)
+    {
+        len=0;
+        return 5;
     }
-    else if(ec == 0)
-    {
-        log_message(logger,LOG_ERROR,"Timeout while reading responce");
-        return 3;
-    }*/
     return 0;
 }
 
@@ -135,7 +140,7 @@ static uint8_t operation_0(int fd)
     if(ec!=0)
         return ec;
     cmdlen=0;
-    ec=message_read(fd,cmdbuf,0,&cmdlen);
+    ec=message_read(fd,cmdbuf,0,&cmdlen,REQ_TIMEOUT_MS);
     if(ec!=0)
         return ec;
     cmdbuf[cmdlen]='\0';
