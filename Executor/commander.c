@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "cmd_defs.h"
 #include "message.h"
+#include "comm_helper.h"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -42,110 +43,34 @@ static uint8_t arg_is_numeric(const char* arg)
     return 1;
 }
 
-static uint8_t sndbuf[DATABUFSZ];
-static uint8_t recbuf[DATABUFSZ];
-static uint32_t seed;
-static volatile uint8_t shutdown;
-
-static int fd_wait(int fd, int timeout, short int events)
+static uint8_t operation_0(int fd, uint32_t seed)
 {
-    struct pollfd fds;
-    int cur_time=0;
-    while(cur_time<timeout)
-    {
-        fds.fd=fd;
-        fds.events=events;
-        fds.revents=0;
-        int ec=poll(&fds,1,50);
-        if(ec<0) //Error
-            return -1;
-        else if(ec == 0) //TIMEOUT
-            cur_time+=50;
-        else
-            break;
-        if(shutdown)
-            break;
-    }
-    return cur_time;
-}
-
-static uint8_t message_send(int fd, const uint8_t* cmdbuf, int32_t offset, int32_t len, int timeout)
-{
-    int32_t sndlen=msg_encode(sndbuf,0,cmdbuf,offset,len,seed);
-    if(sndlen<0)
-        return 1;
-    int op_time=fd_wait(fd,timeout,POLLOUT);
-    if(op_time<0)
-        return 2; //Error
-    if(shutdown)
-        return 255;
-    if(op_time>=timeout)
-        return 3;
-    if(write(fd,sndbuf,(size_t)sndlen)!=(ssize_t)sndlen)
-        return 4;
-    return 0;
-}
-
-static uint8_t message_read(int fd, uint8_t* cmdbuf, int32_t offset, int32_t* len, int timeout)
-{
-    int cur_time=0;
-    //wait for msg_header
-    int op_time=fd_wait(fd,timeout,POLLIN);
-    if(op_time<0)
-        return 2;
-    if(shutdown)
-        return 255;
-    cur_time+=op_time;
-    if(cur_time>=timeout)
-        return 3;
-    //read msg_header
-    if(read(fd,recbuf,MSGHDRSZ)!=(ssize_t)MSGHDRSZ)
-        return 4;
-    MSGLENTYPE pl_len=msg_get_pl_len(recbuf,0);
-    int32_t pl_offset=msg_get_pl_offset(0);
-    //read msg payload
-    //wait for msg payload
-    op_time=fd_wait(fd,timeout-cur_time,POLLIN);
-    if(op_time<0)
-        return 2;
-    if(shutdown)
-        return 255;
-    cur_time+=op_time;
-    if(cur_time>=timeout)
-        return 3;
-    //read msg payload
-    if(read(fd,(recbuf+pl_offset),pl_len)!=(ssize_t)pl_len)
-        return 4;
-    //decode payload
-    *len=msg_decode(cmdbuf,offset,recbuf,0,seed);
-    if(*len<0)
-    {
-        len=0;
-        return 5;
-    }
-    return 0;
-}
-
-
-
-static uint8_t operation_0(int fd)
-{
+    uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
     uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ+1,1);
     cmdbuf[DATABUFSZ]='\0';
     CMDHDR cmd;
     cmd.cmd_type=0;
     cmdhdr_write(cmdbuf,0,cmd);
     int32_t cmdlen=(int32_t)CMDHDRSZ;
-    uint8_t ec=message_send(fd,cmdbuf,0,cmdlen,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fd,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
     if(ec!=0)
+    {
+        free(tmpbuff);
+        free(cmdbuf);
         return ec;
+    }
     cmdlen=0;
-    ec=message_read(fd,cmdbuf,0,&cmdlen,REQ_TIMEOUT_MS);
+    ec=message_read(fd,tmpbuff,cmdbuf,0,&cmdlen,seed,REQ_TIMEOUT_MS);
     if(ec!=0)
+    {
+        free(tmpbuff);
+        free(cmdbuf);
         return ec;
+    }
     cmdbuf[cmdlen]='\0';
     puts((char*)cmdbuf);
     free(cmdbuf);
+    free(tmpbuff);
     return 0;
 }
 
@@ -154,8 +79,7 @@ static uint8_t operation_0(int fd)
 
 int main(int argc, char* argv[])
 {
-    shutdown=0;
-
+    comm_shutdown(0u);
     //logger
     logger=log_init();
     log_setlevel(logger,LOG_INFO);
@@ -192,6 +116,7 @@ int main(int argc, char* argv[])
         teardown(13);
     }
 
+    uint32_t seed=0;
     //security key
     if(arg_is_numeric(argv[3]))
         seed=(uint32_t)strtol(argv[3], NULL, 10);
@@ -238,7 +163,7 @@ int main(int argc, char* argv[])
     switch(op_code)
     {
     case 0:
-        err=operation_0(fd);
+        err=operation_0(fd,seed);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
@@ -246,7 +171,6 @@ int main(int argc, char* argv[])
         break;
     }
 
-    //write comand request
     if(err!=0)
     {
        log_message(logger,LOG_ERROR,"Operation %i was failed",LI(op_code));

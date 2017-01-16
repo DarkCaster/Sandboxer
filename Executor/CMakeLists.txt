@@ -120,16 +120,16 @@ if(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
 endif(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
 
 #test util
-add_executable(test.bin${ARCHSUFFIX} helper_macro.h dictionary.c hash.c message.c logger.c test.c)
+add_executable(test.bin${ARCHSUFFIX} helper_macro.h comm_helper.c dictionary.c hash.c message.c logger.c test.c)
 set_property(TARGET test.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
 target_link_libraries(test.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
 
 #executor util, static
-add_executable(executor.bin${ARCHSUFFIX} helper_macro.h cmd_defs.h dictionary.c hash.c message.c logger.c executor_worker.c executor.c)
+add_executable(executor.bin${ARCHSUFFIX} helper_macro.h cmd_defs.h comm_helper.c dictionary.c hash.c message.c logger.c executor_worker.c executor.c)
 set_property(TARGET executor.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
 target_link_libraries(executor.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
 
 #commander util, static
-add_executable(commander.bin${ARCHSUFFIX} helper_macro.h cmd_defs.h dictionary.c hash.c message.c logger.c commander.c)
+add_executable(commander.bin${ARCHSUFFIX} helper_macro.h cmd_defs.h comm_helper.c dictionary.c hash.c message.c logger.c commander.c)
 set_property(TARGET commander.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
 target_link_libraries(commander.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
