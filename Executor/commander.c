@@ -43,7 +43,7 @@ static uint8_t arg_is_numeric(const char* arg)
     return 1;
 }
 
-static uint8_t operation_0(int fd, uint32_t seed)
+static uint8_t operation_0(int fdi, int fdo, uint32_t seed)
 {
     uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
     uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ+1,1);
@@ -53,7 +53,7 @@ static uint8_t operation_0(int fd, uint32_t seed)
     cmdhdr_write(cmdbuf,0,cmd);
     int32_t cmdlen=(int32_t)CMDHDRSZ;
     log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fd,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fdo,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
     if(ec!=0)
     {
         free(tmpbuff);
@@ -62,7 +62,7 @@ static uint8_t operation_0(int fd, uint32_t seed)
     }
     cmdlen=0;
     log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fd,tmpbuff,cmdbuf,0,&cmdlen,seed,REQ_TIMEOUT_MS);
+    ec=message_read(fdi,tmpbuff,cmdbuf,0,&cmdlen,seed,REQ_TIMEOUT_MS);
     if(ec!=0)
     {
         free(tmpbuff);
@@ -109,7 +109,17 @@ int main(int argc, char* argv[])
         teardown(12);
     }
     //channel-name
-    const char* channel=argv[2];
+    size_t ch_base_len=strnlen(argv[2],MAXARGLEN);
+
+    char* channel_in=(char*)safe_alloc(ch_base_len+4,1);
+    strncpy(channel_in,argv[2],ch_base_len);
+    strncpy(channel_in+ch_base_len,".in",3);
+    channel_in[ch_base_len+4]='\0';
+
+    char* channel_out=(char*)safe_alloc(ch_base_len+5,1);
+    strncpy(channel_out,argv[2],ch_base_len);
+    strncpy(channel_out+ch_base_len,".out",4);
+    channel_out[ch_base_len+5]='\0';
 
     if(strnlen(argv[3], MAXARGLEN)>=MAXARGLEN)
     {
@@ -145,7 +155,7 @@ int main(int argc, char* argv[])
 
     log_message(logger,LOG_INFO,"Secutity key is set to %i",LI(seed));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
-    log_message(logger,LOG_INFO,"Channel name is set to %s",LS(channel));
+    log_message(logger,LOG_INFO,"Channel name is set to %s/%s",LS(channel_out),LS(channel_in));
 
     if(chdir(ctldir)!=0)
     {
@@ -153,10 +163,17 @@ int main(int argc, char* argv[])
         teardown(21);
     }
 
-    int fd=open(channel,O_RDWR);
-    if(fd<0)
+    int fdi=open(channel_in,O_RDONLY);
+    if(fdi<0)
     {
-        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel));
+        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_in));
+        teardown(22);
+    }
+
+    int fdo=open(channel_out,O_WRONLY);
+    if(fdo<0)
+    {
+        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_out));
         teardown(22);
     }
 
@@ -164,7 +181,7 @@ int main(int argc, char* argv[])
     switch(op_code)
     {
     case 0:
-        err=operation_0(fd,seed);
+        err=operation_0(fdi,fdo,seed);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
@@ -175,12 +192,16 @@ int main(int argc, char* argv[])
     if(err!=0)
     {
        log_message(logger,LOG_ERROR,"Operation %i was failed",LI(op_code));
-       close(fd);
+       close(fdi);
+       close(fdo);
        teardown(30);
     }
 
-    if(close(fd)!=0)
-        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel));
+    if(close(fdi)!=0)
+        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_in));
+
+    if(close(fdo)!=0)
+        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_out));
 
     //TODO: move signal handling logic to bg thread, when needed
     /*
