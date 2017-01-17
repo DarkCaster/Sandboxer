@@ -70,6 +70,7 @@ static uint8_t operation_0(int fdi, int fdo, uint32_t seed)
         return ec;
     }
     cmdbuf[cmdlen]='\0';
+    puts((char*)cmdbuf);
     free(cmdbuf);
     free(tmpbuff);
     return 0;
