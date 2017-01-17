@@ -129,7 +129,7 @@ static void _dict_set(const DictDef dict_instance, const char* key, uint8_t* dat
     NList* el=(NList*)safe_alloc(1,sizeof(NList));
     el->data=data;
     size_t len=strnlen(key,MAXKEYLEN);
-    el->key=(char*)safe_alloc(1,len+1);
+    el->key=(char*)safe_alloc(len+1,1);
     el->key[len]='\0';//as precaution
     strncpy(el->key,key,len);
     NList* head=dict->hashtab[hash];
@@ -179,4 +179,41 @@ int32_t dict_count(const DictDef dict_instance)
     int32_t result=((Dict*)dict_instance)->count;
     dict_unlock(dict_instance);
     return result;
+}
+
+char** dict_keylist(const DictDef dict_instance)
+{
+    dict_lock(dict_instance);
+    Dict* const dict=(Dict*)dict_instance;
+    int32_t count=dict->count;
+    char** result=(char**)safe_alloc((size_t)(count+1),sizeof(char*));
+    result[count]=NULL; //end marker, used when freeing
+    int pos=0;
+    for(int i=0;i<256;++i)
+    {
+        NList* el=dict->hashtab[i];
+        while(el!=NULL)
+        {
+            size_t len=strlen(el->key);
+            result[pos]=(char*)safe_alloc(len+1,1);
+            result[pos][len]='\0';
+            strcpy(result[pos],el->key);
+            el=el->next;
+            ++pos;
+        }
+    }
+    dict_unlock(dict_instance);
+    return result;
+}
+
+void dict_keylist_dispose(char** keylist)
+{
+    int pos=0;
+    while(keylist[pos]!=NULL)
+    {
+        free(keylist[pos]);
+        keylist[pos]=NULL; //as precaution
+        ++pos;
+    }
+    free(keylist);
 }

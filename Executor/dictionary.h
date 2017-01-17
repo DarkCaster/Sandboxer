@@ -27,6 +27,9 @@ uint8_t* dict_del(const DictDef dict_instance, const char* key);
 //get key\ptr elements count
 int32_t dict_count(const DictDef dict_instance);
 
+char** dict_keylist(const DictDef dict_instance);
+void dict_keylist_dispose(char** keylist);
+
 #ifdef __cplusplus
 }
 #endif
