@@ -1,5 +1,6 @@
 #include "helper_macro.h"
 #include "executor_worker.h"
+#include "comm_helper.h"
 #include "logger.h"
 #include "pthread.h"
 
@@ -8,17 +9,13 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/fcntl.h>
-#include <poll.h>
-
 struct strWorker
 {
     pthread_mutex_t access_lock;
     uint32_t key;
     uint8_t shutdown;
-    char* fifo_path;
+    char* fifo_in_path;
+    char* fifo_out_path;
     pthread_t thread;
 };
 
@@ -30,19 +27,29 @@ static Worker* worker_init(void)
 {
     Worker* result=(Worker*)safe_alloc(1,sizeof(Worker));
     pthread_mutex_init(&(result->access_lock),NULL);
-    result->fifo_path=NULL;
+    result->fifo_in_path=NULL;
+    result->fifo_out_path=NULL;
     return result;
 }
 
 static void worker_deinit(Worker* woker)
 {
-    if(woker->fifo_path!=NULL)
+    if(woker->fifo_in_path!=NULL)
     {
-        int ec=remove(woker->fifo_path);
+        int ec=remove(woker->fifo_in_path);
         if(ec!=0)
-            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(woker->fifo_path),LI(ec));
-        free(woker->fifo_path);
+            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(woker->fifo_in_path),LI(ec));
+        free(woker->fifo_in_path);
     }
+
+    if(woker->fifo_out_path!=NULL)
+    {
+        int ec=remove(woker->fifo_out_path);
+        if(ec!=0)
+            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(woker->fifo_out_path),LI(ec));
+        free(woker->fifo_out_path);
+    }
+
     pthread_mutex_unlock(&(woker->access_lock));
     pthread_mutex_destroy(&(woker->access_lock));
     free((void*)woker);
@@ -67,28 +74,21 @@ static void * worker_thread (void* param)
 {
     Worker* worker=(Worker*)param;
     worker_lock(worker);
-    const char* fifo=worker->fifo_path;
+    const char* fifo_in=worker->fifo_in_path;
+    const char* fifo_out=worker->fifo_out_path;
     uint32_t seed=worker->key;
     uint8_t shutdown=worker->shutdown;
-    log_message(logger,LOG_INFO,"Started new worker thread for %s pipe",LS(fifo));
+    log_message(logger,LOG_INFO,"Started new worker thread for %s|%s pipe",LS(fifo_in),LS(fifo_out));
     worker_unlock(worker);
-    struct pollfd fds;
-    int fd=open(fifo,O_RDWR);
-    if(fd<0)
+
+    int fdi=open(fifo_in,O_RDWR);
+    int fdo=open(fifo_out,O_RDWR);
+
+    if(fdi<0||fdo<0)
     {
-        worker_lock(worker);
-        shutdown=worker->shutdown;
-        worker_unlock(worker);
-        if(!shutdown)
-            log_message(logger,LOG_ERROR,"Failed to open %s pipe",LS(fifo));
-        else
-            log_message(logger,LOG_WARNING,"Failed to open %s pipe because of shutdown",LS(fifo));
+        log_message(logger,LOG_ERROR,"Failed to open %s|%s pipe",LS(fifo_in),LS(fifo_out));
         shutdown=1;
-    }
-    else
-    {
-        fds.fd=fd;
-        fds.events=POLLIN;
+        comm_shutdown(1u);
     }
 
     if(!shutdown)
@@ -96,28 +96,18 @@ static void * worker_thread (void* param)
 
     while(!shutdown)
     {
-        //read and process message, TODO
-        char buf[10];
-        //set_cmd_timeout(&timeout);
-        int ec=poll(&fds,1,250);
-        /*int rv=select(fd + 1, &set, &set, &set, &timeout);*/
-        if(ec<0)
-            log_message(logger,LOG_ERROR,"Error while reading file");
-        else if(ec == 0)
-            log_message(logger,LOG_INFO,"Timeout!");
-        else
-        {
-            ssize_t r=read(fd,buf,10);
-            log_message(logger,LOG_INFO,"Bytes read %i",LI(r));
-        }
+
 
         worker_lock(worker);
         shutdown=worker->shutdown;
         worker_unlock(worker);
     };
-    log_message(logger,LOG_INFO,"Worker thread for %s pipe is shuting down",LS(fifo));
-    if(fd>=0 && close(fd)!=0)
-        log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(fifo));
+
+    log_message(logger,LOG_INFO,"Worker thread for %s|%s pipe is shutting down",LS(fifo_in),LS(fifo_out));
+    if(fdi>=0 && close(fdi)!=0)
+        log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(fifo_in));
+    if(fdo>=0 && close(fdo)!=0)
+        log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(fifo_out));
     return NULL;
 }
 
@@ -127,27 +117,46 @@ WorkerDef worker_launch(const char* ctldir, const char* channel, uint32_t key)
     size_t ctl=strlen(ctldir);
     size_t pl=strlen(ps);
     size_t chl=strlen(channel);
-    char filename[ctl+pl+chl+1];
-    strcpy(filename,ctldir);
-    strcpy(filename+ctl,ps);
-    strcpy(filename+ctl+pl,channel);
-    filename[ctl+pl+chl]='\0';
+
+    char filename_in[ctl+pl+chl+4];
+    strcpy(filename_in,ctldir);
+    strcpy(filename_in+ctl,ps);
+    strcpy(filename_in+ctl+pl,channel);
+    strcpy(filename_in+ctl+pl+chl,".in");
+    filename_in[ctl+pl+chl+3]='\0';
+
+    char filename_out[ctl+pl+chl+5];
+    strcpy(filename_out,ctldir);
+    strcpy(filename_out+ctl,ps);
+    strcpy(filename_out+ctl+pl,channel);
+    strcpy(filename_out+ctl+pl+chl,".out");
+    filename_out[ctl+pl+chl+4]='\0';
+
     log_message(logger,LOG_INFO,"Starting new worker at control dir %s with channel %s",ctldir,channel);
 
-    if(mkfifo(filename, 0600)!=0)
+    if(mkfifo(filename_in, 0600)!=0)
     {
-        log_message(logger,LOG_ERROR,"Failed to create communication pipe at %s",filename);
+        log_message(logger,LOG_ERROR,"Failed to create communication pipe at %s",filename_in);
+        return NULL;
+    }
+
+    if(mkfifo(filename_out, 0600)!=0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to create communication pipe at %s",filename_out);
         return NULL;
     }
 
     Worker* worker=worker_init();
-
     worker_lock(worker);
     worker->key=key;
     worker->shutdown=0;
-    worker->fifo_path=(char*)safe_alloc(ctl+pl+chl+1,sizeof(char));
-    worker->fifo_path[ctl+pl+chl]='\0';
-    strcpy(worker->fifo_path,filename);
+    worker->fifo_in_path=(char*)safe_alloc(strlen(filename_in)+1,sizeof(char));
+    worker->fifo_in_path[strlen(filename_in)]='\0';
+    strcpy(worker->fifo_in_path,filename_in);
+    worker->fifo_out_path=(char*)safe_alloc(strlen(filename_out)+1,sizeof(char));
+    worker->fifo_out_path[strlen(filename_out)]='\0';
+    strcpy(worker->fifo_out_path,filename_out);
+
     int ec=pthread_create(&(worker->thread),NULL,worker_thread,worker);
     worker_unlock(worker);
     if(ec!=0)
@@ -166,6 +175,7 @@ void worker_shutdown(const WorkerDef _worker)
         return;
     worker_lock(worker);
     worker->shutdown=1;
+    comm_shutdown(1);
     worker_unlock(worker);
     int ec=pthread_join((worker->thread),NULL);
     if(ec!=0)

@@ -111,15 +111,15 @@ int main(int argc, char* argv[])
     //channel-name
     size_t ch_base_len=strnlen(argv[2],MAXARGLEN);
 
-    char* channel_in=(char*)safe_alloc(ch_base_len+4,1);
+    char* channel_in=(char*)safe_alloc(ch_base_len+5,1);
     strncpy(channel_in,argv[2],ch_base_len);
-    strncpy(channel_in+ch_base_len,".in",3);
+    strncpy(channel_in+ch_base_len,".out",4);
     channel_in[ch_base_len+4]='\0';
 
-    char* channel_out=(char*)safe_alloc(ch_base_len+5,1);
+    char* channel_out=(char*)safe_alloc(ch_base_len+4,1);
     strncpy(channel_out,argv[2],ch_base_len);
-    strncpy(channel_out+ch_base_len,".out",4);
-    channel_out[ch_base_len+5]='\0';
+    strncpy(channel_out+ch_base_len,".in",3);
+    channel_out[ch_base_len+3]='\0';
 
     if(strnlen(argv[3], MAXARGLEN)>=MAXARGLEN)
     {
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 
     log_message(logger,LOG_INFO,"Secutity key is set to %i",LI(seed));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
-    log_message(logger,LOG_INFO,"Channel name is set to %s/%s",LS(channel_out),LS(channel_in));
+    log_message(logger,LOG_INFO,"Channel name is set to %s|%s",LS(channel_out),LS(channel_in));
 
     if(chdir(ctldir)!=0)
     {
@@ -163,14 +163,14 @@ int main(int argc, char* argv[])
         teardown(21);
     }
 
-    int fdi=open(channel_in,O_RDONLY);
+    int fdi=open(channel_in,O_RDWR);
     if(fdi<0)
     {
         log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_in));
         teardown(22);
     }
 
-    int fdo=open(channel_out,O_WRONLY);
+    int fdo=open(channel_out,O_RDWR);
     if(fdo<0)
     {
         log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_out));
@@ -203,6 +203,9 @@ int main(int argc, char* argv[])
     if(close(fdo)!=0)
         log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_out));
 
+    free(channel_in);
+    free(channel_out);
+
     //TODO: move signal handling logic to bg thread, when needed
     /*
     sigset_t set;
@@ -217,5 +220,6 @@ int main(int argc, char* argv[])
         log_message(logger,LOG_INFO,"Performing termination sequence");
         teardown(0);
     }*/
+
     teardown(0);
 }
