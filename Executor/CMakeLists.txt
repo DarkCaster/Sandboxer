@@ -75,6 +75,8 @@ check_include_file(sys/types.h HAVE_SYSTYPES_H)
 check_include_file(sys/stat.h HAVE_SYSSTAT_H)
 check_include_file(sys/wait.h HAVE_SYSWAIT_H)
 check_include_file(sys/fcntl.h HAVE_FNCTL_H)
+check_include_file(sys/time.h HAVE_SYSTIME_H)
+
 check_include_file(poll.h HAVE_POLL_H)
 check_include_file(signal.h HAVE_SIGNAL_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
@@ -96,6 +98,9 @@ if(NOT(HAVE_UNISTD_H))
 endif()
 if(NOT(HAVE_FNCTL_H))
  message(FATAL_ERROR "C header file sys/fcntl.h not available for your platform. Cannot proceed.")
+endif()
+if(NOT(HAVE_SYSTIME_H))
+ message(FATAL_ERROR "C header file sys/time.h not available for your platform. Cannot proceed.")
 endif()
 
 
