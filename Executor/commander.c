@@ -46,8 +46,8 @@ static uint8_t arg_is_numeric(const char* arg)
 static uint8_t operation_0(int fdi, int fdo, uint32_t seed)
 {
     uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ+1,1);
-    cmdbuf[DATABUFSZ]='\0';
+    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    cmdbuf[DATABUFSZ-1]='\0';
     CMDHDR cmd;
     cmd.cmd_type=0;
     cmdhdr_write(cmdbuf,0,cmd);
