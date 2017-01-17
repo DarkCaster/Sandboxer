@@ -1,6 +1,7 @@
 #include "helper_macro.h"
 #include "logger.h"
 #include "executor_worker.h"
+#include "comm_helper.h"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -169,6 +170,7 @@ int main(int argc, char* argv[])
             if (sig_map[i]==sig)
             {
                 log_message(logger,LOG_INFO,"Performing termination sequence");
+                comm_shutdown(1u);
                 worker_shutdown(main_worker);
                 free(sig_map);
                 teardown(0);

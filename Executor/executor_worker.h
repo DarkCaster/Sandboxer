@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#define WORKER_REACT_TIME_MS 250
+
 typedef void * WorkerDef;
 //set logger
 void worker_set_logger(LogDef _logger);
