@@ -47,33 +47,42 @@ uint8_t message_send(int fd, uint8_t* const tmpbuf, const uint8_t* cmdbuf, int32
     return 0;
 }
 
-uint8_t message_read(int fd, uint8_t* const tmpbuf, uint8_t* cmdbuf, int32_t offset, int32_t* len, uint32_t seed, int timeout)
+uint8_t message_read_header(int fd, uint8_t* const tmpbuf, int* time_limit)
 {
-    int cur_time=0;
     //wait for msg_header
-    int op_time=fd_wait(fd,timeout,POLLIN);
+    int op_time=fd_wait(fd,*time_limit,POLLIN);
     if(op_time<0)
         return 2;
     if(shutdown)
         return 255;
-    cur_time+=op_time;
-    if(cur_time>=timeout)
+    *time_limit-=op_time;
+    if(*time_limit<0)
+    {
+        *time_limit=0;
         return 3;
+    }
     //read msg_header
     if(read(fd,tmpbuf,MSGHDRSZ)!=(ssize_t)MSGHDRSZ)
         return 4;
+    return 0;
+}
+
+uint8_t message_read_and_transform_payload(int fd, uint8_t* const tmpbuf, uint8_t* cmdbuf, int32_t offset, int32_t* len, uint32_t seed, int* time_limit)
+{
     MSGLENTYPE pl_len=msg_get_pl_len(tmpbuf,0);
     int32_t pl_offset=msg_get_pl_offset(0);
-    //read msg payload
     //wait for msg payload
-    op_time=fd_wait(fd,timeout-cur_time,POLLIN);
+    int op_time=fd_wait(fd,*time_limit,POLLIN);
     if(op_time<0)
         return 2;
     if(shutdown)
         return 255;
-    cur_time+=op_time;
-    if(cur_time>=timeout)
+    *time_limit-=op_time;
+    if(*time_limit<0)
+    {
+        *time_limit=0;
         return 3;
+    }
     //read msg payload
     if(read(fd,(tmpbuf+pl_offset),pl_len)!=(ssize_t)pl_len)
         return 4;
@@ -86,3 +95,16 @@ uint8_t message_read(int fd, uint8_t* const tmpbuf, uint8_t* cmdbuf, int32_t off
     }
     return 0;
 }
+
+uint8_t message_read(int fd, uint8_t* const tmpbuf, uint8_t* cmdbuf, int32_t offset, int32_t* len, uint32_t seed, int timeout)
+{
+    uint8_t ec=message_read_header(fd, tmpbuf, &timeout);
+    if(ec!=0)
+        return ec;
+    ec=message_read_and_transform_payload(fd,tmpbuf,cmdbuf,offset,len,seed,&timeout);
+    if(ec!=0)
+        return ec;
+    return 0;
+}
+
+
