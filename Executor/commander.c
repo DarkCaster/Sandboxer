@@ -88,8 +88,11 @@ static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
     cmdhdr_write(cmdbuf,0,cmd);
     //append executable name
     int32_t cmdlen=(int32_t)CMDHDRSZ;
-    strcpy((char*)(cmdbuf+cmdlen),exec);
-    cmdlen+=(int32_t)strlen(exec);
+    if(exec!=NULL)
+    {
+        strcpy((char*)(cmdbuf+cmdlen),exec);
+        cmdlen+=(int32_t)strlen(exec);
+    }
     log_message(logger,LOG_INFO,"Sending request");
     uint8_t ec=message_send(fdo,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
     if(ec!=0)
