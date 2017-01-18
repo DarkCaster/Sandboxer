@@ -144,6 +144,7 @@ static uint8_t operation_1(int fdo, Worker* this_worker, uint32_t key, char* exe
         this_worker->exec=(char*)safe_alloc(len+1,1);
         this_worker->exec[len]='\0';
         strncpy(this_worker->exec,exec,len);
+        log_message(logger,LOG_INFO,"File-name to exec was set to %s",LS(this_worker->exec));
         worker_unlock(this_worker);
         CMDHDR cmd;
         cmd.cmd_type=1;
@@ -335,7 +336,7 @@ void worker_shutdown(const WorkerDef _worker)
         return;
     worker_lock(worker);
     char* chn_in=worker->fifo_in_path;
-    char* chn_out=worker->fifo_in_path;
+    char* chn_out=worker->fifo_out_path;
     worker_unlock(worker);
     log_message(logger,LOG_INFO,"Requesting shutdown for worker with comm pipes %s|%s",LS(chn_in),LS(chn_out));
     worker_lock(worker);
