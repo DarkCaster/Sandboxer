@@ -43,6 +43,7 @@ static uint8_t arg_is_numeric(const char* arg)
     return 1;
 }
 
+//opcode 0 - create new session with separate comm. channels
 static uint8_t operation_0(int fdi, int fdo, uint32_t seed)
 {
     uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
@@ -69,8 +70,59 @@ static uint8_t operation_0(int fdi, int fdo, uint32_t seed)
         free(cmdbuf);
         return ec;
     }
-    cmdbuf[cmdlen]='\0';
+    cmdbuf[cmdlen]='\0';//received string may not contain leading null character
     puts((char*)cmdbuf);
+    free(cmdbuf);
+    free(tmpbuff);
+    return 0;
+}
+
+//opcode 1 - set executable name
+static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
+{
+    uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    cmdbuf[DATABUFSZ-1]='\0';
+    CMDHDR cmd;
+    cmd.cmd_type=1;
+    cmdhdr_write(cmdbuf,0,cmd);
+    //append executable name
+    int32_t cmdlen=(int32_t)CMDHDRSZ;
+    strcpy((char*)(cmdbuf+cmdlen),exec);
+    cmdlen+=(int32_t)strlen(exec);
+    log_message(logger,LOG_INFO,"Sending request");
+    uint8_t ec=message_send(fdo,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
+    if(ec!=0)
+    {
+        free(tmpbuff);
+        free(cmdbuf);
+        return ec;
+    }
+    cmdlen=0;
+    log_message(logger,LOG_INFO,"Reading response");
+    ec=message_read(fdi,tmpbuff,cmdbuf,0,&cmdlen,seed,REQ_TIMEOUT_MS);
+    if(ec!=0)
+    {
+        free(tmpbuff);
+        free(cmdbuf);
+        return ec;
+    }
+    //read response
+    if(cmdlen!=(int32_t)CMDHDRSZ)
+    {
+        log_message(logger,LOG_ERROR,"Wrong response length detected!");
+        free(tmpbuff);
+        free(cmdbuf);
+        return 1;
+    }
+    CMDHDR rcmd=cmdhdr_read(cmdbuf,0);
+    if(rcmd.cmd_type!=1)
+    {
+        log_message(logger,LOG_ERROR,"Executor module reports error while setting exec-name!");
+        free(tmpbuff);
+        free(cmdbuf);
+        return 2;
+    }
     free(cmdbuf);
     free(tmpbuff);
     return 0;
