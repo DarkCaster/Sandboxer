@@ -21,6 +21,9 @@ struct strWorker
     char* ctldir;
     char* fifo_in_path;
     char* fifo_out_path;
+    char* exec;
+    char** params;
+    uint32_t params_count;
     pthread_t thread;
 };
 
@@ -36,6 +39,9 @@ static Worker* worker_init(void)
     result->fifo_out_path=NULL;
     result->ctldir=NULL;
     result->child_workers=NULL;
+    result->exec=NULL;
+    result->params=NULL;
+    result->params_count=0;
     return result;
 }
 
@@ -62,6 +68,16 @@ static void worker_deinit(Worker* worker)
 
     if(worker->child_workers!=NULL)
         dict_deinit(worker->child_workers);
+
+    if(worker->exec!=NULL)
+        free(worker->exec);
+
+    if(worker->params_count>0)
+    {
+        for(uint32_t i=0;i<worker->params_count;++i)
+            free(worker->params[i]);
+        free(worker->params);
+    }
 
     pthread_mutex_unlock(&(worker->access_lock));
     pthread_mutex_destroy(&(worker->access_lock));
@@ -114,6 +130,35 @@ static uint8_t operation_0(int fdo, Worker* this_worker, const char* ctldir, uin
     int ec=message_send(fdo,tmpbuf,(uint8_t*)chn,0,len,key,REQ_TIMEOUT_MS);
     if(ec!=0)
         log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
+    free(tmpbuf);
+    return 0;
+}
+
+static uint8_t operation_1(int fdo, Worker* this_worker, uint32_t key, char* exec, size_t len)
+{
+    uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    uint8_t cmdbuf[CMDHDRSZ];
+    if(len>0 && exec!=NULL)
+    {
+        worker_lock(this_worker);
+        this_worker->exec=(char*)safe_alloc(len+1,1);
+        this_worker->exec[len]='\0';
+        strncpy(this_worker->exec,exec,len);
+        worker_unlock(this_worker);
+        CMDHDR cmd;
+        cmd.cmd_type=1;
+        cmdhdr_write(cmdbuf,0,cmd);
+    }
+    else
+    {
+        CMDHDR cmd;
+        cmd.cmd_type=255;
+        cmdhdr_write(cmdbuf,0,cmd);
+    }
+    //send back new pipe basename
+    int ec=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        log_message(logger,LOG_ERROR,"Failed to send response with operation completion result");
     free(tmpbuf);
     return 0;
 }
@@ -190,6 +235,9 @@ static void * worker_thread (void* param)
             {
             case 0:
                 err=operation_0(fdo,worker,ctldir,seed);
+                break;
+            case 1:
+                err=operation_1(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));

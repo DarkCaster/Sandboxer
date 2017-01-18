@@ -128,7 +128,7 @@ static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
     return 0;
 }
 
-//params: <control-dir> <channel-name> <security-key> <operation-code> [command] [param1] [param2] ...
+//params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
 
 
 int main(int argc, char* argv[])
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     if(argc<5)
     {
         log_message(logger,LOG_ERROR,"<control-dir>, <channel-name>, <security-key> or <operation-code> parameters missing");
-        log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> <operation-code> [command] [param1] [param2] ...");
+        log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...");
         teardown(10);
     }
 
@@ -204,9 +204,21 @@ int main(int argc, char* argv[])
     }
     uint8_t op_code=(uint8_t)op_test;
 
-    int exec_count=argc-5;
+    char* op_param=NULL;
+    if(argc>5)
+    {
+        size_t op_param_len=strnlen(argv[5],MAXARGLEN);
+        if(op_param_len>=MAXARGLEN)
+        {
+            log_message(logger,LOG_ERROR,"[operation param] param too long. Max characters allowed = %i",LI(MAXARGLEN));
+            teardown(16);
+        }
+        op_param=(char*)safe_alloc(op_param_len+1,1);
+        op_param[op_param_len]='\0';
+        strncpy(op_param,argv[5],op_param_len);
+    }
 
-    log_message(logger,LOG_INFO,"Secutity key is set to %i",LI(seed));
+    log_message(logger,LOG_INFO,"Security key is set to %i",LI(seed));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
     log_message(logger,LOG_INFO,"Channel name is set to %s|%s",LS(channel_out),LS(channel_in));
 
@@ -236,6 +248,9 @@ int main(int argc, char* argv[])
     case 0:
         err=operation_0(fdi,fdo,seed);
         break;
+    case 1:
+        err=operation_1(fdi,fdo,seed,op_param);
+        break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
         teardown(22);
@@ -256,6 +271,8 @@ int main(int argc, char* argv[])
     if(close(fdo)!=0)
         log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_out));
 
+    if(op_param!=NULL)
+        free(op_param);
     free(channel_in);
     free(channel_out);
 
