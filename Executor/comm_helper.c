@@ -56,7 +56,7 @@ uint8_t message_read_header(int fd, uint8_t* const tmpbuf, int* time_limit)
     if(shutdown)
         return 255;
     *time_limit-=op_time;
-    if(*time_limit<0)
+    if(*time_limit<=0)
     {
         *time_limit=0;
         return 3;
