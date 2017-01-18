@@ -3,18 +3,22 @@
 #include "comm_helper.h"
 #include "cmd_defs.h"
 #include "logger.h"
-#include "pthread.h"
+#include "dictionary.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <pthread.h>
+#include <sys/time.h>
 
 struct strWorker
 {
     pthread_mutex_t access_lock;
+    DictDef child_workers;
     uint32_t key;
     uint8_t shutdown;
+    char* ctldir;
     char* fifo_in_path;
     char* fifo_out_path;
     pthread_t thread;
@@ -30,30 +34,38 @@ static Worker* worker_init(void)
     pthread_mutex_init(&(result->access_lock),NULL);
     result->fifo_in_path=NULL;
     result->fifo_out_path=NULL;
+    result->ctldir=NULL;
+    result->child_workers=NULL;
     return result;
 }
 
-static void worker_deinit(Worker* woker)
+static void worker_deinit(Worker* worker)
 {
-    if(woker->fifo_in_path!=NULL)
+    if(worker->fifo_in_path!=NULL)
     {
-        int ec=remove(woker->fifo_in_path);
+        int ec=remove(worker->fifo_in_path);
         if(ec!=0)
-            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(woker->fifo_in_path),LI(ec));
-        free(woker->fifo_in_path);
+            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(worker->fifo_in_path),LI(ec));
+        free(worker->fifo_in_path);
     }
 
-    if(woker->fifo_out_path!=NULL)
+    if(worker->fifo_out_path!=NULL)
     {
-        int ec=remove(woker->fifo_out_path);
+        int ec=remove(worker->fifo_out_path);
         if(ec!=0)
-            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(woker->fifo_out_path),LI(ec));
-        free(woker->fifo_out_path);
+            log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(worker->fifo_out_path),LI(ec));
+        free(worker->fifo_out_path);
     }
 
-    pthread_mutex_unlock(&(woker->access_lock));
-    pthread_mutex_destroy(&(woker->access_lock));
-    free((void*)woker);
+    if(worker->ctldir!=NULL)
+        free(worker->ctldir);
+
+    if(worker->child_workers!=NULL)
+        dict_deinit(worker->child_workers);
+
+    pthread_mutex_unlock(&(worker->access_lock));
+    pthread_mutex_destroy(&(worker->access_lock));
+    free((void*)worker);
 }
 
 void worker_set_logger(LogDef _logger)
@@ -71,8 +83,38 @@ static void worker_unlock(Worker* worker)
     pthread_mutex_unlock(&(worker->access_lock));
 }
 
-static uint8_t operation_0(int fdo, uint32_t seed)
+static unsigned long long current_timestamp(void)
 {
+    struct timeval te;
+    gettimeofday(&te, NULL);
+    return (unsigned long long)(te.tv_sec*1000LL + te.tv_usec/1000);
+}
+
+static uint8_t operation_0(int fdo, Worker* this_worker, const char* ctldir, uint32_t key)
+{
+    uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    //create new worker thread, with new comm pair
+    char chn[256];
+    int len=sprintf(chn,"%04llx", current_timestamp());
+    chn[len]='\0';
+    WorkerDef child=worker_launch(ctldir,chn,key);
+    if(child==NULL)
+    {
+        log_message(logger,LOG_ERROR,"Failed to create new worker for channel %s",LI(chn));
+        chn[0]='\0';
+        len=0;
+    }
+    else
+    {
+        worker_lock(this_worker);
+        dict_set(this_worker->child_workers,chn,(uint8_t*)child);
+        worker_unlock(this_worker);
+    }
+    //send back new pipe basename
+    int ec=message_send(fdo,tmpbuf,(uint8_t*)chn,0,len,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
+    free(tmpbuf);
     return 0;
 }
 
@@ -82,6 +124,7 @@ static void * worker_thread (void* param)
     worker_lock(worker);
     const char* fifo_in=worker->fifo_in_path;
     const char* fifo_out=worker->fifo_out_path;
+    const char* ctldir=worker->ctldir;
     uint32_t seed=worker->key;
     uint8_t shutdown=worker->shutdown;
     log_message(logger,LOG_INFO,"Started new worker thread for %s|%s pipe",LS(fifo_in),LS(fifo_out));
@@ -146,7 +189,7 @@ static void * worker_thread (void* param)
             switch(cmdhdr.cmd_type)
             {
             case 0:
-                err=operation_0(fdo,seed);
+                err=operation_0(fdo,worker,ctldir,seed);
                 break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
@@ -222,7 +265,10 @@ WorkerDef worker_launch(const char* ctldir, const char* channel, uint32_t key)
     worker->fifo_out_path=(char*)safe_alloc(strlen(filename_out)+1,sizeof(char));
     worker->fifo_out_path[strlen(filename_out)]='\0';
     strcpy(worker->fifo_out_path,filename_out);
-
+    worker->ctldir=(char*)safe_alloc(ctl+1,sizeof(char));
+    worker->ctldir[ctl]='\0';
+    strcpy(worker->ctldir,ctldir);
+    worker->child_workers=dict_init();
     int ec=pthread_create(&(worker->thread),NULL,worker_thread,worker);
     worker_unlock(worker);
     if(ec!=0)
@@ -240,11 +286,28 @@ void worker_shutdown(const WorkerDef _worker)
     if(worker==NULL)
         return;
     worker_lock(worker);
+    char* chn_in=worker->fifo_in_path;
+    char* chn_out=worker->fifo_in_path;
+    worker_unlock(worker);
+    log_message(logger,LOG_INFO,"Requesting shutdown for worker with comm pipes %s|%s",LS(chn_in),LS(chn_out));
+    worker_lock(worker);
     worker->shutdown=1;
     worker_unlock(worker);
     int ec=pthread_join((worker->thread),NULL);
     if(ec!=0)
         log_message(logger,LOG_ERROR,"Error awaiting for worker's thread termination with pthread_join, ec==%i",ec);
+    //shutdown child workers
+    worker_lock(worker);
+    char** keylist=dict_keylist(worker->child_workers);
+    int pos=0;
+    while(keylist[pos]!=NULL)
+    {
+        WorkerDef child=dict_get(worker->child_workers,keylist[pos]);
+        worker_shutdown(child);
+        ++pos;
+    }
+    dict_keylist_dispose(keylist);
+    worker_unlock(worker);
     worker_deinit(worker);
     return;
 }
