@@ -25,7 +25,6 @@ struct strWorker
     char* ctldir;
     char* fifo_in_path;
     char* fifo_out_path;
-    char* exec;
     char** params;
     uint32_t params_count;
     pthread_t thread;
@@ -66,7 +65,6 @@ static Worker* worker_init(void)
     result->fifo_out_path=NULL;
     result->ctldir=NULL;
     result->child_workers=NULL;
-    result->exec=NULL;
     result->params=NULL;
     result->params_count=0;
     return result;
@@ -95,9 +93,6 @@ static void worker_deinit(Worker* worker)
 
     if(worker->child_workers!=NULL)
         dict_deinit(worker->child_workers);
-
-    if(worker->exec!=NULL)
-        free(worker->exec);
 
     if(worker->params!=NULL)
     {
@@ -172,10 +167,12 @@ static uint8_t operation_1(int fdo, Worker* this_worker, uint32_t key, char* exe
     if(len>0 && exec!=NULL)
     {
         worker_lock(this_worker);
-        this_worker->exec=(char*)safe_alloc(len+1,1);
-        this_worker->exec[len]='\0';
-        strncpy(this_worker->exec,exec,len);
-        log_message(logger,LOG_INFO,"File-name to exec was set to %s",LS(this_worker->exec));
+        if(this_worker->params[0]!=NULL)
+            free(this_worker->params[0]);
+        this_worker->params[0]=(char*)safe_alloc(len+1,1);
+        this_worker->params[0][len]='\0';
+        strncpy(this_worker->params[0],exec,len);
+        log_message(logger,LOG_INFO,"File-name to exec was set to %s",LS(this_worker->params[0]));
         worker_unlock(this_worker);
         CMDHDR cmd;
         cmd.cmd_type=1;
@@ -204,20 +201,12 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
     if(len>0 && param!=NULL)
     {
         worker_lock(this_worker);
-        if(this_worker->params_count==0)
-        {
-            this_worker->params=(char**)safe_alloc(2,sizeof(char*));
-            this_worker->params_count=1;
-        }
-        else
-        {
-            char** tmp=(char**)safe_alloc(this_worker->params_count+2,sizeof(char*));
-            for(uint32_t i;i<this_worker->params_count;++i)
-                tmp[i]=this_worker->params[i];
-            this_worker->params_count+=1;
-            free(this_worker->params);
-            this_worker->params=tmp;
-        }
+        char** tmp=(char**)safe_alloc(this_worker->params_count+2,sizeof(char*));
+        for(uint32_t i;i<this_worker->params_count;++i)
+            tmp[i]=this_worker->params[i];
+        this_worker->params_count+=1;
+        free(this_worker->params);
+        this_worker->params=tmp;
         uint32_t cur=this_worker->params_count-1;
         this_worker->params[cur]=(char*)safe_alloc(len+1,1);
         this_worker->params[cur][len]='\0';
@@ -261,11 +250,11 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
     uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
 
     worker_lock(this_worker);
-    char* exec=this_worker->exec;
     char** params=this_worker->params;
+    uint32_t params_count=this_worker->params_count;
     worker_unlock(this_worker);
     uint8_t ec=0;
-    if(exec==NULL)
+    if(params[0]==NULL || params_count<1)
     {
         log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
         operation_error(fdo,key,tmpbuf,105);
@@ -477,6 +466,10 @@ WorkerDef worker_launch(const char* ctldir, const char* channel, uint32_t key)
     worker->ctldir[ctl]='\0';
     strcpy(worker->ctldir,ctldir);
     worker->child_workers=dict_init();
+    worker->params=(char**)safe_alloc(2,sizeof(char*));
+    worker->params_count=1;
+    worker->params[0]=NULL;
+    worker->params[1]=NULL;
     int ec=pthread_create(&(worker->thread),NULL,worker_thread,worker);
     worker_unlock(worker);
     if(ec!=0)
