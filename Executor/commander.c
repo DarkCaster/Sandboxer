@@ -78,20 +78,20 @@ static uint8_t operation_0(int fdi, int fdo, uint32_t seed)
 }
 
 //opcode 1 - set executable name
-static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
+static uint8_t operation_1_2(int fdi, int fdo, uint8_t op, uint32_t seed, char* param)
 {
     uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
     uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
     cmdbuf[DATABUFSZ-1]='\0';
     CMDHDR cmd;
-    cmd.cmd_type=1;
+    cmd.cmd_type=op;
     cmdhdr_write(cmdbuf,0,cmd);
     //append executable name
     int32_t cmdlen=(int32_t)CMDHDRSZ;
-    if(exec!=NULL)
+    if(param!=NULL)
     {
-        strcpy((char*)(cmdbuf+cmdlen),exec);
-        cmdlen+=(int32_t)strlen(exec);
+        strcpy((char*)(cmdbuf+cmdlen),param);
+        cmdlen+=(int32_t)strlen(param);
     }
     log_message(logger,LOG_INFO,"Sending request");
     uint8_t ec=message_send(fdo,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
@@ -119,9 +119,9 @@ static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
         return 1;
     }
     CMDHDR rcmd=cmdhdr_read(cmdbuf,0);
-    if(rcmd.cmd_type!=1)
+    if(rcmd.cmd_type!=op)
     {
-        log_message(logger,LOG_ERROR,"Executor module reports error while setting exec-name!");
+        log_message(logger,LOG_ERROR,"Executor module reports error while setting exec-name/exec-param!");
         free(tmpbuff);
         free(cmdbuf);
         return 2;
@@ -129,6 +129,16 @@ static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
     free(cmdbuf);
     free(tmpbuff);
     return 0;
+}
+
+static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
+{
+    return operation_1_2(fdi,fdo,1u,seed,exec);
+}
+
+static uint8_t operation_2(int fdi, int fdo, uint32_t seed, char* param)
+{
+    return operation_1_2(fdi,fdo,2u,seed,param);
 }
 
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
@@ -253,6 +263,9 @@ int main(int argc, char* argv[])
         break;
     case 1:
         err=operation_1(fdi,fdo,seed,op_param);
+        break;
+    case 2:
+        err=operation_2(fdi,fdo,seed,op_param);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));

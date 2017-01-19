@@ -164,6 +164,51 @@ static uint8_t operation_1(int fdo, Worker* this_worker, uint32_t key, char* exe
     return 0;
 }
 
+static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* param, size_t len)
+{
+    uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    uint8_t cmdbuf[CMDHDRSZ];
+    if(len>0 && param!=NULL)
+    {
+        worker_lock(this_worker);
+        if(this_worker->params_count==0)
+        {
+            this_worker->params=(char**)safe_alloc(1,sizeof(char*));
+            this_worker->params_count=1;
+        }
+        else
+        {
+            char** tmp=(char**)safe_alloc(this_worker->params_count+1,sizeof(char*));
+            for(uint32_t i;i<this_worker->params_count;++i)
+                tmp[i]=this_worker->params[i];
+            this_worker->params_count+=1;
+            free(this_worker->params);
+            this_worker->params=tmp;
+        }
+        uint32_t cur=this_worker->params_count-1;
+        this_worker->params[cur]=(char*)safe_alloc(len+1,1);
+        this_worker->params[cur][len]='\0';
+        strncpy(this_worker->params[cur],param,len);
+        log_message(logger,LOG_INFO,"Added exec param %s, total params count %i",LS(this_worker->params[cur]),LI(this_worker->params_count));
+        worker_unlock(this_worker);
+        CMDHDR cmd;
+        cmd.cmd_type=2;
+        cmdhdr_write(cmdbuf,0,cmd);
+    }
+    else
+    {
+        CMDHDR cmd;
+        cmd.cmd_type=255;
+        cmdhdr_write(cmdbuf,0,cmd);
+    }
+    //send back new pipe basename
+    int ec=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        log_message(logger,LOG_ERROR,"Failed to send response with operation completion result");
+    free(tmpbuf);
+    return 0;
+}
+
 static void * worker_thread (void* param)
 {
     Worker* worker=(Worker*)param;
@@ -239,6 +284,9 @@ static void * worker_thread (void* param)
                 break;
             case 1:
                 err=operation_1(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
+                break;
+            case 2:
+                err=operation_2(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
