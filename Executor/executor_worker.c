@@ -72,10 +72,14 @@ static void worker_deinit(Worker* worker)
     if(worker->exec!=NULL)
         free(worker->exec);
 
-    if(worker->params_count>0)
+    if(worker->params!=NULL)
     {
-        for(uint32_t i=0;i<worker->params_count;++i)
-            free(worker->params[i]);
+        int pos=0;
+        while(worker->params[pos]!=NULL)
+        {
+            free(worker->params[pos]);
+            ++pos;
+        }
         free(worker->params);
     }
 
@@ -164,6 +168,8 @@ static uint8_t operation_1(int fdo, Worker* this_worker, uint32_t key, char* exe
     return 0;
 }
 
+
+
 static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* param, size_t len)
 {
     uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
@@ -173,12 +179,12 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
         worker_lock(this_worker);
         if(this_worker->params_count==0)
         {
-            this_worker->params=(char**)safe_alloc(1,sizeof(char*));
+            this_worker->params=(char**)safe_alloc(2,sizeof(char*));
             this_worker->params_count=1;
         }
         else
         {
-            char** tmp=(char**)safe_alloc(this_worker->params_count+1,sizeof(char*));
+            char** tmp=(char**)safe_alloc(this_worker->params_count+2,sizeof(char*));
             for(uint32_t i;i<this_worker->params_count;++i)
                 tmp[i]=this_worker->params[i];
             this_worker->params_count+=1;
@@ -190,6 +196,8 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
         this_worker->params[cur][len]='\0';
         strncpy(this_worker->params[cur],param,len);
         log_message(logger,LOG_INFO,"Added exec param %s, total params count %i",LS(this_worker->params[cur]),LI(this_worker->params_count));
+        //add null-pointer to the end of the list
+        this_worker->params[this_worker->params_count]=NULL;
         worker_unlock(this_worker);
         CMDHDR cmd;
         cmd.cmd_type=2;
