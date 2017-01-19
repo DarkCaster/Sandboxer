@@ -131,11 +131,11 @@ static uint8_t operation_0(int fdo, Worker* this_worker, const char* ctldir, uin
         worker_unlock(this_worker);
     }
     //send back new pipe basename
-    int ec=message_send(fdo,tmpbuf,(uint8_t*)chn,0,len,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
+    uint8_t ec=message_send(fdo,tmpbuf,(uint8_t*)chn,0,len,key,REQ_TIMEOUT_MS);
+    if(ec!=0 && ec!=255)
         log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
     free(tmpbuf);
-    return 0;
+    return ec;
 }
 
 static uint8_t operation_1(int fdo, Worker* this_worker, uint32_t key, char* exec, size_t len)
@@ -161,11 +161,11 @@ static uint8_t operation_1(int fdo, Worker* this_worker, uint32_t key, char* exe
         cmdhdr_write(cmdbuf,0,cmd);
     }
     //send back new pipe basename
-    int ec=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
+    uint8_t ec=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    if(ec!=0 && ec!=255)
         log_message(logger,LOG_ERROR,"Failed to send response with operation completion result");
     free(tmpbuf);
-    return 0;
+    return ec;
 }
 
 
@@ -210,7 +210,7 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
         cmdhdr_write(cmdbuf,0,cmd);
     }
     //send back new pipe basename
-    int ec=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
     if(ec!=0)
         log_message(logger,LOG_ERROR,"Failed to send response with operation completion result");
     free(tmpbuf);
@@ -302,7 +302,8 @@ static void * worker_thread (void* param)
             }
             if(err!=0)
             {
-               log_message(logger,LOG_ERROR,"Operation %i was failed",LI(cmdhdr.cmd_type));
+               if(err!=255)
+                   log_message(logger,LOG_ERROR,"Operation %i was failed",LI(cmdhdr.cmd_type));
                shutdown=1;
                break;
             }
