@@ -1,3 +1,6 @@
+//TODO: convert to feature macros.
+#define _GNU_SOURCE
+
 #include "helper_macro.h"
 #include "executor_worker.h"
 #include "comm_helper.h"
@@ -274,7 +277,7 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
     int stdout_pipe[2];
     int stderr_pipe[2];
 
-    if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0)
+    if ( pipe2(stdout_pipe,O_NONBLOCK)!=0 || pipe2(stderr_pipe,O_NONBLOCK)!=0 )
     {
         log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
         operation_error(fdo,key,tmpbuf,110);
@@ -283,7 +286,10 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
         return 110;
     }
 
+    worker_lock_fork();
     pid_t pid = fork();
+    worker_unlock_fork();
+
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
