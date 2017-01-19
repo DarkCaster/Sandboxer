@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <pthread.h>
+#include <errno.h>
 #include <sys/time.h>
 
 struct strWorker
@@ -26,6 +27,29 @@ struct strWorker
     uint32_t params_count;
     pthread_t thread;
 };
+
+static pthread_mutex_t fork_lock;
+
+void worker_init_fork_lock(void)
+{
+    pthread_mutex_init(&fork_lock,NULL);
+}
+
+void worker_deinit_fork_lock(void)
+{
+    pthread_mutex_unlock(&fork_lock);
+    pthread_mutex_destroy(&fork_lock);
+}
+
+static void worker_lock_fork(void)
+{
+    pthread_mutex_lock(&fork_lock);
+}
+
+static void worker_unlock_fork(void)
+{
+    pthread_mutex_unlock(&fork_lock);
+}
 
 #define Worker struct strWorker
 
@@ -215,6 +239,78 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
         log_message(logger,LOG_ERROR,"Failed to send response with operation completion result");
     free(tmpbuf);
     return 0;
+}
+
+static void operation_error(int fdo, uint32_t key, uint8_t* tmpbuf, uint8_t ec)
+{
+    uint8_t cmdbuf[CMDHDRSZ];
+    CMDHDR cmd;
+    cmd.cmd_type=ec;
+    cmdhdr_write(cmdbuf,0,cmd);
+    uint8_t ec2=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    if(ec2!=0)
+       log_message(logger,LOG_ERROR,"Failed to send response with operation result");
+}
+
+static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
+{
+    uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
+
+    worker_lock(this_worker);
+    char* exec=this_worker->exec;
+    char** params=this_worker->params;
+    worker_unlock(this_worker);
+    uint8_t ec=0;
+    if(exec==NULL)
+    {
+        log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
+        operation_error(fdo,key,tmpbuf,105);
+        free(tmpbuf);
+        free(cmdbuf);
+        return ec;
+    }
+
+    int stdout_pipe[2];
+    int stderr_pipe[2];
+
+    if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
+        operation_error(fdo,key,tmpbuf,110);
+        free(tmpbuf);
+        free(cmdbuf);
+        return 110;
+    }
+
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        log_message(logger,LOG_ERROR,"Failed to perform fork");
+        operation_error(fdo,key,tmpbuf,120);
+        free(tmpbuf);
+        free(cmdbuf);
+        return 120;
+    }
+
+    if(pid==0)
+    {
+        //TODO: also add stdin redirection.
+        while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+        close(stdout_pipe[1]);
+        close(stdout_pipe[0]);
+        while((dup2(stderr_pipe[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
+        close(stderr_pipe[1]);
+        close(stderr_pipe[0]);
+
+        exit(1);
+    }
+
+
+
+    free(tmpbuf);
+    free(cmdbuf);
+    return ec;
 }
 
 static void * worker_thread (void* param)

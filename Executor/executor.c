@@ -23,6 +23,7 @@ static void teardown(int code)
         log_message(logger,msg_type,"Performing teardown with exit code %i",LI(code));
         log_deinit(logger);
     }
+    worker_deinit_fork_lock();
     exit(code);
 }
 
@@ -46,10 +47,11 @@ int main(int argc, char* argv[])
     log_setlevel(logger,LOG_INFO);
     log_stdout(logger,1u);
     log_headline(logger,"Executor startup");
-    log_message(logger,LOG_INFO,"Parsing startup params");
 
     worker_set_logger(logger);
+    worker_init_fork_lock();
 
+    log_message(logger,LOG_INFO,"Parsing startup params");
     if(argc<4)
     {
         log_message(logger,LOG_ERROR,"<control-dir> or <channel-name> or <security-key> parameters missing");

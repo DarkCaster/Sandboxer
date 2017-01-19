@@ -18,6 +18,10 @@ WorkerDef worker_launch(const char* ctldir, const char* channel, uint32_t key);
 //may block. will also recursively shutdown all subworkers
 void worker_shutdown(const WorkerDef _worker);
 
+
+void worker_init_fork_lock(void);
+void worker_deinit_fork_lock(void);
+
 #ifdef __cplusplus
 }
 #endif
