@@ -1,6 +1,3 @@
-//TODO: convert to feature macros.
-#define _GNU_SOURCE
-
 #include "helper_macro.h"
 #include "executor_worker.h"
 #include "comm_helper.h"

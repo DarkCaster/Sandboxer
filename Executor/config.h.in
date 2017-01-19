@@ -14,6 +14,7 @@
 #cmakedefine HAVE_FNCTL_H
 #cmakedefine HAVE_POLL_H
 #cmakedefine HAVE_SYSTIME_H
+#cmakedefine HAVE_ERRNO_H
 
 #define LOG_FILENAMESZ 4095
 #define LOG_OUTBUFSZ 4095
