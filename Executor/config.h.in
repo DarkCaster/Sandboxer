@@ -20,5 +20,6 @@
 #define LOG_OUTBUFSZ 4095
 #define DATABUFSZ 65536
 #define REQ_TIMEOUT_MS 10000
+#define WORKER_REACT_TIME_MS 250
 
 #endif
