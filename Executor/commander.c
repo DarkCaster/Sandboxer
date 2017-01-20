@@ -404,7 +404,7 @@ int main(int argc, char* argv[])
     case 2:
         err=operation_2(fdi,fdo,seed,op_param);
         break;
-    case 3:
+    case 100:
         err=operation_100(fdi,fdo,seed);
         break;
     default:
