@@ -1,6 +1,7 @@
 #include "helper_macro.h"
 #include "executor_worker.h"
 #include "comm_helper.h"
+#include "message.h"
 #include "cmd_defs.h"
 #include "logger.h"
 #include "dictionary.h"
@@ -231,7 +232,7 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
     return 0;
 }
 
-static void operation_status(int fdo, uint32_t key, uint8_t* tmpbuf, uint8_t ec)
+static uint8_t operation_status(int fdo, uint32_t key, uint8_t* tmpbuf, uint8_t ec)
 {
     uint8_t cmdbuf[CMDHDRSZ];
     CMDHDR cmd;
@@ -240,6 +241,7 @@ static void operation_status(int fdo, uint32_t key, uint8_t* tmpbuf, uint8_t ec)
     uint8_t ec2=message_send(fdo,tmpbuf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
     if(ec2!=0)
        log_message(logger,LOG_ERROR,"Failed to send response with operation result");
+    return ec2;
 }
 
 //0-dead,1-alive
@@ -259,7 +261,7 @@ static uint8_t pid_is_alive(const char* cmd_path, const char* exec)
     return 1;
 }
 
-static uint8_t operation_100_101(int fdo, Worker* this_worker, uint32_t key, uint8_t comm_detached)
+static uint8_t operation_100_101(int fdi, int fdo, Worker* this_worker, uint32_t key, uint8_t comm_detached)
 {
     uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
 
@@ -321,6 +323,9 @@ static uint8_t operation_100_101(int fdo, Worker* this_worker, uint32_t key, uin
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
 
     //send response for child startup
+    uint8_t comm_alive=comm_detached?0:1;
+    if(operation_status(fdo,key,tmpbuf,(uint8_t)(100+comm_detached))!=0)
+        comm_alive=0;
 
     //TODO: read from stdout\stderr and push it downstream, while child is alive or commander part is listening
     //if commander part is disconnected, continue to dispose incoming data while child is alive
@@ -329,18 +334,100 @@ static uint8_t operation_100_101(int fdo, Worker* this_worker, uint32_t key, uin
     sprintf(cmd_path,"/proc/%d/cmdline",(uint32_t)pid);
     uint8_t pid_alive=1;
     uint8_t data_present=1;
-    uint8_t comm_alive=1;
+    int32_t in_len=0;
+    uint8_t* in_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
+    uint8_t* out_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
+    uint8_t* err_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
+    const size_t data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
     while(pid_alive || data_present)
     {
         data_present=1;
+        in_len=0;
+
         //check pid is alive
         if(pid_alive)
             pid_alive &= pid_is_alive(cmd_path,params[0]);
+
         //read input from commander
-        //read stdout and stderr from child
+        if(comm_alive)
+        {
+            if(message_read(fdi,tmpbuf,in_buf,0,&in_len,key,REQ_TIMEOUT_MS)!=0)
+            {
+                log_message(logger,LOG_WARNING,"Commander goes offline, disposing all stdout and stderr from child process");
+                comm_alive=0;
+            }
+            else
+            {
+                CMDHDR cmd;
+                cmd=cmdhdr_read(in_buf,0);
+                //TODO: child termination
+                if(cmd.cmd_type!=100)
+                {
+                    comm_alive=0;
+                }
+                else
+                {
+                    in_len-=(int32_t)CMDHDRSZ;
+                    if(in_len<0)
+                    {
+                        log_message(logger,LOG_WARNING,"Incorrect input data was received, disconnecting commander.");
+                        comm_alive=0;
+                    }
+                }
+            }
+        }
+
+        //read stdout  from child
+        ssize_t out_count = read(stdout_pipe[0],(void*)(out_buf+CMDHDRSZ),data_req);
+        if (out_count == -1)
+        {
+            if (errno != EINTR)
+                log_message(logger,LOG_ERROR,"Error while reading stdout from child process %s",LS(params[0]));
+            out_count=0;
+            data_present=0;
+        }
+
+        //and stderr
+        ssize_t err_count = read(stderr_pipe[0],(void*)(err_buf+CMDHDRSZ),data_req);
+        if (err_count == -1)
+        {
+            if (errno != EINTR)
+                log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s",LS(params[0]));
+            err_count=0;
+            data_present=0;
+        }
+
+        //check if there some data left to read
+        if((out_count<(ssize_t)data_req && err_count<(ssize_t)data_req)||(out_count==0&&err_count==0))
+            data_present=0;
+
         //send output down to commander
+        if(comm_alive)
+        {
+            CMDHDR cmd;
+            cmd.cmd_type=100;
+
+            cmdhdr_write(out_buf,0,cmd);
+            int32_t olen=(int32_t)out_count+(int32_t)CMDHDRSZ;
+            uint8_t ec=message_send(fdo,tmpbuf,out_buf,0,olen,key,REQ_TIMEOUT_MS);
+            if(ec!=0)
+                log_message(logger,LOG_WARNING,"Commander goes offline while sending child stdout, disconnecting commander.");
+
+            cmdhdr_write(err_buf,0,cmd);
+            int32_t elen=(int32_t)err_count+(int32_t)CMDHDRSZ;
+            ec=message_send(fdo,tmpbuf,err_buf,0,elen,key,REQ_TIMEOUT_MS);
+            if(ec!=0)
+                log_message(logger,LOG_WARNING,"Commander goes offline while sending child stderr, disconnecting commander.");
+        }
         //TODO: send input from commander to stdio of child
+        //Wait a little, if data_present==0
+        if(data_present==0)
+            usleep(WORKER_REACT_TIME_MS*1000);
     }
+
+    free(in_buf);
+    free(out_buf);
+    free(err_buf);
 
     if(close(stdout_pipe[0])!=0)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
@@ -431,9 +518,9 @@ static void * worker_thread (void* param)
                 err=operation_2(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 100:
-                err=operation_100_101(fdo,worker,seed,0);
+                err=operation_100_101(fdi,fdo,worker,seed,0);
             case 101:
-                err=operation_100_101(fdo,worker,seed,1);
+                err=operation_100_101(fdi,fdo,worker,seed,1);
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
                 break;
