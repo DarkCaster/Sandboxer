@@ -157,14 +157,15 @@ int main(int argc, char* argv[])
     sigfillset(&set);
     sigprocmask(SIG_BLOCK,&set,NULL);
 
+    WorkerDef main_worker=worker_launch(ctldir,channel,seed);
+    if(main_worker==NULL)
+    {
+        log_message(logger,LOG_ERROR,"Failed to start main worker for %s channel",LS(channel));
+        teardown(22);
+    }
+
     while(1)
     {
-        WorkerDef main_worker=worker_launch(ctldir,channel,seed);
-        if(main_worker==NULL)
-        {
-            log_message(logger,LOG_ERROR,"Failed to start main worker for %s channel",LS(channel));
-            teardown(22);
-        }
         int sig;
         sigwait(&set,&sig);
         log_message(logger,LOG_INFO,"Received signal %i",LI(sig));
