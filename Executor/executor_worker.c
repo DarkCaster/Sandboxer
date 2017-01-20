@@ -201,7 +201,7 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
     {
         worker_lock(this_worker);
         char** tmp=(char**)safe_alloc(this_worker->params_count+2,sizeof(char*));
-        for(uint32_t i;i<this_worker->params_count;++i)
+        for(uint32_t i=0;i<this_worker->params_count;++i)
             tmp[i]=this_worker->params[i];
         this_worker->params_count+=1;
         free(this_worker->params);
@@ -519,8 +519,10 @@ static void * worker_thread (void* param)
                 break;
             case 100:
                 err=operation_100_101(fdi,fdo,worker,seed,0);
+                break;
             case 101:
                 err=operation_100_101(fdi,fdo,worker,seed,1);
+                break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
                 break;
