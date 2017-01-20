@@ -231,7 +231,7 @@ static uint8_t operation_2(int fdo, Worker* this_worker, uint32_t key, char* par
     return 0;
 }
 
-static void operation_error(int fdo, uint32_t key, uint8_t* tmpbuf, uint8_t ec)
+static void operation_status(int fdo, uint32_t key, uint8_t* tmpbuf, uint8_t ec)
 {
     uint8_t cmdbuf[CMDHDRSZ];
     CMDHDR cmd;
@@ -259,10 +259,9 @@ static uint8_t pid_is_alive(const char* cmd_path, const char* exec)
     return 1;
 }
 
-static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
+static uint8_t operation_100_101(int fdo, Worker* this_worker, uint32_t key, uint8_t comm_detached)
 {
     uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
 
     worker_lock(this_worker);
     char** params=this_worker->params;
@@ -272,9 +271,8 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
     if(params[0]==NULL || params_count<1)
     {
         log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
-        operation_error(fdo,key,tmpbuf,105);
+        operation_status(fdo,key,tmpbuf,105);
         free(tmpbuf);
-        free(cmdbuf);
         return 105;
     }
 
@@ -285,9 +283,8 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
     if ( pipe2(stdout_pipe,O_NONBLOCK)!=0 || pipe2(stderr_pipe,O_NONBLOCK)!=0 )
     {
         log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
-        operation_error(fdo,key,tmpbuf,110);
+        operation_status(fdo,key,tmpbuf,110);
         free(tmpbuf);
-        free(cmdbuf);
         return 110;
     }
 
@@ -300,9 +297,8 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
-        operation_error(fdo,key,tmpbuf,120);
+        operation_status(fdo,key,tmpbuf,120);
         free(tmpbuf);
-        free(cmdbuf);
         return 120;
     }
 
@@ -323,6 +319,8 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
     if(close(stderr_pipe[1])!=0)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
+
+    //send response for child startup
 
     //TODO: read from stdout\stderr and push it downstream, while child is alive or commander part is listening
     //if commander part is disconnected, continue to dispose incoming data while child is alive
@@ -350,7 +348,6 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
 
     free(tmpbuf);
-    free(cmdbuf);
     return 255;
 }
 
@@ -434,7 +431,9 @@ static void * worker_thread (void* param)
                 err=operation_2(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 100:
-                err=operation_100(fdo,worker,seed);
+                err=operation_100_101(fdo,worker,seed,0);
+            case 101:
+                err=operation_100_101(fdo,worker,seed,1);
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
                 break;
