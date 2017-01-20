@@ -47,6 +47,27 @@ uint8_t message_send(int fd, uint8_t* const tmpbuf, const uint8_t* cmdbuf, int32
     return 0;
 }
 
+uint8_t message_send_2(int fd, uint8_t* const tmpbuf, const uint8_t* cmdbuf, int32_t offset, int32_t len, uint32_t seed, int* time_limit)
+{
+    int32_t sndlen=msg_encode(tmpbuf,0,cmdbuf,offset,len,seed);
+    if(sndlen<0)
+        return 1;
+    int op_time=fd_wait(fd,*time_limit,POLLOUT);
+    if(op_time<0)
+        return 2; //Error
+    if(shutdown)
+        return 255;
+    *time_limit-=op_time;
+    if(*time_limit<=0)
+    {
+        *time_limit=0;
+        return 3;
+    }
+    if(write(fd,tmpbuf,(size_t)sndlen)!=(ssize_t)sndlen)
+        return 4;
+    return 0;
+}
+
 uint8_t message_read_header(int fd, uint8_t* const tmpbuf, int* time_limit)
 {
     //wait for msg_header
@@ -102,6 +123,17 @@ uint8_t message_read(int fd, uint8_t* const tmpbuf, uint8_t* cmdbuf, int32_t off
     if(ec!=0)
         return ec;
     ec=message_read_and_transform_payload(fd,tmpbuf,cmdbuf,offset,len,seed,&timeout);
+    if(ec!=0)
+        return ec;
+    return 0;
+}
+
+uint8_t message_read_2(int fd, uint8_t* const tmpbuf, uint8_t* cmdbuf, int32_t offset, int32_t* len, uint32_t seed, int* time_limit)
+{
+    uint8_t ec=message_read_header(fd,tmpbuf,time_limit);
+    if(ec!=0)
+        return ec;
+    ec=message_read_and_transform_payload(fd,tmpbuf,cmdbuf,offset,len,seed,time_limit);
     if(ec!=0)
         return ec;
     return 0;
