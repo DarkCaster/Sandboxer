@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 struct strWorker
 {
@@ -241,6 +242,23 @@ static void operation_error(int fdo, uint32_t key, uint8_t* tmpbuf, uint8_t ec)
        log_message(logger,LOG_ERROR,"Failed to send response with operation result");
 }
 
+//0-dead,1-alive
+static uint8_t pid_is_alive(const char* cmd_path, const char* exec)
+{
+    int fd=open(cmd_path,O_RDONLY|O_NONBLOCK);
+    if(fd<0)
+        return 0;
+    size_t elen=strlen(exec);
+    char test[elen];
+    ssize_t rlen=read(fd,test,elen);
+    close(fd);
+    if(rlen!=(ssize_t)elen)
+        return 0;
+    if(strncmp(exec,test,elen)!=0)
+        return 0;
+    return 1;
+}
+
 static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
 {
     uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
@@ -250,16 +268,17 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
     char** params=this_worker->params;
     uint32_t params_count=this_worker->params_count;
     worker_unlock(this_worker);
-    uint8_t ec=0;
+
     if(params[0]==NULL || params_count<1)
     {
         log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
         operation_error(fdo,key,tmpbuf,105);
         free(tmpbuf);
         free(cmdbuf);
-        return ec;
+        return 105;
     }
 
+    //size_t exec_len=strlen(params[0]);
     int stdout_pipe[2];
     int stderr_pipe[2];
 
@@ -271,6 +290,8 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
         free(cmdbuf);
         return 110;
     }
+
+    log_message(logger,LOG_INFO,"Starting new process %s",LS(params[0]));
 
     worker_lock_fork();
     pid_t pid = fork();
@@ -294,15 +315,43 @@ static uint8_t operation_100(int fdo, Worker* this_worker, uint32_t key)
         while((dup2(stderr_pipe[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
         close(stderr_pipe[1]);
         close(stderr_pipe[0]);
-
+        execv(params[0],params);
         exit(1);
     }
 
+    if(close(stdout_pipe[1])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
+    if(close(stderr_pipe[1])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
 
+    //TODO: read from stdout\stderr and push it downstream, while child is alive or commander part is listening
+    //if commander part is disconnected, continue to dispose incoming data while child is alive
+    log_message(logger,LOG_INFO,"Worker for process %s now entering control loop",LS(params[0]));
+    char cmd_path[256];
+    sprintf(cmd_path,"/proc/%d/cmdline",(uint32_t)pid);
+    uint8_t pid_alive=1;
+    uint8_t data_present=1;
+    uint8_t comm_alive=1;
+    while(pid_alive || data_present)
+    {
+        data_present=1;
+        //check pid is alive
+        if(pid_alive)
+            pid_alive &= pid_is_alive(cmd_path,params[0]);
+        //read input from commander
+        //read stdout and stderr from child
+        //send output down to commander
+        //TODO: send input from commander to stdio of child
+    }
+
+    if(close(stdout_pipe[0])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
+    if(close(stderr_pipe[0])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
 
     free(tmpbuf);
     free(cmdbuf);
-    return ec;
+    return 255;
 }
 
 static void * worker_thread (void* param)
@@ -384,6 +433,8 @@ static void * worker_thread (void* param)
             case 2:
                 err=operation_2(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
+            case 100:
+                err=operation_100(fdo,worker,seed);
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
                 break;
