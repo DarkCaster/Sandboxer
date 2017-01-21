@@ -28,6 +28,8 @@ static uint32_t key;
 static char* ctldir;
 static char* channel;
 static char* self;
+static int fdi;
+static int fdo;
 
 //params to start child
 static char** params;
@@ -44,6 +46,8 @@ static volatile uint8_t shutdown;
 //prototypes
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
+static uint8_t operation_status(uint8_t ec);
+static uint8_t operation_0(void);
 
 static void show_usage(void)
 {
@@ -121,8 +125,8 @@ int main(int argc, char* argv[])
     params[0]=NULL;
     params[1]=NULL;
 
-    int fdi=open(filename_in,O_RDWR);
-    int fdo=open(filename_out,O_RDWR);
+    fdi=open(filename_in,O_RDWR);
+    fdo=open(filename_out,O_RDWR);
 
     if(fdi<0||fdo<0)
     {
@@ -178,10 +182,10 @@ int main(int argc, char* argv[])
             uint8_t err;
             switch(cmdhdr.cmd_type)
             {
-            /*case 0:
-                err=operation_0(fdo,worker,ctldir,seed);
+            case 0:
+                err=operation_0();
                 break;
-            case 1:
+            /*case 1:
                 err=operation_1(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 2:
@@ -201,7 +205,10 @@ int main(int argc, char* argv[])
             if(err!=0)
             {
                if(err!=255)
-                   log_message(logger,LOG_ERROR,"Operation %i was failed",LI(cmdhdr.cmd_type));
+               {
+                   log_message(logger,LOG_ERROR,"Operation %i was failed with ec %i",LI(cmdhdr.cmd_type),LI(err));
+                   operation_status(err);
+               }
                shutdown=1;
                break;
             }
@@ -253,4 +260,54 @@ static uint8_t arg_is_numeric(const char* arg)
         if(!isdigit((int)arg[i]))
             return 0;
     return 1;
+}
+
+static unsigned long long current_timestamp(void)
+{
+    struct timeval te;
+    gettimeofday(&te, NULL);
+    return (unsigned long long)(te.tv_sec*1000LL + te.tv_usec/1000);
+}
+
+static uint8_t operation_status(uint8_t ec)
+{
+    uint8_t cmdbuf[CMDHDRSZ];
+    CMDHDR cmd;
+    cmd.cmd_type=ec;
+    cmdhdr_write(cmdbuf,0,cmd);
+    uint8_t ec2=message_send(fdo,tmp_buf,cmdbuf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    if(ec2!=0)
+       log_message(logger,LOG_ERROR,"Failed to send response with operation result");
+    return ec2;
+}
+
+static uint8_t spawn_slave(const char* new_channel)
+{
+    return 255;
+}
+
+static uint8_t operation_0(void)
+{
+    char chn[256];
+    sprintf(chn,"%04llx", current_timestamp());
+    uint8_t ec=spawn_slave(chn);
+    if(ec!=0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to spawn slave executor for channel %s",LI(chn));
+        return 1;
+    }
+    //TODO: ping
+
+    //send response
+    CMDHDR response;
+    response.cmd_type=0;
+    cmdhdr_write(data_buf,0,response);
+    size_t data_len=strnlen(chn,256);
+    strncpy((char*)(data_buf+CMDHDRSZ),chn,data_len);
+    data_len+=CMDHDRSZ;
+
+    ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)data_len,key,REQ_TIMEOUT_MS);
+    if(ec!=0 && ec!=255)
+        log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
+    return ec;
 }
