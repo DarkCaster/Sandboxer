@@ -135,7 +135,12 @@ set_property(TARGET test.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
 target_link_libraries(test.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
 
 #executor util, static
-add_executable(executor.bin${ARCHSUFFIX} helper_macro.h cmd_defs.h comm_helper.c dictionary.c hash.c message.c logger.c executor_worker.c executor.c)
+add_executable(old_executor.bin${ARCHSUFFIX} helper_macro.h cmd_defs.h comm_helper.c dictionary.c hash.c message.c logger.c executor_worker.c executor.c)
+set_property(TARGET old_executor.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
+target_link_libraries(old_executor.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
+
+#new executor util, static
+add_executable(executor.bin${ARCHSUFFIX} helper_macro.h cmd_defs.h comm_helper.c hash.c message.c logger.c new_executor.c)
 set_property(TARGET executor.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS "-static")
 target_link_libraries(executor.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
 
