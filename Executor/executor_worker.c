@@ -314,6 +314,7 @@ static uint8_t operation_100_101(int fdi, int fdo, Worker* this_worker, uint32_t
         close(stderr_pipe[1]);
         close(stderr_pipe[0]);
         execv(params[0],params);
+        perror("execv failed!");
         exit(1);
     }
 
@@ -334,6 +335,8 @@ static uint8_t operation_100_101(int fdi, int fdo, Worker* this_worker, uint32_t
     sprintf(cmd_path,"/proc/%d/cmdline",(uint32_t)pid);
     uint8_t pid_alive=1;
     uint8_t data_present=1;
+    uint32_t skip_o_read=0;
+    uint32_t skip_e_read=0;
     int32_t in_len=0;
     uint8_t* in_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
     uint8_t* out_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
@@ -377,28 +380,40 @@ static uint8_t operation_100_101(int fdi, int fdo, Worker* this_worker, uint32_t
             }
         }
 
-        //read stdout  from child
+        //read stdout from child
         ssize_t out_count = read(stdout_pipe[0],(void*)(out_buf+CMDHDRSZ),data_req);
         if (out_count == -1)
         {
-            if (errno != EINTR)
-                log_message(logger,LOG_ERROR,"Error while reading stdout from child process %s",LS(params[0]));
+            int err=errno;
+            if(err != EINTR && err != EAGAIN)
+                log_message(logger,LOG_ERROR,"Error while reading stdout from child process %s, errno=%i",LS(params[0]),LI(err));
             out_count=0;
-            data_present=0;
+            if( (err != EINTR && err != EAGAIN) || skip_o_read>=10)
+                data_present=0;
+            if( err == EINTR || err == EAGAIN )
+                skip_o_read++;
         }
+        else
+            skip_o_read=0;
 
-        //and stderr
+        //and stderr from child
         ssize_t err_count = read(stderr_pipe[0],(void*)(err_buf+CMDHDRSZ),data_req);
         if (err_count == -1)
         {
-            if (errno != EINTR)
-                log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s",LS(params[0]));
+            int err=errno;
+            if(err != EINTR && err != EAGAIN)
+                log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s, errno=%i",LS(params[0]),LI(err));
             err_count=0;
-            data_present=0;
+            if( (err != EINTR && err != EAGAIN) || skip_e_read>=10)
+                data_present=0;
+            if( err == EINTR || err == EAGAIN )
+                skip_e_read++;
         }
+        else
+            skip_e_read=0;
 
         //check if there some data left to read
-        if((out_count<(ssize_t)data_req && err_count<(ssize_t)data_req)||(out_count==0&&err_count==0))
+        if(out_count<(ssize_t)data_req && err_count<(ssize_t)data_req && skip_o_read==0 && skip_e_read==0)
             data_present=0;
 
         //send output down to commander
@@ -424,6 +439,10 @@ static uint8_t operation_100_101(int fdi, int fdo, Worker* this_worker, uint32_t
         if(data_present==0)
             usleep(WORKER_REACT_TIME_MS*1000);
     }
+    log_message(logger,LOG_INFO,"Process %s was finished, control loop complete",LS(params[0]));
+
+    //send info about control loop completion
+    operation_status(fdo,key,tmpbuf,150);
 
     free(in_buf);
     free(out_buf);
