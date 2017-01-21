@@ -294,7 +294,7 @@ static uint8_t operation_0(void)
     if(ec!=0)
     {
         log_message(logger,LOG_ERROR,"Failed to spawn slave executor for channel %s",LI(chn));
-        return 1;
+        return ec;
     }
     //TODO: ping
 
@@ -309,5 +309,5 @@ static uint8_t operation_0(void)
     ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)data_len,key,REQ_TIMEOUT_MS);
     if(ec!=0 && ec!=255)
         log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
-    return ec;
+    return 0;
 }
