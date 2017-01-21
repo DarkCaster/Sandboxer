@@ -25,6 +25,7 @@ static LogDef logger=NULL;
 //config
 static uint8_t mode;
 static uint32_t key;
+static uint8_t log_file_enabled;
 static char* ctldir;
 static char* channel;
 static char* self;
@@ -63,7 +64,7 @@ int main(int argc, char* argv[])
 
     self=argv[0];
     mode=(uint8_t)strtol(argv[1], NULL, 10);
-    uint8_t log_file_enable=(uint8_t)strtol(argv[2], NULL, 10);
+    log_file_enabled=(uint8_t)strtol(argv[2], NULL, 10);
     ctldir=argv[3];
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
@@ -82,7 +83,7 @@ int main(int argc, char* argv[])
     }
 
     size_t chn_len=strnlen(channel,MAXARGLEN);
-    if(log_file_enable)
+    if(log_file_enabled)
     {
         char log_file[chn_len+5];
         strncpy(log_file,channel,chn_len);
@@ -281,9 +282,43 @@ static uint8_t operation_status(uint8_t ec)
     return ec2;
 }
 
-static uint8_t spawn_slave(const char* new_channel)
+static uint8_t spawn_slave(char * new_channel)
 {
-    return 255;
+    if(self==NULL)
+    {
+        log_message(logger,LOG_ERROR,"Self exec not set, cannot re-spawn self");
+        return 1;
+    }
+    //<mode 0-master 1-slave> <logfile 0-disable 1-enable> <control dir> <channel-name> <security key>
+    char skey[256];
+    sprintf(skey,"%d",key);
+    char slave[4];
+    sprintf(slave,"%d",1);
+    char log_en[4];
+    sprintf(slave,"%d",log_file_enabled);
+    char * const self_params[7]=
+    {
+        self,
+        slave,
+        log_en,
+        ctldir,
+        new_channel,
+        skey,
+        NULL
+    };
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        log_message(logger,LOG_ERROR,"Failed to perform fork");
+        return 2;
+    }
+    if(pid==0)
+    {
+        execv(self,self_params);
+        perror("execv failed!");
+        exit(1);
+    }
+    return 0;
 }
 
 static uint8_t operation_0(void)
@@ -296,8 +331,38 @@ static uint8_t operation_0(void)
         log_message(logger,LOG_ERROR,"Failed to spawn slave executor for channel %s",LI(chn));
         return ec;
     }
-    //TODO: ping
-
+    //try to open/close pipe
+    int timeout=REQ_TIMEOUT_MS;
+    char chn_in[255];
+    sprintf(chn_in,"%s.in",chn);
+    char chn_out[255];
+    sprintf(chn_out,"%s.out",chn);
+    while(timeout>0)
+    {
+        int t_fdi=open(chn_in,O_RDWR);
+        int t_fdo=open(chn_out,O_RDWR);
+        if(t_fdi>0 && t_fdo>0)
+        {
+            if((close(t_fdi)|close(t_fdo))!=0)
+            {
+               log_message(logger,LOG_ERROR,"Slave channel test failed! (close)");
+               return 10;
+            }
+            break;
+        }
+        else
+        {
+            close(t_fdi);
+            close(t_fdo);
+        }
+        usleep(WORKER_REACT_TIME_MS*1000);
+        timeout-=WORKER_REACT_TIME_MS;
+    }
+    if(timeout<=0)
+    {
+       log_message(logger,LOG_ERROR,"Slave channel test failed! (timeout)");
+       return 11;
+    }
     //send response
     CMDHDR response;
     response.cmd_type=0;
@@ -305,7 +370,6 @@ static uint8_t operation_0(void)
     size_t data_len=strnlen(chn,256);
     strncpy((char*)(data_buf+CMDHDRSZ),chn,data_len);
     data_len+=CMDHDRSZ;
-
     ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)data_len,key,REQ_TIMEOUT_MS);
     if(ec!=0 && ec!=255)
         log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
