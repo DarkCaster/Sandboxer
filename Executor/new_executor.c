@@ -74,7 +74,9 @@ int main(int argc, char* argv[])
     logger=log_init();
     log_setlevel(logger,LOG_INFO);
     if(mode==0)
-        log_stdout(logger,(uint8_t)(mode!=0?0:1));
+        log_stdout(logger,1);
+    else
+        log_stdout(logger,0);
 
     if(chdir("/")!=0 || chdir(ctldir)!=0)
     {
@@ -83,7 +85,7 @@ int main(int argc, char* argv[])
     }
 
     size_t chn_len=strnlen(channel,MAXARGLEN);
-    if(log_file_enabled)
+    if(log_file_enabled!=0)
     {
         char log_file[chn_len+5];
         strncpy(log_file,channel,chn_len);
@@ -295,7 +297,7 @@ static uint8_t spawn_slave(char * new_channel)
     char slave[4];
     sprintf(slave,"%d",1);
     char log_en[4];
-    sprintf(slave,"%d",log_file_enabled);
+    sprintf(log_en,"%d",log_file_enabled);
     char * const self_params[7]=
     {
         self,
@@ -323,6 +325,11 @@ static uint8_t spawn_slave(char * new_channel)
 
 static uint8_t operation_0(void)
 {
+    if(mode==1)
+    {
+        log_message(logger,LOG_ERROR,"Slave executor for channel %s cannot spawn another slave executor",LI(channel));
+        return 20;
+    }
     char chn[256];
     sprintf(chn,"%04llx", current_timestamp());
     uint8_t ec=spawn_slave(chn);
