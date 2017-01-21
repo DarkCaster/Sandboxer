@@ -49,6 +49,7 @@ static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
+static uint8_t operation_1(char* exec, size_t len);
 
 static void show_usage(void)
 {
@@ -188,10 +189,10 @@ int main(int argc, char* argv[])
             case 0:
                 err=operation_0();
                 break;
-            /*case 1:
-                err=operation_1(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
+            case 1:
+                err=operation_1((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
-            case 2:
+            /*case 2:
                 err=operation_2(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 100:
@@ -381,4 +382,22 @@ static uint8_t operation_0(void)
     if(ec!=0 && ec!=255)
         log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
     return 0;
+}
+
+static uint8_t operation_1(char* exec, size_t len)
+{
+    uint8_t ec=0;
+    if(len>0 && exec!=NULL)
+    {
+        if(params[0]!=NULL)
+            free(params[0]);
+        params[0]=(char*)safe_alloc(len+1,1);
+        params[0][len]='\0';
+        strncpy(params[0],exec,len);
+        log_message(logger,LOG_INFO,"File-name to exec was set to %s",LS(params[0]));
+        ec=0;
+    }
+    else
+        ec=1;
+    return operation_status(ec);
 }
