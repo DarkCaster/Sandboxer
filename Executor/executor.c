@@ -541,9 +541,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
     uint32_t skip_o_read=0;
     uint32_t skip_e_read=0;
     int32_t in_len=0;
-    /*uint8_t* in_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
-    uint8_t* out_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
-    uint8_t* err_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);*/
+
     const size_t data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
     while(child_is_alive || data_present)
     {
