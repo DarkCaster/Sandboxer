@@ -230,7 +230,8 @@ static uint8_t operation_100(uint8_t* child_ec)
             return 1;
         }
 
-        write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_out_data_len);
+        if(recv_out_data_len>0)
+            write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_out_data_len);
 
         //read stderr, captured by executor module
         int32_t recv_err_data_len=0;
@@ -257,7 +258,8 @@ static uint8_t operation_100(uint8_t* child_ec)
             return 1;
         }
 
-        write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_err_data_len);
+        if(recv_err_data_len>0)
+            write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_err_data_len);
 
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
             usleep((useconds_t)(DATA_WAIT_TIME_MS*1000));
