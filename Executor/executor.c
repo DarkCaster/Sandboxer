@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
             }
             else if(ec!=3 && ec!=255)
             {
-                log_message(logger,LOG_ERROR,"Read error on %s pipe",LS(filename_in));
+                log_message(logger,LOG_ERROR,"Read error on %s pipe (phase 0). ec=%i",LS(filename_in),LI(ec));
                 shutdown=1;
                 break;
             }
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
                 phase=2;
             else if(ec!=3 && ec!=255)
             {
-                log_message(logger,LOG_ERROR,"Read error on %s pipe",LS(filename_out));
+                log_message(logger,LOG_ERROR,"Read error on %s pipe (phase 1). ec=%i",LS(filename_out),LI(ec));
                 shutdown=1;
                 break;
             }
