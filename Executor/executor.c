@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/ioctl.h>
 
 #define MAXARGLEN 4095
 static LogDef logger=NULL;
@@ -492,6 +493,16 @@ static uint8_t operation_2(char* param, size_t len)
         return 1;
 }
 
+static size_t bytes_avail(int fd)
+{
+    int nbytes=0;
+    int ec=ioctl(fd,FIONREAD,&nbytes);
+    if(ec<0)
+        return 0;
+    else
+        return (size_t)nbytes;
+}
+
 static uint8_t operation_100_101(uint8_t comm_detached)
 {
     if(params[0]==NULL || params_count<1)
@@ -501,7 +512,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
     }
     int stdout_pipe[2];
     int stderr_pipe[2];
-    if ( pipe2(stdout_pipe,O_NONBLOCK)!=0 || pipe2(stderr_pipe,O_NONBLOCK)!=0 )
+    if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0 )
     {
         log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
         return 110;
@@ -537,15 +548,13 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         comm_alive=0;
     log_message(logger,LOG_INFO,"Entering child process control loop",LS(params[0]));
 
-    uint8_t data_present=1;
-    uint32_t skip_o_read=0;
-    uint32_t skip_e_read=0;
     int32_t in_len=0;
+    uint8_t o_data_empty=0;
+    uint8_t e_data_empty=0;
+    const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
 
-    const size_t data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
-    while(child_is_alive || data_present)
+    while(child_is_alive || o_data_empty<2 || e_data_empty<2)
     {
-        data_present=1;
         in_len=0;
 
         //read input from commander
@@ -579,20 +588,24 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         }
 
         //read stdout from child
-        ssize_t out_count = read(stdout_pipe[0],(void*)(chld_buf+CMDHDRSZ),data_req);
-        if (out_count == -1)
+        size_t avail=bytes_avail(stdout_pipe[0]);
+        ssize_t out_count=0;
+        if(avail>0)
         {
-            int err=errno;
-            if(err != EINTR && err != EAGAIN)
-                log_message(logger,LOG_ERROR,"Error while reading stdout from child process %s, errno=%i",LS(params[0]),LI(err));
-            out_count=0;
-            if( (err != EINTR && err != EAGAIN) || skip_o_read>=10)
-                data_present=0;
-            if( err == EINTR || err == EAGAIN )
-                skip_o_read++;
+            if(avail>max_data_req)
+                avail=max_data_req;
+            out_count=read(stdout_pipe[0],(void*)(chld_buf+CMDHDRSZ),avail);
+            if(out_count==-1)
+            {
+                int err=errno;
+                if(err!=EINTR)
+                    log_message(logger,LOG_ERROR,"Error while reading stdout from child process %s, errno=%i",LS(params[0]),LI(err));
+                out_count=0;
+            }
+            o_data_empty=0;
         }
         else
-            skip_o_read=0;
+            ++o_data_empty;
 
         if(comm_alive)
         {
@@ -609,24 +622,24 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         }
 
         //and stderr from child
-        ssize_t err_count = read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),data_req);
-        if (err_count == -1)
+        avail=bytes_avail(stderr_pipe[0]);
+        ssize_t err_count=0;
+        if(avail>0)
         {
-            int err=errno;
-            if(err != EINTR && err != EAGAIN)
-                log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s, errno=%i",LS(params[0]),LI(err));
-            err_count=0;
-            if( (err != EINTR && err != EAGAIN) || skip_e_read>=10)
-                data_present=0;
-            if( err == EINTR || err == EAGAIN )
-                skip_e_read++;
+            if(avail>max_data_req)
+                avail=max_data_req;
+            err_count=read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),max_data_req);
+            if(err_count==-1)
+            {
+                int err=errno;
+                if(err!=EINTR)
+                    log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s, errno=%i",LS(params[0]),LI(err));
+                err_count=0;
+            }
+            e_data_empty=0;
         }
         else
-            skip_e_read=0;
-
-        //check if there some data left to read
-        if(out_count<(ssize_t)data_req && err_count<(ssize_t)data_req && skip_o_read==0 && skip_e_read==0)
-            data_present=0;
+            ++e_data_empty;
 
         //send output down to commander
         if(comm_alive)
@@ -643,8 +656,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
             }
         }
         //TODO: send input from commander to stdio of child
-        //Wait a little, if data_present==0
-        if(data_present==0)
+        if( !comm_alive && o_data_empty>0 && e_data_empty>0 )
             usleep(WORKER_REACT_TIME_MS*1000);
     }
     log_message(logger,LOG_INFO,"Process %s was finished, control loop complete",LS(params[0]));
