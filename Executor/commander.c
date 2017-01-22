@@ -40,7 +40,7 @@ static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec);
 static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
-static uint8_t operation_100(void);
+static uint8_t operation_100(uint8_t *child_ec);
 
 /*static size_t bytes_avail(int fd);
 
@@ -147,7 +147,7 @@ static uint8_t operation_2(char* param)
 }
 
 //launch configured binary
-static uint8_t operation_100(void)
+static uint8_t operation_100(uint8_t* child_ec)
 {
     CMDHDR cmd;
     cmd.cmd_type=100;
@@ -196,14 +196,20 @@ static uint8_t operation_100(void)
         if(recv_out_data_len<0)
         {
             log_message(logger,LOG_ERROR,"Corrupted data received from executor");
-            return ec;
+            return 2;
         }
 
         uint8_t rcode=cmdhdr_read(data_buf,0).cmd_type;
-        if(rcode!=100)
+        if(rcode==101)
+        {
+            *child_ec=*(data_buf+CMDHDRSZ);
+            log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec));
+            return 0;
+        }
+        else if(rcode!=100)
         {
             log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
-            return ec;
+            return 1;
         }
 
         write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_out_data_len);
@@ -217,14 +223,20 @@ static uint8_t operation_100(void)
         if(recv_err_data_len<0)
         {
             log_message(logger,LOG_ERROR,"Corrupted data received from executor");
-            return ec;
+            return 2;
         }
 
         rcode=cmdhdr_read(data_buf,0).cmd_type;
-        if(rcode!=100)
+        if(rcode==101)
+        {
+            *child_ec=*(data_buf+CMDHDRSZ);
+            log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec));
+            return 0;
+        }
+        else if(rcode!=100)
         {
             log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
-            return ec;
+            return 1;
         }
 
         write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_err_data_len);
@@ -350,6 +362,8 @@ int main(int argc, char* argv[])
     }
 
     uint8_t err;
+    uint8_t child_ec=0;
+
     switch(op_code)
     {
     case 0:
@@ -362,7 +376,7 @@ int main(int argc, char* argv[])
         err=operation_2(op_param);
         break;
     case 100:
-        err=operation_100();
+        err=operation_100(&child_ec);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
@@ -404,5 +418,5 @@ int main(int argc, char* argv[])
         teardown(0);
     }*/
 
-    teardown(0);
+    teardown(child_ec);
 }

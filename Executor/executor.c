@@ -665,8 +665,16 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         }
     }
     log_message(logger,LOG_INFO,"Process %s was finished, control loop complete",LS(params[0]));
-    //send info about control loop completion
-    operation_status(101);
+
+    //send info about control loop completion and child exit code
+    CMDHDR cmd;
+    cmd.cmd_type=101;
+    cmdhdr_write(data_buf,0,cmd);
+    *(data_buf+CMDHDRSZ)=child_ec;
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ+1,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        log_message(logger,LOG_WARNING,"Failed to send child's process exit code ec=%i",LI(ec));
+
     if(close(stdout_pipe[0])!=0)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
     if(close(stderr_pipe[0])!=0)
