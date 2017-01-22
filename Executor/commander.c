@@ -13,12 +13,14 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
+#include <poll.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
-#include <poll.h>
+
 
 #define MAXARGLEN 4095
 static LogDef logger=NULL;
@@ -42,7 +44,7 @@ static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_100(uint8_t *child_ec);
 
-/*static size_t bytes_avail(int fd);
+static size_t bytes_avail(int fd);
 
 static size_t bytes_avail(int fd)
 {
@@ -52,7 +54,7 @@ static size_t bytes_avail(int fd)
         return 0;
     else
         return (size_t)nbytes;
-}*/
+}
 
 static void teardown(int code)
 {
@@ -177,10 +179,26 @@ static uint8_t operation_100(uint8_t* child_ec)
     //main command loop
     log_message(logger,LOG_INFO,"Commander module entering control loop");
     cmd.cmd_type=100;
+    const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
+
     while(1)
     {
-        //TODO: read input
+        //read input
         int32_t send_data_len=CMDHDRSZ;
+        size_t avail=bytes_avail(STDIN_FILENO);
+        if(avail>0)
+        {
+            if(avail>max_data_req)
+                avail=max_data_req;
+            ssize_t rcount=read(STDIN_FILENO,(void*)(data_buf+CMDHDRSZ),avail);
+            if(rcount<0)
+            {
+                if(errno!=EINTR)
+                    log_message(logger,LOG_ERROR,"Error while reading stdin");
+            }
+            send_data_len+=(int32_t)rcount;
+        }
+
         //send input
         cmdhdr_write(data_buf,0,cmd);
         ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
