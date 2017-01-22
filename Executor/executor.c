@@ -45,6 +45,7 @@ static uint8_t chld_buf[MSGPLMAXLEN+1];
 static volatile uint8_t shutdown;
 static volatile uint8_t ignore_sigchld;
 static volatile uint8_t child_is_alive;
+static volatile uint8_t child_ec;
 
 //prototypes
 static void teardown(int code);
@@ -62,20 +63,50 @@ static void show_usage(void)
     exit(1);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+static void signal_handler(int sig, siginfo_t* info, void* context)
+{
+    log_message(logger,LOG_INFO,"Received signal %i",LI(sig));
+    if(sig==SIGCHLD && !ignore_sigchld)
+    {
+
+        child_ec=(uint8_t)(info->si_status);
+        log_message(logger,LOG_INFO,"Child terminated with exit code %i",LI(child_ec));
+        child_is_alive=0u;
+    }
+    else if(sig==SIGHUP || sig==SIGINT || sig==SIGTERM)
+    {
+        if(child_is_alive)
+            log_message(logger,LOG_INFO,"Cannot initiate shutdown while child is still running");
+        else
+        {
+            log_message(logger,LOG_INFO,"Initiating shutdown");
+            shutdown=1;
+            comm_shutdown(1);
+        }
+    }
+}
+#pragma GCC diagnostic pop
+
 int main(int argc, char* argv[])
 {
     if( argc!=6 || !arg_is_numeric(argv[1]) || !arg_is_numeric(argv[2]) || !arg_is_numeric(argv[5]) || strnlen(argv[3], MAXARGLEN)>=MAXARGLEN || strnlen(argv[4], MAXARGLEN)>=MAXARGLEN)
         show_usage();
 
+    //set config params
     self=argv[0];
     mode=(uint8_t)strtol(argv[1], NULL, 10);
     log_file_enabled=(uint8_t)strtol(argv[2], NULL, 10);
     ctldir=argv[3];
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
+
+    //set status params
     shutdown=0;
     ignore_sigchld=0;
     child_is_alive=0;
+    child_ec=0;
 
     //logger
     logger=log_init();
@@ -84,6 +115,33 @@ int main(int argc, char* argv[])
         log_stdout(logger,1);
     else
         log_stdout(logger,0);
+
+    //register signal handler
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_sigaction = &signal_handler;
+    act.sa_flags = SA_SIGINFO;
+
+    if(sigaction(SIGTERM, &act, NULL) < 0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGTERM handler");
+        return 1;
+    }
+    if(sigaction(SIGINT, &act, NULL) < 0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGINT handler");
+        return 1;
+    }
+    if(sigaction(SIGHUP, &act, NULL) < 0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGHUP handler");
+        return 1;
+    }
+    if(sigaction(SIGCHLD, &act, NULL) < 0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGCHLD handler");
+        return 1;
+    }
 
     if(chdir("/")!=0 || chdir(ctldir)!=0)
     {
