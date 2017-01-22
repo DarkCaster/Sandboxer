@@ -36,10 +36,10 @@ static int fdo;
 static char** params;
 static int params_count;
 
-//exchange data buffers
+//data exchange buffers
 static uint8_t tmp_buf[DATABUFSZ];
-static uint8_t data_buf[MSGPLMAXLEN];
-static uint8_t chld_buf[MSGPLMAXLEN];
+static uint8_t data_buf[MSGPLMAXLEN+1];//as precaution
+static uint8_t chld_buf[MSGPLMAXLEN+1];
 
 //volatile variables, used for async-signal handling
 static volatile uint8_t shutdown;
