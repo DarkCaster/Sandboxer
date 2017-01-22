@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
 
     log_headline(logger,"Executor startup");
 
-    log_message(logger,LOG_INFO,"Secutity key is set to %i",LI(key));
+    log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
     log_message(logger,LOG_INFO,"Channel name is set to %s",LS(channel));
 
