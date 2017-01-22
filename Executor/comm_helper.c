@@ -1,5 +1,6 @@
 #include "comm_helper.h"
 #include "message.h"
+#include "errno.h"
 
 static volatile uint8_t shutdown;
 
@@ -18,7 +19,7 @@ int fd_wait(int fd, int timeout, short int events)
         fds.events=events;
         fds.revents=0;
         int ec=poll(&fds,1,50);
-        if(ec<0) //Error
+        if(ec<0 && errno!=EINTR) //Error
             return -1;
         else if(ec == 0) //TIMEOUT
             cur_time+=50;
