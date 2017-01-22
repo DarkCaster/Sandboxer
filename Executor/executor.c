@@ -512,7 +512,8 @@ static uint8_t operation_100_101(uint8_t comm_detached)
     }
     int stdout_pipe[2];
     int stderr_pipe[2];
-    if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0 )
+    int stdin_pipe[2];
+    if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0 || pipe(stdin_pipe)!=0 )
     {
         log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
         return 110;
@@ -534,6 +535,9 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         while((dup2(stderr_pipe[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
         close(stderr_pipe[1]);
         close(stderr_pipe[0]);
+        while((dup2(stdin_pipe[0], STDIN_FILENO) == -1) && (errno == EINTR)) {}
+        close(stdin_pipe[0]);
+        close(stdin_pipe[1]);
         execv(params[0],params);
         perror("execv failed");
         exit(1);
@@ -542,6 +546,8 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
     if(close(stderr_pipe[1])!=0)
         log_message(logger,LOG_WARNING,"Failed to close stderr_pipe[1]!"); //should not happen
+    if(close(stdin_pipe[0])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdin_pipe[0]!"); //should not happen
     //send response for child startup
     uint8_t comm_alive=comm_detached?0:1;
     if(operation_status(0)!=0)
@@ -655,7 +661,18 @@ static uint8_t operation_100_101(uint8_t comm_detached)
                 comm_alive=0;
             }
         }
-        //TODO: send input from commander to stdio of child
+
+        //send input from commander to stdio of child
+        if(in_len>0)
+        {
+            if(write(stdin_pipe[1],(void*)(data_buf+CMDHDRSZ),(size_t)in_len)<0)
+            {
+                int err=errno;
+                if(err!=EINTR)
+                    log_message(logger,LOG_ERROR,"Error while writing stdin to child process %s, errno=%i",LS(params[0]),LI(err));
+            }
+        }
+
         if( !comm_alive && o_data_empty>0 && e_data_empty>0 )
         {
             uint8_t min_dada_empty=o_data_empty;
@@ -679,5 +696,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
     if(close(stderr_pipe[0])!=0)
         log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
+    if(close(stdin_pipe[1])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdin_pipe[1]!"); //should not happen
     return 255;
 }
