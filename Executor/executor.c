@@ -553,7 +553,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
     uint8_t e_data_empty=0;
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
 
-    while(child_is_alive || o_data_empty<2 || e_data_empty<2)
+    while(child_is_alive || o_data_empty<4 || e_data_empty<4)
     {
         in_len=0;
 
@@ -604,7 +604,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
             }
             o_data_empty=0;
         }
-        else
+        else if(o_data_empty<4)
             ++o_data_empty;
 
         if(comm_alive)
@@ -638,7 +638,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
             }
             e_data_empty=0;
         }
-        else
+        else if(e_data_empty<4)
             ++e_data_empty;
 
         //send output down to commander
@@ -657,7 +657,12 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         }
         //TODO: send input from commander to stdio of child
         if( !comm_alive && o_data_empty>0 && e_data_empty>0 )
-            usleep(WORKER_REACT_TIME_MS*1000);
+        {
+            uint8_t min_dada_empty=o_data_empty;
+            if(min_dada_empty>e_data_empty)
+                min_dada_empty=e_data_empty;
+            usleep( (useconds_t)(DATA_WAIT_TIME_MS*1000*min_dada_empty) );
+        }
     }
     log_message(logger,LOG_INFO,"Process %s was finished, control loop complete",LS(params[0]));
     //send info about control loop completion
