@@ -44,6 +44,7 @@ static uint8_t chld_buf[MSGPLMAXLEN];
 //volatile variables, used for async-signal handling
 static volatile uint8_t shutdown;
 static volatile uint8_t ignore_sigchld;
+static volatile uint8_t child_is_alive;
 
 //prototypes
 static void teardown(int code);
@@ -52,6 +53,7 @@ static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
 static uint8_t operation_2(char* param, size_t len);
+static uint8_t operation_100_101(uint8_t comm_detached);
 
 static void show_usage(void)
 {
@@ -72,6 +74,8 @@ int main(int argc, char* argv[])
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
     shutdown=0;
+    ignore_sigchld=0;
+    child_is_alive=0;
 
     //logger
     logger=log_init();
@@ -197,12 +201,12 @@ int main(int argc, char* argv[])
             case 2:
                 err=operation_2((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
-            /*case 100:
-                err=operation_100_101(fdi,fdo,worker,seed,0);
+            case 100:
+                err=operation_100_101(0);
                 break;
             case 101:
-                err=operation_100_101(fdi,fdo,worker,seed,1);
-                break;*/
+                err=operation_100_101(1);
+                break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
                 err=0;
@@ -428,4 +432,171 @@ static uint8_t operation_2(char* param, size_t len)
     }
     else
         return 1;
+}
+
+static uint8_t operation_100_101(uint8_t comm_detached)
+{
+    if(params[0]==NULL || params_count<1)
+    {
+        log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
+        return 105;
+    }
+    int stdout_pipe[2];
+    int stderr_pipe[2];
+    if ( pipe2(stdout_pipe,O_NONBLOCK)!=0 || pipe2(stderr_pipe,O_NONBLOCK)!=0 )
+    {
+        log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
+        return 110;
+    }
+    log_message(logger,LOG_INFO,"Starting new process %s",LS(params[0]));
+    child_is_alive=1;
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        log_message(logger,LOG_ERROR,"Failed to perform fork");
+        return 120;
+    }
+    if(pid==0)
+    {
+        //TODO: also add stdin redirection.
+        while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+        close(stdout_pipe[1]);
+        close(stdout_pipe[0]);
+        while((dup2(stderr_pipe[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
+        close(stderr_pipe[1]);
+        close(stderr_pipe[0]);
+        execv(params[0],params);
+        perror("execv failed");
+        exit(1);
+    }
+    if(close(stdout_pipe[1])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
+    if(close(stderr_pipe[1])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stderr_pipe[1]!"); //should not happen
+    //send response for child startup
+    uint8_t comm_alive=comm_detached?0:1;
+    if(operation_status(0)!=0)
+        comm_alive=0;
+    log_message(logger,LOG_INFO,"Entering child process control loop",LS(params[0]));
+
+    uint8_t data_present=1;
+    uint32_t skip_o_read=0;
+    uint32_t skip_e_read=0;
+    int32_t in_len=0;
+    /*uint8_t* in_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
+    uint8_t* out_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
+    uint8_t* err_buf=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);*/
+    const size_t data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
+    while(child_is_alive || data_present)
+    {
+        data_present=1;
+        in_len=0;
+
+        //read input from commander
+        if(comm_alive)
+        {
+            if(message_read(fdi,tmp_buf,data_buf,0,&in_len,key,REQ_TIMEOUT_MS)!=0)
+            {
+                log_message(logger,LOG_WARNING,"Commander was timed out, disposing all stdout and stderr from child process");
+                comm_alive=0;
+            }
+            else
+            {
+                CMDHDR cmd;
+                cmd=cmdhdr_read(data_buf,0);
+                //TODO: child termination via signal
+                if(cmd.cmd_type!=100)
+                {
+                    log_message(logger,LOG_WARNING,"Commander gone offline, disposing all stdout and stderr from child process");
+                    comm_alive=0;
+                }
+                else
+                {
+                    in_len-=(int32_t)CMDHDRSZ;
+                    if(in_len<0)
+                    {
+                        log_message(logger,LOG_WARNING,"Incorrect input data was received, disconnecting commander.");
+                        comm_alive=0;
+                    }
+                }
+            }
+        }
+
+        //read stdout from child
+        ssize_t out_count = read(stdout_pipe[0],(void*)(chld_buf+CMDHDRSZ),data_req);
+        if (out_count == -1)
+        {
+            int err=errno;
+            if(err != EINTR && err != EAGAIN)
+                log_message(logger,LOG_ERROR,"Error while reading stdout from child process %s, errno=%i",LS(params[0]),LI(err));
+            out_count=0;
+            if( (err != EINTR && err != EAGAIN) || skip_o_read>=10)
+                data_present=0;
+            if( err == EINTR || err == EAGAIN )
+                skip_o_read++;
+        }
+        else
+            skip_o_read=0;
+
+        if(comm_alive)
+        {
+            CMDHDR cmd;
+            cmd.cmd_type=100;
+            cmdhdr_write(chld_buf,0,cmd);
+            int32_t olen=(int32_t)out_count+(int32_t)CMDHDRSZ;
+            uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,olen,key,REQ_TIMEOUT_MS);
+            if(ec!=0)
+            {
+                log_message(logger,LOG_WARNING,"Commander goes offline while sending child stdout, disconnecting commander.");
+                comm_alive=0;
+            }
+        }
+
+        //and stderr from child
+        ssize_t err_count = read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),data_req);
+        if (err_count == -1)
+        {
+            int err=errno;
+            if(err != EINTR && err != EAGAIN)
+                log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s, errno=%i",LS(params[0]),LI(err));
+            err_count=0;
+            if( (err != EINTR && err != EAGAIN) || skip_e_read>=10)
+                data_present=0;
+            if( err == EINTR || err == EAGAIN )
+                skip_e_read++;
+        }
+        else
+            skip_e_read=0;
+
+        //check if there some data left to read
+        if(out_count<(ssize_t)data_req && err_count<(ssize_t)data_req && skip_o_read==0 && skip_e_read==0)
+            data_present=0;
+
+        //send output down to commander
+        if(comm_alive)
+        {
+            CMDHDR cmd;
+            cmd.cmd_type=100;
+            cmdhdr_write(chld_buf,0,cmd);
+            int32_t elen=(int32_t)err_count+(int32_t)CMDHDRSZ;
+            uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,elen,key,REQ_TIMEOUT_MS);
+            if(ec!=0)
+            {
+                log_message(logger,LOG_WARNING,"Commander goes offline while sending child stderr, disconnecting commander.");
+                comm_alive=0;
+            }
+        }
+        //TODO: send input from commander to stdio of child
+        //Wait a little, if data_present==0
+        if(data_present==0)
+            usleep(WORKER_REACT_TIME_MS*1000);
+    }
+    log_message(logger,LOG_INFO,"Process %s was finished, control loop complete",LS(params[0]));
+    //send info about control loop completion
+    operation_status(101);
+    if(close(stdout_pipe[0])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
+    if(close(stderr_pipe[0])!=0)
+        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
+    return 255;
 }
