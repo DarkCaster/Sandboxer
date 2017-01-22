@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
+#include <sys/ioctl.h>
 #include <poll.h>
 
 #define MAXARGLEN 4095
@@ -40,6 +41,18 @@ static uint8_t operation_1(char* exec);
 static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_100(void);
+
+/*static size_t bytes_avail(int fd);
+
+static size_t bytes_avail(int fd)
+{
+    int nbytes=0;
+    int ec=ioctl(fd,FIONREAD,&nbytes);
+    if(ec<0)
+        return 0;
+    else
+        return (size_t)nbytes;
+}*/
 
 static void teardown(int code)
 {
@@ -166,25 +179,21 @@ static uint8_t operation_100(void)
     cmd.cmd_type=100;
     while(1)
     {
-        int time_left=WORKER_REACT_TIME_MS;
         //TODO: read input
-        int32_t data_len=CMDHDRSZ;
+        int32_t send_data_len=CMDHDRSZ;
         //send input
         cmdhdr_write(data_buf,0,cmd);
-        int time_limit=REQ_TIMEOUT_MS;
-        ec=message_send_2(fdo,tmp_buf,data_buf,0,data_len,key,&time_limit);
+        ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
         if(ec!=0)
             return ec;
-        time_left-=(REQ_TIMEOUT_MS-time_limit);
-        data_len=0;
-        //read stdout, captured by executor module
-        time_limit=REQ_TIMEOUT_MS;
-        ec=message_read_2(fdi,tmp_buf,data_buf,0,&data_len,key,&time_limit);
-        if(ec!=0)
-            return ec;
-        time_left-=(REQ_TIMEOUT_MS-time_limit);
 
-        if((data_len-(int32_t)CMDHDRSZ)<0)
+        //read stdout, captured by executor module
+        int32_t recv_out_data_len=0;
+        ec=message_read(fdi,tmp_buf,data_buf,0,&recv_out_data_len,key,REQ_TIMEOUT_MS);
+        if(ec!=0)
+            return ec;
+        recv_out_data_len-=(int32_t)CMDHDRSZ;
+        if(recv_out_data_len<0)
         {
             log_message(logger,LOG_ERROR,"Corrupted data received from executor");
             return ec;
@@ -197,15 +206,15 @@ static uint8_t operation_100(void)
             return ec;
         }
 
-        write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)data_len-CMDHDRSZ);
+        write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_out_data_len);
 
         //read stderr, captured by executor module
-        time_limit=REQ_TIMEOUT_MS;
-        ec=message_read_2(fdi,tmp_buf,data_buf,0,&data_len,key,&time_limit);
+        int32_t recv_err_data_len=0;
+        ec=message_read(fdi,tmp_buf,data_buf,0,&recv_err_data_len,key,REQ_TIMEOUT_MS);
         if(ec!=0)
             return ec;
-        time_left-=(REQ_TIMEOUT_MS-time_limit);
-        if((data_len-(int32_t)CMDHDRSZ)<0)
+        recv_err_data_len-=(int32_t)CMDHDRSZ;
+        if(recv_err_data_len<0)
         {
             log_message(logger,LOG_ERROR,"Corrupted data received from executor");
             return ec;
@@ -218,10 +227,10 @@ static uint8_t operation_100(void)
             return ec;
         }
 
-        write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)data_len-CMDHDRSZ);
+        write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_err_data_len);
 
-        if(time_left>0)
-            usleep((useconds_t)(time_left*1000));
+        if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
+            usleep((useconds_t)(DATA_WAIT_TIME_MS*1000));
     }
 
     return 0;
