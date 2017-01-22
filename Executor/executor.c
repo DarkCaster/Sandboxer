@@ -628,7 +628,7 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         {
             if(avail>max_data_req)
                 avail=max_data_req;
-            err_count=read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),max_data_req);
+            err_count=read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),avail);
             if(err_count==-1)
             {
                 int err=errno;
