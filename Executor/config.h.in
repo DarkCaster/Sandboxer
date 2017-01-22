@@ -9,11 +9,13 @@
 #cmakedefine HAVE_SYSTYPES_H
 #cmakedefine HAVE_SYSSTAT_H
 #cmakedefine HAVE_SYSWAIT_H
+#cmakedefine HAVE_SYSIOCTL_H
+#cmakedefine HAVE_SYSTIME_H
+
 #cmakedefine HAVE_SIGNAL_H
 #cmakedefine HAVE_UNISTD_H
 #cmakedefine HAVE_FNCTL_H
 #cmakedefine HAVE_POLL_H
-#cmakedefine HAVE_SYSTIME_H
 #cmakedefine HAVE_ERRNO_H
 
 #define LOG_FILENAMESZ 4095
