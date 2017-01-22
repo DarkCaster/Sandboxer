@@ -279,10 +279,9 @@ int main(int argc, char* argv[])
         teardown(13);
     }
 
-    uint32_t seed=0;
     //security key
     if(arg_is_numeric(argv[3]))
-        seed=(uint32_t)strtol(argv[3], NULL, 10);
+        key=(uint32_t)strtol(argv[3], NULL, 10);
     else
     {
         log_message(logger,LOG_ERROR,"<security-key> param is incorrect");
@@ -317,7 +316,7 @@ int main(int argc, char* argv[])
         strncpy(op_param,argv[5],op_param_len);
     }
 
-    log_message(logger,LOG_INFO,"Security key is set to %i",LI(seed));
+    log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
     log_message(logger,LOG_INFO,"Channel name is set to %s|%s",LS(channel_out),LS(channel_in));
 
