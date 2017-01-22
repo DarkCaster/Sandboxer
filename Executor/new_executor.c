@@ -41,8 +41,9 @@ static uint8_t tmp_buf[DATABUFSZ];
 static uint8_t data_buf[MSGPLMAXLEN];
 static uint8_t chld_buf[MSGPLMAXLEN];
 
-//shutdown variable
+//volatile variables, used for async-signal handling
 static volatile uint8_t shutdown;
+static volatile uint8_t ignore_sigchld;
 
 //prototypes
 static void teardown(int code);
@@ -50,6 +51,7 @@ static uint8_t arg_is_numeric(const char* arg);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
+static uint8_t operation_2(char* param, size_t len);
 
 static void show_usage(void)
 {
@@ -192,10 +194,10 @@ int main(int argc, char* argv[])
             case 1:
                 err=operation_1((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
-            /*case 2:
-                err=operation_2(fdo,worker,seed,(char*)(cmdbuf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
+            case 2:
+                err=operation_2((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
-            case 100:
+            /*case 100:
                 err=operation_100_101(fdi,fdo,worker,seed,0);
                 break;
             case 101:
@@ -321,6 +323,7 @@ static uint8_t spawn_slave(char * new_channel)
         perror("execv failed!");
         exit(1);
     }
+    ignore_sigchld=1;
     return 0;
 }
 
@@ -386,7 +389,6 @@ static uint8_t operation_0(void)
 
 static uint8_t operation_1(char* exec, size_t len)
 {
-    uint8_t ec=0;
     if(len>0 && exec!=NULL)
     {
         if(params[0]!=NULL)
@@ -395,9 +397,35 @@ static uint8_t operation_1(char* exec, size_t len)
         params[0][len]='\0';
         strncpy(params[0],exec,len);
         log_message(logger,LOG_INFO,"File-name to exec was set to %s",LS(params[0]));
-        ec=0;
+        if(operation_status(0)!=0)
+            return 255;
+        return 0;
     }
     else
-        ec=1;
-    return operation_status(ec);
+        return 1;
+}
+
+static uint8_t operation_2(char* param, size_t len)
+{
+    if(len>0 && param!=NULL)
+    {
+        char** tmp=(char**)safe_alloc((size_t)(params_count+2),sizeof(char*));
+        for(int i=0;i<params_count;++i)
+            tmp[i]=params[i];
+        params_count+=1;
+        free(params);
+        params=tmp;
+        int cur=params_count-1;
+        params[cur]=(char*)safe_alloc(len+1,1);
+        params[cur][len]='\0';
+        strncpy(params[cur],param,len);
+        log_message(logger,LOG_INFO,"Added exec param %s, total params count %i",LS(params[cur]),LI(params_count));
+        //add null-pointer to the end of the list
+        params[params_count]=NULL;
+        if(operation_status(0)!=0)
+            return 255;
+        return 0;
+    }
+    else
+        return 1;
 }
