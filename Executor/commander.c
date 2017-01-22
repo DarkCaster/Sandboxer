@@ -19,7 +19,27 @@
 #include <sys/fcntl.h>
 #include <poll.h>
 
+#define MAXARGLEN 4095
 static LogDef logger=NULL;
+
+//config
+static uint32_t key;
+static char* ctldir;
+static int fdi;
+static int fdo;
+
+//data exchange buffers
+static uint8_t tmp_buf[DATABUFSZ];
+static uint8_t data_buf[MSGPLMAXLEN+1];//as precaution
+
+//proto
+static void teardown(int code);
+static uint8_t arg_is_numeric(const char* arg);
+static uint8_t operation_0(void);
+static uint8_t operation_1(char* exec);
+static uint8_t operation_2(char* param);
+static uint8_t operation_1_2(uint8_t op, char* param);
+static uint8_t operation_100(void);
 
 static void teardown(int code)
 {
@@ -32,8 +52,6 @@ static void teardown(int code)
     exit(code);
 }
 
-#define MAXARGLEN 4095
-
 static uint8_t arg_is_numeric(const char* arg)
 {
     size_t len=strnlen(arg,MAXARGLEN);
@@ -44,144 +62,102 @@ static uint8_t arg_is_numeric(const char* arg)
 }
 
 //opcode 0 - create new session with separate comm. channels
-static uint8_t operation_0(int fdi, int fdo, uint32_t seed)
+static uint8_t operation_0(void)
 {
-    uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    cmdbuf[DATABUFSZ-1]='\0';
     CMDHDR cmd;
     cmd.cmd_type=0;
-    cmdhdr_write(cmdbuf,0,cmd);
-    int32_t cmdlen=(int32_t)CMDHDRSZ;
+    cmdhdr_write(data_buf,0,cmd);
     log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
     if(ec!=0)
-    {
-        free(tmpbuff);
-        free(cmdbuf);
         return ec;
-    }
-    cmdlen=0;
+    int32_t cmdlen=0;
     log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fdi,tmpbuff,cmdbuf,0,&cmdlen,seed,REQ_TIMEOUT_MS);
+    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
     if(ec!=0)
-    {
-        free(tmpbuff);
-        free(cmdbuf);
         return ec;
+    if(cmdhdr_read(data_buf,0).cmd_type!=0)
+    {
+        log_message(logger,LOG_ERROR,"Wrong responce code received %i",LI(cmdhdr_read(data_buf,0).cmd_type));
+        return 1;
     }
-    cmdbuf[cmdlen]='\0';//received string may not contain leading null character
-    puts((char*)cmdbuf);
-    free(cmdbuf);
-    free(tmpbuff);
+    data_buf[cmdlen]='\0';//received string may not contain leading null character
+    puts((char*)(data_buf+CMDHDRSZ));
     return 0;
 }
 
 //opcode 1 - set executable name
-static uint8_t operation_1_2(int fdi, int fdo, uint8_t op, uint32_t seed, char* param)
+static uint8_t operation_1_2(uint8_t op, char* param)
 {
-    uint8_t* tmpbuff=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    uint8_t* cmdbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    cmdbuf[DATABUFSZ-1]='\0';
     CMDHDR cmd;
     cmd.cmd_type=op;
-    cmdhdr_write(cmdbuf,0,cmd);
+    cmdhdr_write(data_buf,0,cmd);
     //append executable name
     int32_t cmdlen=(int32_t)CMDHDRSZ;
     if(param!=NULL)
     {
-        strcpy((char*)(cmdbuf+cmdlen),param);
+        strcpy((char*)(data_buf+cmdlen),param);
         cmdlen+=(int32_t)strlen(param);
     }
     log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmpbuff,cmdbuf,0,cmdlen,seed,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,cmdlen,key,REQ_TIMEOUT_MS);
     if(ec!=0)
-    {
-        free(tmpbuff);
-        free(cmdbuf);
         return ec;
-    }
     cmdlen=0;
     log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fdi,tmpbuff,cmdbuf,0,&cmdlen,seed,REQ_TIMEOUT_MS);
+    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
     if(ec!=0)
-    {
-        free(tmpbuff);
-        free(cmdbuf);
         return ec;
-    }
     //read response
     if(cmdlen!=(int32_t)CMDHDRSZ)
     {
         log_message(logger,LOG_ERROR,"Wrong response length detected!");
-        free(tmpbuff);
-        free(cmdbuf);
         return 1;
     }
-    CMDHDR rcmd=cmdhdr_read(cmdbuf,0);
-    if(rcmd.cmd_type!=op)
+    CMDHDR rcmd=cmdhdr_read(data_buf,0);
+    if(rcmd.cmd_type!=0)
     {
         log_message(logger,LOG_ERROR,"Executor module reports error while setting exec-name/exec-param!");
-        free(tmpbuff);
-        free(cmdbuf);
         return 2;
     }
-    free(cmdbuf);
-    free(tmpbuff);
     return 0;
 }
 
-static uint8_t operation_1(int fdi, int fdo, uint32_t seed, char* exec)
+static uint8_t operation_1(char* exec)
 {
-    return operation_1_2(fdi,fdo,1u,seed,exec);
+    return operation_1_2(1u,exec);
 }
 
-static uint8_t operation_2(int fdi, int fdo, uint32_t seed, char* param)
+static uint8_t operation_2(char* param)
 {
-    return operation_1_2(fdi,fdo,2u,seed,param);
+    return operation_1_2(2u,param);
 }
 
-static uint8_t operation_100(int fdi, int fdo, uint32_t seed)
+//launch configured binary
+static uint8_t operation_100(void)
 {
-    //launch configured binary
-    uint8_t* tmpbuf=(uint8_t*)safe_alloc(DATABUFSZ,1);
-    uint8_t* data=(uint8_t*)safe_alloc(MSGPLMAXLEN+1,1);
-
     CMDHDR cmd;
     cmd.cmd_type=100;
-    cmdhdr_write(data,0,cmd);
-
+    cmdhdr_write(data_buf,0,cmd);
     log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmpbuf,data,0,CMDHDRSZ,seed,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
     if(ec!=0)
-    {
-        free(tmpbuf);
-        free(data);
         return ec;
-    }
     int cmdlen=0;
     log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fdi,tmpbuf,data,0,&cmdlen,seed,REQ_TIMEOUT_MS);
+    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
     if(ec!=0)
-    {
-        free(tmpbuf);
-        free(data);
         return ec;
-    }
     //decode response
     if(cmdlen!=(int32_t)CMDHDRSZ)
     {
         log_message(logger,LOG_ERROR,"Wrong response length detected!");
-        free(tmpbuf);
-        free(data);
         return 1;
     }
-    CMDHDR rcmd=cmdhdr_read(data,0);
-    if(rcmd.cmd_type!=100)
+    CMDHDR rcmd=cmdhdr_read(data_buf,0);
+    if(rcmd.cmd_type!=0)
     {
         log_message(logger,LOG_ERROR,"Executor module reports error while performing child exec, error code=%i",rcmd.cmd_type);
-        free(tmpbuf);
-        free(data);
         return 2;
     }
 
@@ -191,90 +167,63 @@ static uint8_t operation_100(int fdi, int fdo, uint32_t seed)
     while(1)
     {
         int time_left=WORKER_REACT_TIME_MS;
-
         //TODO: read input
         int32_t data_len=CMDHDRSZ;
-
         //send input
-        cmdhdr_write(data,0,cmd);
+        cmdhdr_write(data_buf,0,cmd);
         int time_limit=REQ_TIMEOUT_MS;
-        ec=message_send_2(fdo,tmpbuf,data,0,data_len,seed,&time_limit);
+        ec=message_send_2(fdo,tmp_buf,data_buf,0,data_len,key,&time_limit);
         if(ec!=0)
-        {
-            free(tmpbuf);
-            free(data);
             return ec;
-        }
         time_left-=(REQ_TIMEOUT_MS-time_limit);
-
         data_len=0;
-
         //read stdout, captured by executor module
         time_limit=REQ_TIMEOUT_MS;
-        ec=message_read_2(fdi,tmpbuf,data,0,&data_len,seed,&time_limit);
+        ec=message_read_2(fdi,tmp_buf,data_buf,0,&data_len,key,&time_limit);
         if(ec!=0)
-        {
-            free(tmpbuf);
-            free(data);
             return ec;
-        }
         time_left-=(REQ_TIMEOUT_MS-time_limit);
 
         if((data_len-(int32_t)CMDHDRSZ)<0)
         {
             log_message(logger,LOG_ERROR,"Corrupted data received from executor");
-            free(tmpbuf);
-            free(data);
             return ec;
         }
 
-        uint8_t rcode=cmdhdr_read(data,0).cmd_type;
+        uint8_t rcode=cmdhdr_read(data_buf,0).cmd_type;
         if(rcode!=100)
         {
             log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
-            free(tmpbuf);
-            free(data);
             return ec;
         }
 
-        write(STDOUT_FILENO,(void*)(data+CMDHDRSZ),(size_t)data_len-CMDHDRSZ);
+        write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)data_len-CMDHDRSZ);
 
         //read stderr, captured by executor module
         time_limit=REQ_TIMEOUT_MS;
-        ec=message_read_2(fdi,tmpbuf,data,0,&data_len,seed,&time_limit);
+        ec=message_read_2(fdi,tmp_buf,data_buf,0,&data_len,key,&time_limit);
         if(ec!=0)
-        {
-            free(tmpbuf);
-            free(data);
             return ec;
-        }
         time_left-=(REQ_TIMEOUT_MS-time_limit);
-
         if((data_len-(int32_t)CMDHDRSZ)<0)
         {
             log_message(logger,LOG_ERROR,"Corrupted data received from executor");
-            free(tmpbuf);
-            free(data);
             return ec;
         }
 
-        rcode=cmdhdr_read(data,0).cmd_type;
+        rcode=cmdhdr_read(data_buf,0).cmd_type;
         if(rcode!=100)
         {
             log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
-            free(tmpbuf);
-            free(data);
             return ec;
         }
 
-        write(STDERR_FILENO,(void*)(data+CMDHDRSZ),(size_t)data_len-CMDHDRSZ);
+        write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)data_len-CMDHDRSZ);
 
         if(time_left>0)
             usleep((useconds_t)(time_left*1000));
     }
 
-    free(tmpbuf);
-    free(data);
     return 0;
 }
 
@@ -304,7 +253,7 @@ int main(int argc, char* argv[])
         teardown(11);
     }
     //control-dir
-    const char* ctldir=argv[1];
+    ctldir=argv[1];
 
     if(strnlen(argv[2], MAXARGLEN)>=MAXARGLEN)
     {
@@ -378,14 +327,14 @@ int main(int argc, char* argv[])
         teardown(21);
     }
 
-    int fdi=open(channel_in,O_RDWR);
+    fdi=open(channel_in,O_RDWR);
     if(fdi<0)
     {
         log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_in));
         teardown(22);
     }
 
-    int fdo=open(channel_out,O_RDWR);
+    fdo=open(channel_out,O_RDWR);
     if(fdo<0)
     {
         log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_out));
@@ -396,16 +345,16 @@ int main(int argc, char* argv[])
     switch(op_code)
     {
     case 0:
-        err=operation_0(fdi,fdo,seed);
+        err=operation_0();
         break;
     case 1:
-        err=operation_1(fdi,fdo,seed,op_param);
+        err=operation_1(op_param);
         break;
     case 2:
-        err=operation_2(fdi,fdo,seed,op_param);
+        err=operation_2(op_param);
         break;
     case 100:
-        err=operation_100(fdi,fdo,seed);
+        err=operation_100();
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
