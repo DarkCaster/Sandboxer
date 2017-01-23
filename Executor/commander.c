@@ -206,6 +206,20 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
 
     #define restore_terminal if(ts_is_set)tcsetattr(STDOUT_FILENO,TCSANOW,&term_settings_backup)
 
+    #define receive_data(data_len,out_fd) \
+        { data_len=0; \
+        ec=message_read(fdi,tmp_buf,data_buf,0,&data_len,key,REQ_TIMEOUT_MS); \
+        if(ec!=0){ restore_terminal; return ec; } \
+        data_len-=(int32_t)CMDHDRSZ; \
+        if(data_len<0) \
+            { restore_terminal; log_message(logger,LOG_ERROR,"Corrupted data received from executor"); return 2; } \
+        if(cmdhdr_read(data_buf,0).cmd_type==101) \
+            { restore_terminal; *child_ec=*(data_buf+CMDHDRSZ); log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec)); return 0; } \
+        else if(cmdhdr_read(data_buf,0).cmd_type!=100) \
+            { restore_terminal; log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(cmdhdr_read(data_buf,0).cmd_type)); return 1; } \
+        if(data_len>0) \
+            write(out_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); }
+
     while(1)
     {
         //TODO: check if term size is changes, and send new params
@@ -240,75 +254,14 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
             return ec;
         }
 
-        //read stdout, captured by executor module
         int32_t recv_out_data_len=0;
-        ec=message_read(fdi,tmp_buf,data_buf,0,&recv_out_data_len,key,REQ_TIMEOUT_MS);
-        if(ec!=0)
-        {
-            restore_terminal;
-            return ec;
-        }
-
-        recv_out_data_len-=(int32_t)CMDHDRSZ;
-        if(recv_out_data_len<0)
-        {
-            restore_terminal;
-            log_message(logger,LOG_ERROR,"Corrupted data received from executor");
-            return 2;
-        }
-
-        uint8_t rcode=cmdhdr_read(data_buf,0).cmd_type;
-        if(rcode==101)
-        {
-            restore_terminal;
-            *child_ec=*(data_buf+CMDHDRSZ);
-            log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec));
-            return 0;
-        }
-        else if(rcode!=100)
-        {
-            restore_terminal;
-            log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
-            return 1;
-        }
-
-        if(recv_out_data_len>0)
-            write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_out_data_len);
+        receive_data(recv_out_data_len,STDOUT_FILENO); //read stdout, captured by executor module
 
         int32_t recv_err_data_len=0;
         if(use_pty)
-        {
             recv_err_data_len=recv_out_data_len;
-        }
         else
-        {
-            //read stderr, captured by executor module
-            ec=message_read(fdi,tmp_buf,data_buf,0,&recv_err_data_len,key,REQ_TIMEOUT_MS);
-            if(ec!=0)
-                return ec;
-            recv_err_data_len-=(int32_t)CMDHDRSZ;
-            if(recv_err_data_len<0)
-            {
-                log_message(logger,LOG_ERROR,"Corrupted data received from executor");
-                return 2;
-            }
-
-            rcode=cmdhdr_read(data_buf,0).cmd_type;
-            if(rcode==101)
-            {
-                *child_ec=*(data_buf+CMDHDRSZ);
-                log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec));
-                return 0;
-            }
-            else if(rcode!=100)
-            {
-                log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
-                return 1;
-            }
-
-            if(recv_err_data_len>0)
-                write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_err_data_len);
-        }
+            receive_data(recv_err_data_len,STDERR_FILENO); //read stderr, captured by executor module
 
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
             usleep((useconds_t)(DATA_WAIT_TIME_MS*1000));
