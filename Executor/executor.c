@@ -767,11 +767,20 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     if(ec!=0)
         log_message(logger,LOG_WARNING,"Failed to send child's process exit code ec=%i",LI(ec));
 
-    if(close(stdout_pipe[0])!=0)
-        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
-    if(close(stderr_pipe[0])!=0)
-        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
-    if(close(stdin_pipe[1])!=0)
-        log_message(logger,LOG_WARNING,"Failed to close stdin_pipe[1]!"); //should not happen
+    if(use_pty)
+    {
+        if(close(fdm)!=0)
+            log_message(logger,LOG_WARNING,"Failed to close master pty. ec=%i",LI(errno)); //should not happen
+    }
+    else
+    {
+        if(close(stdout_pipe[0])!=0)
+            log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
+        if(close(stderr_pipe[0])!=0)
+            log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[0]!"); //should not happen
+        if(close(stdin_pipe[1])!=0)
+            log_message(logger,LOG_WARNING,"Failed to close stdin_pipe[1]!"); //should not happen
+    }
+
     return 255;
 }
