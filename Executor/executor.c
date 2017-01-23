@@ -13,6 +13,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <errno.h>
+#include <termios.h>
 
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -55,7 +56,7 @@ static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
 static uint8_t operation_2(char* param, size_t len);
-static uint8_t operation_100_101(uint8_t comm_detached);
+static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
 
 static void show_usage(void)
 {
@@ -261,10 +262,16 @@ int main(int argc, char* argv[])
                 err=operation_2((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 100:
-                err=operation_100_101(0);
+                err=operation_100_101_200_201(0,0);
                 break;
             case 101:
-                err=operation_100_101(1);
+                err=operation_100_101_200_201(1,0);
+                break;
+            case 200:
+                err=operation_100_101_200_201(0,1);
+                break;
+            case 201:
+                err=operation_100_101_200_201(1,1);
                 break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
@@ -503,20 +510,55 @@ static size_t bytes_avail(int fd)
         return (size_t)nbytes;
 }
 
-static uint8_t operation_100_101(uint8_t comm_detached)
+static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
 {
     if(params[0]==NULL || params_count<1)
     {
         log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
         return 105;
     }
+
     int stdout_pipe[2];
     int stderr_pipe[2];
     int stdin_pipe[2];
-    if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0 || pipe(stdin_pipe)!=0 )
+
+    int fdm=-1;
+    int fds=-1;
+
+    if(use_pty)
     {
-        log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
-        return 110;
+        fdm = posix_openpt(O_RDWR);
+        if(fdm < 0)
+        {
+            log_message(logger,LOG_ERROR,"posix_openpt failed with ec=%i",LI(errno));
+            return 110;
+        }
+        int rc = grantpt(fdm);
+        if (rc != 0)
+        {
+            log_message(logger,LOG_ERROR,"grantpt failed with ec=%i",LI(errno));
+            return 111;
+        }
+        rc = unlockpt(fdm);
+        if(rc != 0)
+        {
+            log_message(logger,LOG_ERROR,"unlockpt failed with ec=%i",LI(errno));
+            return 112;
+        }
+        fds = open(ptsname(fdm),O_RDWR);
+        if(fds < 0)
+        {
+            log_message(logger,LOG_ERROR,"Failed to open slave pty. ec=%i",LI(errno));
+            return 113;
+        }
+    }
+    else
+    {
+        if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0 || pipe(stdin_pipe)!=0 )
+        {
+            log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
+            return 110;
+        }
     }
     log_message(logger,LOG_INFO,"Starting new process %s",LS(params[0]));
     child_is_alive=1;
@@ -528,26 +570,51 @@ static uint8_t operation_100_101(uint8_t comm_detached)
     }
     if(pid==0)
     {
-        //TODO: also add stdin redirection.
-        while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
-        close(stdout_pipe[1]);
-        close(stdout_pipe[0]);
-        while((dup2(stderr_pipe[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
-        close(stderr_pipe[1]);
-        close(stderr_pipe[0]);
-        while((dup2(stdin_pipe[0], STDIN_FILENO) == -1) && (errno == EINTR)) {}
-        close(stdin_pipe[0]);
-        close(stdin_pipe[1]);
+        if(use_pty)
+        {
+            if(close(fdm)!=0)
+                exit(2);
+            struct termios term_settings;
+            if(tcgetattr(fds, &term_settings)!=0)
+                exit(3);
+            cfmakeraw(&term_settings);
+            if(tcsetattr(fds,TCSANOW,&term_settings)!=0)
+                exit(4);
+            while((dup2(fds, STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+            while((dup2(fds, STDERR_FILENO) == -1) && (errno == EINTR)) {}
+            while((dup2(fds, STDIN_FILENO) == -1) && (errno == EINTR)) {}
+        }
+        else
+        {
+            //TODO: also add stdin redirection.
+            while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+            close(stdout_pipe[1]);
+            close(stdout_pipe[0]);
+            while((dup2(stderr_pipe[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
+            close(stderr_pipe[1]);
+            close(stderr_pipe[0]);
+            while((dup2(stdin_pipe[0], STDIN_FILENO) == -1) && (errno == EINTR)) {}
+            close(stdin_pipe[0]);
+            close(stdin_pipe[1]);
+        }
         execv(params[0],params);
         perror("execv failed");
         exit(1);
     }
-    if(close(stdout_pipe[1])!=0)
-        log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
-    if(close(stderr_pipe[1])!=0)
-        log_message(logger,LOG_WARNING,"Failed to close stderr_pipe[1]!"); //should not happen
-    if(close(stdin_pipe[0])!=0)
-        log_message(logger,LOG_WARNING,"Failed to close stdin_pipe[0]!"); //should not happen
+    if(use_pty)
+    {
+        if(close(fds)!=0)
+            log_message(logger,LOG_WARNING,"Failed to close slave pty. ec=%i",LI(errno)); //should not happen
+    }
+    else
+    {
+        if(close(stdout_pipe[1])!=0)
+            log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
+        if(close(stderr_pipe[1])!=0)
+            log_message(logger,LOG_WARNING,"Failed to close stderr_pipe[1]!"); //should not happen
+        if(close(stdin_pipe[0])!=0)
+            log_message(logger,LOG_WARNING,"Failed to close stdin_pipe[0]!"); //should not happen
+    }
     //send response for child startup
     uint8_t comm_alive=comm_detached?0:1;
     if(operation_status(0)!=0)
@@ -558,6 +625,9 @@ static uint8_t operation_100_101(uint8_t comm_detached)
     uint8_t o_data_empty=0;
     uint8_t e_data_empty=0;
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
+
+    int ofd=use_pty?fdm:stdout_pipe[0];
+    int ifd=use_pty?fdm:stdin_pipe[1];
 
     while(child_is_alive || o_data_empty<4 || e_data_empty<4)
     {
@@ -594,13 +664,13 @@ static uint8_t operation_100_101(uint8_t comm_detached)
         }
 
         //read stdout from child
-        size_t avail=bytes_avail(stdout_pipe[0]);
+        size_t avail=bytes_avail(ofd);
         ssize_t out_count=0;
         if(avail>0)
         {
             if(avail>max_data_req)
                 avail=max_data_req;
-            out_count=read(stdout_pipe[0],(void*)(chld_buf+CMDHDRSZ),avail);
+            out_count=read(ofd,(void*)(chld_buf+CMDHDRSZ),avail);
             if(out_count==-1)
             {
                 int err=errno;
@@ -627,45 +697,50 @@ static uint8_t operation_100_101(uint8_t comm_detached)
             }
         }
 
-        //and stderr from child
-        avail=bytes_avail(stderr_pipe[0]);
-        ssize_t err_count=0;
-        if(avail>0)
+        if(use_pty)
+            e_data_empty=o_data_empty;
+        else
         {
-            if(avail>max_data_req)
-                avail=max_data_req;
-            err_count=read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),avail);
-            if(err_count==-1)
+            //and stderr from child
+            avail=bytes_avail(stderr_pipe[0]);
+            ssize_t err_count=0;
+            if(avail>0)
             {
-                int err=errno;
-                if(err!=EINTR)
-                    log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s, errno=%i",LS(params[0]),LI(err));
-                err_count=0;
+                if(avail>max_data_req)
+                    avail=max_data_req;
+                err_count=read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),avail);
+                if(err_count==-1)
+                {
+                    int err=errno;
+                    if(err!=EINTR)
+                        log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s, errno=%i",LS(params[0]),LI(err));
+                    err_count=0;
+                }
+                e_data_empty=0;
             }
-            e_data_empty=0;
-        }
-        else if(e_data_empty<4)
-            ++e_data_empty;
+            else if(e_data_empty<4)
+                ++e_data_empty;
 
-        //send output down to commander
-        if(comm_alive)
-        {
-            CMDHDR cmd;
-            cmd.cmd_type=100;
-            cmdhdr_write(chld_buf,0,cmd);
-            int32_t elen=(int32_t)err_count+(int32_t)CMDHDRSZ;
-            uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,elen,key,REQ_TIMEOUT_MS);
-            if(ec!=0)
+            //send output down to commander
+            if(comm_alive)
             {
-                log_message(logger,LOG_WARNING,"Commander goes offline while sending child stderr, disconnecting commander.");
-                comm_alive=0;
+                CMDHDR cmd;
+                cmd.cmd_type=100;
+                cmdhdr_write(chld_buf,0,cmd);
+                int32_t elen=(int32_t)err_count+(int32_t)CMDHDRSZ;
+                uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,elen,key,REQ_TIMEOUT_MS);
+                if(ec!=0)
+                {
+                    log_message(logger,LOG_WARNING,"Commander goes offline while sending child stderr, disconnecting commander.");
+                    comm_alive=0;
+                }
             }
         }
 
         //send input from commander to stdio of child
         if(in_len>0)
         {
-            if(write(stdin_pipe[1],(void*)(data_buf+CMDHDRSZ),(size_t)in_len)<0)
+            if(write(ifd,(void*)(data_buf+CMDHDRSZ),(size_t)in_len)<0)
             {
                 int err=errno;
                 if(err!=EINTR)
