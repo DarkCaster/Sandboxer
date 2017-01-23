@@ -15,6 +15,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <poll.h>
+#include <termios.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,7 +44,6 @@ static uint8_t operation_1(char* exec);
 static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec);
-
 static size_t bytes_avail(int fd);
 
 static size_t bytes_avail(int fd)
@@ -181,8 +181,35 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
     cmd.cmd_type=100;
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
 
+    struct termios term_settings_backup;
+    uint8_t ts_is_set=0;
+
+    if(use_pty)
+    {
+        log_message(logger,LOG_INFO,"Adjusting terminal settings");
+
+        if(tcgetattr(STDOUT_FILENO,&term_settings_backup)!=0)
+            log_message(logger,LOG_WARNING,"Failed to read terminal settings, error code=%i",LI(errno));
+        else
+        {
+            struct termios newopts=term_settings_backup;
+            newopts.c_cflag = 0;
+            newopts.c_iflag = 0;
+            newopts.c_oflag = 0;
+            newopts.c_lflag = 0;
+            if(tcsetattr(STDOUT_FILENO,TCSANOW,&newopts)!=0)
+                log_message(logger,LOG_WARNING,"Failed to set terminal settings, error code=%i",LI(errno));
+            else
+                ts_is_set=1;
+        }
+    }
+
+    #define restore_terminal if(ts_is_set)tcsetattr(STDOUT_FILENO,TCSANOW,&term_settings_backup)
+
     while(1)
     {
+        //TODO: check if term size is changes, and send new params
+
         //read input
         int32_t send_data_len=CMDHDRSZ;
         size_t avail=bytes_avail(STDIN_FILENO);
@@ -194,25 +221,38 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
             if(rcount<0)
             {
                 if(errno!=EINTR)
+                {
+                    restore_terminal;
                     log_message(logger,LOG_ERROR,"Error while reading stdin");
+                    //TODO: send commander disconnect notification
+                }
             }
-            send_data_len+=(int32_t)rcount;
+            else
+                send_data_len+=(int32_t)rcount;
         }
 
         //send input
         cmdhdr_write(data_buf,0,cmd);
         ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
         if(ec!=0)
+        {
+            restore_terminal;
             return ec;
+        }
 
         //read stdout, captured by executor module
         int32_t recv_out_data_len=0;
         ec=message_read(fdi,tmp_buf,data_buf,0,&recv_out_data_len,key,REQ_TIMEOUT_MS);
         if(ec!=0)
+        {
+            restore_terminal;
             return ec;
+        }
+
         recv_out_data_len-=(int32_t)CMDHDRSZ;
         if(recv_out_data_len<0)
         {
+            restore_terminal;
             log_message(logger,LOG_ERROR,"Corrupted data received from executor");
             return 2;
         }
@@ -220,12 +260,14 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
         uint8_t rcode=cmdhdr_read(data_buf,0).cmd_type;
         if(rcode==101)
         {
+            restore_terminal;
             *child_ec=*(data_buf+CMDHDRSZ);
             log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec));
             return 0;
         }
         else if(rcode!=100)
         {
+            restore_terminal;
             log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
             return 1;
         }
@@ -271,8 +313,6 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
             usleep((useconds_t)(DATA_WAIT_TIME_MS*1000));
     }
-
-    return 0;
 }
 
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
