@@ -42,7 +42,7 @@ static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec);
 static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
-static uint8_t operation_100(uint8_t *child_ec);
+static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec);
 
 static size_t bytes_avail(int fd);
 
@@ -149,10 +149,10 @@ static uint8_t operation_2(char* param)
 }
 
 //launch configured binary
-static uint8_t operation_100(uint8_t* child_ec)
+static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
 {
     CMDHDR cmd;
-    cmd.cmd_type=100;
+    cmd.cmd_type=use_pty?200:100;
     cmdhdr_write(data_buf,0,cmd);
     log_message(logger,LOG_INFO,"Sending request");
     uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
@@ -233,33 +233,40 @@ static uint8_t operation_100(uint8_t* child_ec)
         if(recv_out_data_len>0)
             write(STDOUT_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_out_data_len);
 
-        //read stderr, captured by executor module
         int32_t recv_err_data_len=0;
-        ec=message_read(fdi,tmp_buf,data_buf,0,&recv_err_data_len,key,REQ_TIMEOUT_MS);
-        if(ec!=0)
-            return ec;
-        recv_err_data_len-=(int32_t)CMDHDRSZ;
-        if(recv_err_data_len<0)
+        if(use_pty)
         {
-            log_message(logger,LOG_ERROR,"Corrupted data received from executor");
-            return 2;
+            recv_err_data_len=recv_out_data_len;
         }
+        else
+        {
+            //read stderr, captured by executor module
+            ec=message_read(fdi,tmp_buf,data_buf,0,&recv_err_data_len,key,REQ_TIMEOUT_MS);
+            if(ec!=0)
+                return ec;
+            recv_err_data_len-=(int32_t)CMDHDRSZ;
+            if(recv_err_data_len<0)
+            {
+                log_message(logger,LOG_ERROR,"Corrupted data received from executor");
+                return 2;
+            }
 
-        rcode=cmdhdr_read(data_buf,0).cmd_type;
-        if(rcode==101)
-        {
-            *child_ec=*(data_buf+CMDHDRSZ);
-            log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec));
-            return 0;
-        }
-        else if(rcode!=100)
-        {
-            log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
-            return 1;
-        }
+            rcode=cmdhdr_read(data_buf,0).cmd_type;
+            if(rcode==101)
+            {
+                *child_ec=*(data_buf+CMDHDRSZ);
+                log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec));
+                return 0;
+            }
+            else if(rcode!=100)
+            {
+                log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(rcode));
+                return 1;
+            }
 
-        if(recv_err_data_len>0)
-            write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_err_data_len);
+            if(recv_err_data_len>0)
+                write(STDERR_FILENO,(void*)(data_buf+CMDHDRSZ),(size_t)recv_err_data_len);
+        }
 
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
             usleep((useconds_t)(DATA_WAIT_TIME_MS*1000));
@@ -396,7 +403,10 @@ int main(int argc, char* argv[])
         err=operation_2(op_param);
         break;
     case 100:
-        err=operation_100(&child_ec);
+        err=operation_100_200(0,&child_ec);
+        break;
+    case 200:
+        err=operation_100_200(1,&child_ec);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
