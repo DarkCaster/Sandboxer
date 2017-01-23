@@ -13,7 +13,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <errno.h>
-#include <termios.h>
+#include <pty.h>
 
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -517,42 +517,11 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
         return 105;
     }
-
     int stdout_pipe[2];
     int stderr_pipe[2];
     int stdin_pipe[2];
 
-    int fdm=-1;
-    int fds=-1;
-
-    if(use_pty)
-    {
-        fdm = posix_openpt(O_RDWR);
-        if(fdm < 0)
-        {
-            log_message(logger,LOG_ERROR,"posix_openpt failed with ec=%i",LI(errno));
-            return 110;
-        }
-        int rc = grantpt(fdm);
-        if (rc != 0)
-        {
-            log_message(logger,LOG_ERROR,"grantpt failed with ec=%i",LI(errno));
-            return 111;
-        }
-        rc = unlockpt(fdm);
-        if(rc != 0)
-        {
-            log_message(logger,LOG_ERROR,"unlockpt failed with ec=%i",LI(errno));
-            return 112;
-        }
-        fds = open(ptsname(fdm),O_RDWR);
-        if(fds < 0)
-        {
-            log_message(logger,LOG_ERROR,"Failed to open slave pty. ec=%i",LI(errno));
-            return 113;
-        }
-    }
-    else
+    if(!use_pty)
     {
         if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0 || pipe(stdin_pipe)!=0 )
         {
@@ -562,31 +531,29 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     }
     log_message(logger,LOG_INFO,"Starting new process %s",LS(params[0]));
     child_is_alive=1;
-    pid_t pid = fork();
+
+    int fdm=-1;
+    pid_t pid = use_pty ? forkpty(&fdm,NULL,NULL,NULL) : fork();
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
         return 120;
     }
+
     if(pid==0)
     {
-        if(use_pty)
+        /*if(use_pty)
         {
-            if(close(fdm)!=0)
-                exit(2);
             struct termios term_settings;
             if(tcgetattr(fds, &term_settings)!=0)
                 exit(3);
             cfmakeraw(&term_settings);
             if(tcsetattr(fds,TCSANOW,&term_settings)!=0)
                 exit(4);
-            while((dup2(fds, STDOUT_FILENO) == -1) && (errno == EINTR)) {}
-            while((dup2(fds, STDERR_FILENO) == -1) && (errno == EINTR)) {}
-            while((dup2(fds, STDIN_FILENO) == -1) && (errno == EINTR)) {}
-        }
-        else
+        }*/
+
+        if(!use_pty)
         {
-            //TODO: also add stdin redirection.
             while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
             close(stdout_pipe[1]);
             close(stdout_pipe[0]);
@@ -601,12 +568,8 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         perror("execv failed");
         exit(1);
     }
-    if(use_pty)
-    {
-        if(close(fds)!=0)
-            log_message(logger,LOG_WARNING,"Failed to close slave pty. ec=%i",LI(errno)); //should not happen
-    }
-    else
+
+    if(!use_pty)
     {
         if(close(stdout_pipe[1])!=0)
             log_message(logger,LOG_WARNING,"Failed to close stdout_pipe[1]!"); //should not happen
@@ -615,6 +578,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         if(close(stdin_pipe[0])!=0)
             log_message(logger,LOG_WARNING,"Failed to close stdin_pipe[0]!"); //should not happen
     }
+
     //send response for child startup
     uint8_t comm_alive=comm_detached?0:1;
     if(operation_status(0)!=0)
