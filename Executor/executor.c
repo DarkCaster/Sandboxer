@@ -679,7 +679,20 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             close(stdin_pipe[0]);
             close(stdin_pipe[1]);
         }
-        //TODO: fill env
+        if(child_envdel_count>0)
+            for(int i=0;i<child_envdel_count;++i)
+                if(unsetenv(child_envdel_v[i])!=0)
+                {
+                    perror("unsetenv failed");
+                    exit(2);
+                }
+        if(child_envset_count>0)
+            for(int i=0;i<child_envset_count;++i)
+                if(setenv(child_envset_n[i],child_envset_v[i],1)!=0)
+                {
+                    perror("setenv failed");
+                    exit(3);
+                }
         execv(params[0],params);
         perror("execv failed");
         exit(1);
