@@ -738,7 +738,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             {
                 CMDHDR cmd;
                 cmd=cmdhdr_read(data_buf,0);
-                //TODO: child termination via signal
+                //TODO: child termination via signal, terminal size update for pty-enabled mode
                 if(cmd.cmd_type!=100)
                 {
                     log_message(logger,LOG_WARNING,"Commander gone offline, disposing all stdout and stderr from child process");
@@ -752,6 +752,26 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                         log_message(logger,LOG_WARNING,"Incorrect input data was received, disconnecting commander.");
                         comm_alive=0;
                     }
+                }
+            }
+        }
+        else //recconect logic
+        {
+            size_t avail=bytes_avail(fdi);
+            if(avail>0)
+            {
+                log_message(logger,LOG_INFO,"Commander trying to recconect");
+                int32_t rl=0;
+                if(message_read(fdi,tmp_buf,data_buf,0,&rl,key,REQ_TIMEOUT_MS)!=0)
+                    log_message(logger,LOG_WARNING,"Recconect failed (timeout)");
+                else if(rl!=CMDHDRSZ)
+                    log_message(logger,LOG_INFO,"Recconect failed (bad length)");
+                else if (cmdhdr_read(data_buf,0).cmd_type!=255)
+                    log_message(logger,LOG_INFO,"Recconect failed (wrong opcode)");
+                else
+                {
+                    log_message(logger,LOG_INFO,"Recconect complete, redirecting child process output to commander");
+                    comm_alive=1;
                 }
             }
         }
