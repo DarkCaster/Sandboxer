@@ -45,7 +45,7 @@ static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_3(char* name, char* value);
 static uint8_t operation_4(char* name);
-static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec);
+static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect);
 static uint8_t operation_101_201(uint8_t use_pty);
 static size_t bytes_avail(int fd);
 
@@ -200,16 +200,22 @@ int main(int argc, char* argv[])
             err=operation_4(op_param[0]);
         break;
     case 100:
-        err=operation_100_200(0,&child_ec);
+        err=operation_100_200(0,&child_ec,0);
         break;
     case 101:
         err=operation_101_201(0);
         break;
+    case 102:
+        err=operation_100_200(0,&child_ec,1);
+        break;
     case 200:
-        err=operation_100_200(1,&child_ec);
+        err=operation_100_200(1,&child_ec,0);
         break;
     case 201:
         err=operation_101_201(1);
+        break;
+    case 202:
+        err=operation_100_200(1,&child_ec,1);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
@@ -437,10 +443,10 @@ static uint8_t operation_101_201(uint8_t use_pty)
 }
 
 //launch configured binary
-static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
+static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect)
 {
     CMDHDR cmd;
-    cmd.cmd_type=use_pty?200:100;
+    cmd.cmd_type=reconnect?(use_pty?255:254):(use_pty?200:100);
     cmdhdr_write(data_buf,0,cmd);
     log_message(logger,LOG_INFO,"Sending request");
     uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
@@ -457,21 +463,17 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
         log_message(logger,LOG_ERROR,"Wrong response length detected!");
         return 1;
     }
-    CMDHDR rcmd=cmdhdr_read(data_buf,0);
-    if(rcmd.cmd_type!=0)
+    if(cmdhdr_read(data_buf,0).cmd_type!=0)
     {
-        log_message(logger,LOG_ERROR,"Executor module reports error while performing child exec, error code=%i",rcmd.cmd_type);
+        log_message(logger,LOG_ERROR,"Executor module reports error while performing child exec, error code=%i",LI(cmdhdr_read(data_buf,0).cmd_type));
         return 2;
     }
-
     //main command loop
     log_message(logger,LOG_INFO,"Commander module entering control loop");
     cmd.cmd_type=100;
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
-
     struct termios term_settings_backup;
     uint8_t ts_is_set=0;
-
     if(use_pty)
     {
         log_message(logger,LOG_INFO,"Adjusting terminal settings");
@@ -491,9 +493,7 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
                 ts_is_set=1;
         }
     }
-
     #define restore_terminal if(ts_is_set)tcsetattr(STDOUT_FILENO,TCSANOW,&term_settings_backup)
-
     #define receive_data(data_len,out_fd) \
         { data_len=0; \
         ec=message_read(fdi,tmp_buf,data_buf,0,&data_len,key,REQ_TIMEOUT_MS); \

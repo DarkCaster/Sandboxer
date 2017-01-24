@@ -766,12 +766,23 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                     log_message(logger,LOG_WARNING,"Recconect failed (timeout)");
                 else if(rl!=CMDHDRSZ)
                     log_message(logger,LOG_INFO,"Recconect failed (bad length)");
-                else if (cmdhdr_read(data_buf,0).cmd_type!=255)
+                else if(use_pty && cmdhdr_read(data_buf,0).cmd_type!=255)
+                    log_message(logger,LOG_INFO,"Recconect failed (wrong opcode for pty enabled mode)");
+                else if(!use_pty && cmdhdr_read(data_buf,0).cmd_type!=254)
                     log_message(logger,LOG_INFO,"Recconect failed (wrong opcode)");
                 else
                 {
-                    log_message(logger,LOG_INFO,"Recconect complete, redirecting child process output to commander");
-                    comm_alive=1;
+                    log_message(logger,LOG_INFO,"Sending response");
+                    CMDHDR cmd;
+                    cmd.cmd_type=0;
+                    cmdhdr_write(data_buf,0,cmd);
+                    if(message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS)!=0)
+                        log_message(logger,LOG_WARNING,"Recconect response send failed");
+                    else
+                    {
+                        log_message(logger,LOG_INFO,"Recconect complete, redirecting child process output to commander");
+                        comm_alive=1;
+                    }
                 }
             }
         }
