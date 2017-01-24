@@ -46,6 +46,7 @@ static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_3(char* name, char* value);
 static uint8_t operation_4(char* name);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec);
+static uint8_t operation_101_201(uint8_t use_pty);
 static size_t bytes_avail(int fd);
 
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
@@ -201,8 +202,14 @@ int main(int argc, char* argv[])
     case 100:
         err=operation_100_200(0,&child_ec);
         break;
+    case 101:
+        err=operation_101_201(0);
+        break;
     case 200:
         err=operation_100_200(1,&child_ec);
+        break;
+    case 201:
+        err=operation_101_201(1);
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
@@ -397,6 +404,35 @@ static uint8_t operation_3(char* name, char* value)
         return 2;
     }
 
+    return 0;
+}
+
+//launch configured binary
+static uint8_t operation_101_201(uint8_t use_pty)
+{
+    CMDHDR cmd;
+    cmd.cmd_type=use_pty?201:101;
+    cmdhdr_write(data_buf,0,cmd);
+    log_message(logger,LOG_INFO,"Sending request");
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        return ec;
+    int cmdlen=0;
+    log_message(logger,LOG_INFO,"Reading response");
+    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        return ec;
+    //decode response
+    if(cmdlen!=(int32_t)CMDHDRSZ)
+    {
+        log_message(logger,LOG_ERROR,"Wrong response length detected!");
+        return 1;
+    }
+    if(cmdhdr_read(data_buf,0).cmd_type!=0)
+    {
+        log_message(logger,LOG_ERROR,"Executor module reports error while performing child exec, error code=%i",cmdhdr_read(data_buf,0).cmd_type);
+        return 2;
+    }
     return 0;
 }
 
