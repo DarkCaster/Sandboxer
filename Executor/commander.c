@@ -470,7 +470,7 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
     }
     //main command loop
     log_message(logger,LOG_INFO,"Commander module entering control loop");
-    cmd.cmd_type=100;
+    cmd.cmd_type=150;
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
     struct termios term_settings_backup;
     uint8_t ts_is_set=0;
@@ -501,9 +501,9 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         data_len-=(int32_t)CMDHDRSZ; \
         if(data_len<0) \
             { restore_terminal; log_message(logger,LOG_ERROR,"Corrupted data received from executor"); return 2; } \
-        if(cmdhdr_read(data_buf,0).cmd_type==101) \
+        if(cmdhdr_read(data_buf,0).cmd_type==151) \
             { restore_terminal; *child_ec=*(data_buf+CMDHDRSZ); log_message(logger,LOG_INFO,"Child exit with code=%i",LI(*child_ec)); return 0; } \
-        else if(cmdhdr_read(data_buf,0).cmd_type!=100) \
+        else if(cmdhdr_read(data_buf,0).cmd_type!=150) \
             { restore_terminal; log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(cmdhdr_read(data_buf,0).cmd_type)); return 1; } \
         if(data_len>0) \
             write(out_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); }

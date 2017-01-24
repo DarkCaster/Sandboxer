@@ -739,7 +739,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                 CMDHDR cmd;
                 cmd=cmdhdr_read(data_buf,0);
                 //TODO: child termination via signal, terminal size update for pty-enabled mode
-                if(cmd.cmd_type!=100)
+                if(cmd.cmd_type!=150)
                 {
                     log_message(logger,LOG_WARNING,"Commander gone offline, disposing all stdout and stderr from child process");
                     comm_alive=0;
@@ -810,7 +810,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         if(comm_alive)
         {
             CMDHDR cmd;
-            cmd.cmd_type=100;
+            cmd.cmd_type=150;
             cmdhdr_write(chld_buf,0,cmd);
             int32_t olen=(int32_t)out_count+(int32_t)CMDHDRSZ;
             uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,olen,key,REQ_TIMEOUT_MS);
@@ -849,7 +849,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             if(comm_alive)
             {
                 CMDHDR cmd;
-                cmd.cmd_type=100;
+                cmd.cmd_type=150;
                 cmdhdr_write(chld_buf,0,cmd);
                 int32_t elen=(int32_t)err_count+(int32_t)CMDHDRSZ;
                 uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,elen,key,REQ_TIMEOUT_MS);
@@ -884,7 +884,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
 
     //send info about control loop completion and child exit code
     CMDHDR cmd;
-    cmd.cmd_type=101;
+    cmd.cmd_type=151;
     cmdhdr_write(data_buf,0,cmd);
     *(data_buf+CMDHDRSZ)=child_ec;
     uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ+1,key,REQ_TIMEOUT_MS);
