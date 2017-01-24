@@ -46,6 +46,167 @@ static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec);
 static size_t bytes_avail(int fd);
 
+//params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
+int main(int argc, char* argv[])
+{
+    comm_shutdown(0u);
+    //logger
+    logger=log_init();
+    log_setlevel(logger,LOG_INFO);
+    log_stdout(logger,2u);
+    log_headline(logger,"Commander startup");
+    log_message(logger,LOG_INFO,"Parsing startup params");
+
+    if(argc<5)
+    {
+        log_message(logger,LOG_ERROR,"<control-dir>, <channel-name>, <security-key> or <operation-code> parameters missing");
+        log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...");
+        teardown(10);
+    }
+
+    if(strnlen(argv[1], MAXARGLEN)>=MAXARGLEN)
+    {
+        log_message(logger,LOG_ERROR,"<control-dir> param too long. Max characters allowed = %i",LI(MAXARGLEN));
+        teardown(11);
+    }
+    //control-dir
+    ctldir=argv[1];
+
+    if(strnlen(argv[2], MAXARGLEN)>=MAXARGLEN)
+    {
+        log_message(logger,LOG_ERROR,"<channel-name> param too long. Max characters allowed = %i",LI(MAXARGLEN));
+        teardown(12);
+    }
+    //channel-name
+    size_t ch_base_len=strnlen(argv[2],MAXARGLEN);
+
+    char* channel_in=(char*)safe_alloc(ch_base_len+5,1);
+    strncpy(channel_in,argv[2],ch_base_len);
+    strncpy(channel_in+ch_base_len,".out",4);
+    channel_in[ch_base_len+4]='\0';
+
+    char* channel_out=(char*)safe_alloc(ch_base_len+4,1);
+    strncpy(channel_out,argv[2],ch_base_len);
+    strncpy(channel_out+ch_base_len,".in",3);
+    channel_out[ch_base_len+3]='\0';
+
+    if(strnlen(argv[3], MAXARGLEN)>=MAXARGLEN)
+    {
+        log_message(logger,LOG_ERROR,"<security-key> param too long. Max characters allowed = %i",LI(MAXARGLEN));
+        teardown(13);
+    }
+
+    //security key
+    if(arg_is_numeric(argv[3]))
+        key=(uint32_t)strtol(argv[3], NULL, 10);
+    else
+    {
+        log_message(logger,LOG_ERROR,"<security-key> param is incorrect");
+        teardown(14);
+    }
+
+    if(!arg_is_numeric(argv[4]))
+    {
+        log_message(logger,LOG_ERROR,"<operation-code> param must be a number");
+        teardown(14);
+    }
+
+    uint32_t op_test=(uint32_t)strtol(argv[4], NULL, 10);
+    if(op_test>255)
+    {
+        log_message(logger,LOG_ERROR,"<operation-code> param must be a number between 0 and 255");
+        teardown(15);
+    }
+    uint8_t op_code=(uint8_t)op_test;
+
+    char* op_param=NULL;
+    if(argc>5)
+    {
+        size_t op_param_len=strnlen(argv[5],MAXARGLEN);
+        if(op_param_len>=MAXARGLEN)
+        {
+            log_message(logger,LOG_ERROR,"[operation param] param too long. Max characters allowed = %i",LI(MAXARGLEN));
+            teardown(16);
+        }
+        op_param=(char*)safe_alloc(op_param_len+1,1);
+        op_param[op_param_len]='\0';
+        strncpy(op_param,argv[5],op_param_len);
+    }
+
+    log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
+    log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
+    log_message(logger,LOG_INFO,"Channel name is set to %s|%s",LS(channel_out),LS(channel_in));
+
+    if(chdir(ctldir)!=0)
+    {
+        log_message(logger,LOG_ERROR,"Error changing dir to %s",LS(ctldir));
+        teardown(21);
+    }
+
+    fdi=open(channel_in,O_RDWR);
+    if(fdi<0)
+    {
+        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_in));
+        teardown(22);
+    }
+
+    fdo=open(channel_out,O_RDWR);
+    if(fdo<0)
+    {
+        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_out));
+        teardown(22);
+    }
+
+    uint8_t err;
+    uint8_t child_ec=0;
+
+    switch(op_code)
+    {
+    case 0:
+        err=operation_0();
+        break;
+    case 1:
+        err=operation_1(op_param);
+        break;
+    case 2:
+        err=operation_2(op_param);
+        break;
+    case 100:
+        err=operation_100_200(0,&child_ec);
+        break;
+    case 200:
+        err=operation_100_200(1,&child_ec);
+        break;
+    default:
+        log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
+        teardown(22);
+        break;
+    }
+
+    if(err!=0)
+    {
+       log_message(logger,LOG_ERROR,"Operation %i was failed",LI(op_code));
+       close(fdi);
+       close(fdo);
+       teardown(30);
+    }
+
+    if(close(fdi)!=0)
+        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_in));
+
+    if(close(fdo)!=0)
+        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_out));
+
+    if(op_param!=NULL)
+        free(op_param);
+    free(channel_in);
+    free(channel_out);
+
+    //TODO: add signal handlers
+
+    teardown(child_ec);
+}
+
 static size_t bytes_avail(int fd)
 {
     int nbytes=0;
@@ -266,180 +427,4 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec)
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
             usleep((useconds_t)(DATA_WAIT_TIME_MS*1000));
     }
-}
-
-//params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
-
-
-int main(int argc, char* argv[])
-{
-    comm_shutdown(0u);
-    //logger
-    logger=log_init();
-    log_setlevel(logger,LOG_INFO);
-    log_stdout(logger,2u);
-    log_headline(logger,"Commander startup");
-    log_message(logger,LOG_INFO,"Parsing startup params");
-
-    if(argc<5)
-    {
-        log_message(logger,LOG_ERROR,"<control-dir>, <channel-name>, <security-key> or <operation-code> parameters missing");
-        log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...");
-        teardown(10);
-    }
-
-    if(strnlen(argv[1], MAXARGLEN)>=MAXARGLEN)
-    {
-        log_message(logger,LOG_ERROR,"<control-dir> param too long. Max characters allowed = %i",LI(MAXARGLEN));
-        teardown(11);
-    }
-    //control-dir
-    ctldir=argv[1];
-
-    if(strnlen(argv[2], MAXARGLEN)>=MAXARGLEN)
-    {
-        log_message(logger,LOG_ERROR,"<channel-name> param too long. Max characters allowed = %i",LI(MAXARGLEN));
-        teardown(12);
-    }
-    //channel-name
-    size_t ch_base_len=strnlen(argv[2],MAXARGLEN);
-
-    char* channel_in=(char*)safe_alloc(ch_base_len+5,1);
-    strncpy(channel_in,argv[2],ch_base_len);
-    strncpy(channel_in+ch_base_len,".out",4);
-    channel_in[ch_base_len+4]='\0';
-
-    char* channel_out=(char*)safe_alloc(ch_base_len+4,1);
-    strncpy(channel_out,argv[2],ch_base_len);
-    strncpy(channel_out+ch_base_len,".in",3);
-    channel_out[ch_base_len+3]='\0';
-
-    if(strnlen(argv[3], MAXARGLEN)>=MAXARGLEN)
-    {
-        log_message(logger,LOG_ERROR,"<security-key> param too long. Max characters allowed = %i",LI(MAXARGLEN));
-        teardown(13);
-    }
-
-    //security key
-    if(arg_is_numeric(argv[3]))
-        key=(uint32_t)strtol(argv[3], NULL, 10);
-    else
-    {
-        log_message(logger,LOG_ERROR,"<security-key> param is incorrect");
-        teardown(14);
-    }
-
-    if(!arg_is_numeric(argv[4]))
-    {
-        log_message(logger,LOG_ERROR,"<operation-code> param must be a number");
-        teardown(14);
-    }
-
-    uint32_t op_test=(uint32_t)strtol(argv[4], NULL, 10);
-    if(op_test>255)
-    {
-        log_message(logger,LOG_ERROR,"<operation-code> param must be a number between 0 and 255");
-        teardown(15);
-    }
-    uint8_t op_code=(uint8_t)op_test;
-
-    char* op_param=NULL;
-    if(argc>5)
-    {
-        size_t op_param_len=strnlen(argv[5],MAXARGLEN);
-        if(op_param_len>=MAXARGLEN)
-        {
-            log_message(logger,LOG_ERROR,"[operation param] param too long. Max characters allowed = %i",LI(MAXARGLEN));
-            teardown(16);
-        }
-        op_param=(char*)safe_alloc(op_param_len+1,1);
-        op_param[op_param_len]='\0';
-        strncpy(op_param,argv[5],op_param_len);
-    }
-
-    log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
-    log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
-    log_message(logger,LOG_INFO,"Channel name is set to %s|%s",LS(channel_out),LS(channel_in));
-
-    if(chdir(ctldir)!=0)
-    {
-        log_message(logger,LOG_ERROR,"Error changing dir to %s",LS(ctldir));
-        teardown(21);
-    }
-
-    fdi=open(channel_in,O_RDWR);
-    if(fdi<0)
-    {
-        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_in));
-        teardown(22);
-    }
-
-    fdo=open(channel_out,O_RDWR);
-    if(fdo<0)
-    {
-        log_message(logger,LOG_ERROR,"Error opening communication pipe %s",LS(channel_out));
-        teardown(22);
-    }
-
-    uint8_t err;
-    uint8_t child_ec=0;
-
-    switch(op_code)
-    {
-    case 0:
-        err=operation_0();
-        break;
-    case 1:
-        err=operation_1(op_param);
-        break;
-    case 2:
-        err=operation_2(op_param);
-        break;
-    case 100:
-        err=operation_100_200(0,&child_ec);
-        break;
-    case 200:
-        err=operation_100_200(1,&child_ec);
-        break;
-    default:
-        log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
-        teardown(22);
-        break;
-    }
-
-    if(err!=0)
-    {
-       log_message(logger,LOG_ERROR,"Operation %i was failed",LI(op_code));
-       close(fdi);
-       close(fdo);
-       teardown(30);
-    }
-
-    if(close(fdi)!=0)
-        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_in));
-
-    if(close(fdo)!=0)
-        log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_out));
-
-    if(op_param!=NULL)
-        free(op_param);
-    free(channel_in);
-    free(channel_out);
-
-    //TODO: move signal handling logic to bg thread, when needed
-    /*
-    sigset_t set;
-    sigfillset(&set);
-    sigprocmask(SIG_BLOCK,&set,NULL);
-
-    int sig;
-    sigwait(&set,&sig);
-    log_message(logger,LOG_INFO,"Received signal %i",LI(sig));
-    if (sig==15||sig==2)
-    {
-        log_message(logger,LOG_INFO,"Performing termination sequence");
-        teardown(0);
-    }*/
-
-    teardown(child_ec);
 }
