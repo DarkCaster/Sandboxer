@@ -508,6 +508,8 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         if(data_len>0) \
             write(out_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); }
 
+    int data_wait_time=DATA_WAIT_TIME_MS_MIN;
+
     while(1)
     {
         //TODO: check if term size is changes, and send new params
@@ -552,6 +554,18 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
             receive_data(recv_err_data_len,STDERR_FILENO); //read stderr, captured by executor module
 
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
-            usleep((useconds_t)(DATA_WAIT_TIME_MS*1000));
+        {
+            if(data_wait_time>0)
+            {
+                usleep((useconds_t)(data_wait_time*1000));
+                data_wait_time*=2;
+                if(data_wait_time>DATA_WAIT_TIME_MS_MAX)
+                    data_wait_time=DATA_WAIT_TIME_MS_MAX;
+            }
+            else
+                data_wait_time=1;
+        }
+        else
+            data_wait_time=DATA_WAIT_TIME_MS_MIN;
     }
 }
