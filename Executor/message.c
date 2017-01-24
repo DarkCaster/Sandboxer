@@ -3,16 +3,17 @@
 //perform sign\verify of data buffer integrity
 
 #include "message.h"
+#include "cmd_defs.h"
 #include <string.h>
 
 uint16_t msg_get_pl_len(const uint8_t* buffer, int32_t offset)
 {
-    return *((const uint16_t*)(buffer+offset));
+    return u16_read(buffer,offset);
 }
 
 static void msg_write_pl_len(uint8_t* const buffer, int32_t offset, uint16_t len)
 {
-    *((uint16_t* const)(buffer+offset))=len;
+    u16_write(buffer,offset,len);
 }
 
 int32_t msg_get_pl_offset(int32_t offset)

@@ -1,4 +1,5 @@
 #include "hash.h"
+#include "cmd_defs.h"
 
 uint32_t get_hash(uint32_t seed, const uint8_t* data, int32_t offset, int32_t len)
 {
@@ -40,12 +41,12 @@ uint32_t get_hash(uint32_t seed, const uint8_t* data, int32_t offset, int32_t le
 
 static uint32_t read_hash(const uint8_t* buffer, int32_t offset)
 {
-    return *((const uint32_t*)(buffer+offset));
+    return u32_read(buffer,offset);
 }
 
 static void write_hash(uint8_t* const buffer, int32_t offset, uint32_t hash)
 {
-    *((uint32_t* const)(buffer+offset))=hash;
+    u32_write(buffer,offset,hash);
 }
 
 uint8_t verify_hash(uint32_t seed, const uint8_t* buffer, int32_t offset, int32_t full_len)
