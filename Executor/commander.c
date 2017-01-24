@@ -43,6 +43,8 @@ static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec);
 static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
+static uint8_t operation_3(char* name, char* value);
+static uint8_t operation_4(char* name);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec);
 static size_t bytes_avail(int fd);
 
@@ -119,18 +121,23 @@ int main(int argc, char* argv[])
     }
     uint8_t op_code=(uint8_t)op_test;
 
-    char* op_param=NULL;
+    int p_count=argc-5;
+    if(p_count<0)
+        p_count=0;
+    char* op_param[p_count];
+
     if(argc>5)
+    for(int i=5;i<argc;++i)
     {
-        size_t op_param_len=strnlen(argv[5],MAXARGLEN);
+        size_t op_param_len=strnlen(argv[i],MAXARGLEN);
         if(op_param_len>=MAXARGLEN)
         {
-            log_message(logger,LOG_ERROR,"[operation param] param too long. Max characters allowed = %i",LI(MAXARGLEN));
+            log_message(logger,LOG_ERROR,"one of [operation param] is too long. Max characters allowed = %i",LI(MAXARGLEN));
             teardown(16);
         }
-        op_param=(char*)safe_alloc(op_param_len+1,1);
-        op_param[op_param_len]='\0';
-        strncpy(op_param,argv[5],op_param_len);
+        op_param[i-5]=(char*)safe_alloc(op_param_len+1,1);
+        op_param[i-5][op_param_len]='\0';
+        strncpy(op_param[i-5],argv[i],op_param_len);
     }
 
     log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
@@ -166,10 +173,30 @@ int main(int argc, char* argv[])
         err=operation_0();
         break;
     case 1:
-        err=operation_1(op_param);
+        if(p_count<1)
+            err=51;
+        else
+            err=operation_1(op_param[0]);
         break;
     case 2:
-        err=operation_2(op_param);
+        if(p_count<1)
+            err=52;
+        else
+            err=operation_2(op_param[0]);
+        break;
+    case 3:
+        if(p_count<1)
+            err=53;
+        else if(p_count<2)
+            err=operation_3(op_param[0],NULL);
+        else
+            err=operation_3(op_param[0],op_param[1]);
+        break;
+    case 4:
+        if(p_count<1)
+            err=54;
+        else
+            err=operation_4(op_param[0]);
         break;
     case 100:
         err=operation_100_200(0,&child_ec);
@@ -185,7 +212,7 @@ int main(int argc, char* argv[])
 
     if(err!=0)
     {
-       log_message(logger,LOG_ERROR,"Operation %i was failed",LI(op_code));
+       log_message(logger,LOG_ERROR,"Operation %i was failed, err=%i",LI(op_code),LI(err));
        close(fdi);
        close(fdo);
        teardown(30);
@@ -197,8 +224,12 @@ int main(int argc, char* argv[])
     if(close(fdo)!=0)
         log_message(logger,LOG_WARNING,"Error closing communication pipe %s",LS(channel_out));
 
-    if(op_param!=NULL)
-        free(op_param);
+    if(p_count>0)
+    {
+        for(int i=0;i<p_count;++i)
+            free(op_param[i]);
+    }
+
     free(channel_in);
     free(channel_out);
 
@@ -307,6 +338,66 @@ static uint8_t operation_1(char* exec)
 static uint8_t operation_2(char* param)
 {
     return operation_1_2(2u,param);
+}
+
+static uint8_t operation_4(char* name)
+{
+    return operation_1_2(4u,name);
+}
+
+static uint8_t operation_3(char* name, char* value)
+{
+    CMDHDR cmd;
+    cmd.cmd_type=3;
+    cmdhdr_write(data_buf,0,cmd);
+
+    int32_t len=(int32_t)CMDHDRSZ;
+    uint16_t nl = name==NULL?0:(uint16_t)strlen(name);
+    uint16_t vl = value==NULL?0:(uint16_t)strlen(value);
+
+    u16_write(data_buf,len,nl);
+    len+=2;
+
+    u16_write(data_buf,len,vl);
+    len+=2;
+
+    if(nl>0)
+    {
+        strncpy((char*)(data_buf+len),name,nl);
+        len+=nl;
+    }
+
+    if(vl>0)
+    {
+        strncpy((char*)(data_buf+len),value,vl);
+        len+=vl;
+    }
+
+    log_message(logger,LOG_INFO,"Sending request");
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,len,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        return ec;
+
+    len=0;
+    log_message(logger,LOG_INFO,"Reading response");
+    ec=message_read(fdi,tmp_buf,data_buf,0,&len,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        return ec;
+
+    //read response
+    if(len!=(int32_t)CMDHDRSZ)
+    {
+        log_message(logger,LOG_ERROR,"Wrong response length detected!");
+        return 1;
+    }
+
+    if(cmdhdr_read(data_buf,0).cmd_type!=0)
+    {
+        log_message(logger,LOG_ERROR,"Executor module reports error while setting exec-name/exec-param!");
+        return 2;
+    }
+
+    return 0;
 }
 
 //launch configured binary
