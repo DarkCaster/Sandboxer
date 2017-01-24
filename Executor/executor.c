@@ -38,6 +38,14 @@ static int fdo;
 static char** params;
 static int params_count;
 
+//child env
+static char** child_envset_v;
+static char** child_envset_n;
+static int child_envset_count;
+
+static char** child_envdel_v;
+static int child_envdel_count;
+
 //data exchange buffers
 static uint8_t tmp_buf[DATABUFSZ];
 static uint8_t data_buf[MSGPLMAXLEN+1];//as precaution
@@ -56,6 +64,8 @@ static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
 static uint8_t operation_2(char* param, size_t len);
+static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len);
+static uint8_t operation_4(char* name, size_t n_len);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
 
 static void show_usage(void)
@@ -195,6 +205,13 @@ int main(int argc, char* argv[])
     params[0]=NULL;
     params[1]=NULL;
 
+    child_envset_v=NULL;
+    child_envset_n=NULL;
+    child_envset_count=0;
+
+    child_envdel_v=NULL;
+    child_envdel_count=0;
+
     fdi=open(filename_in,O_RDWR);
     fdo=open(filename_out,O_RDWR);
 
@@ -260,6 +277,23 @@ int main(int argc, char* argv[])
                 break;
             case 2:
                 err=operation_2((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
+                break;
+            case 3:
+                if((pl_len-(int32_t)CMDHDRSZ)<4)
+                    err=10;
+                else
+                {
+                    int32_t o3_pl_len=(int32_t)pl_len-(int32_t)CMDHDRSZ-4;
+                    uint16_t nl=u16_read(data_buf,CMDHDRSZ);
+                    uint16_t vl=u16_read(data_buf,CMDHDRSZ+2);
+                    if(o3_pl_len<(nl+vl))
+                        err=11;
+                    else
+                        err=operation_3((char*)(data_buf+CMDHDRSZ+4),nl,(char*)(data_buf+CMDHDRSZ+4+nl),vl);
+                }
+                break;
+            case 4:
+                err=operation_4((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 100:
                 err=operation_100_101_200_201(0,0);
@@ -500,6 +534,87 @@ static uint8_t operation_2(char* param, size_t len)
         return 1;
 }
 
+static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len)
+{
+    if(n_len>0 && name!=NULL)
+    {
+
+        if(child_envset_count==0)
+        {
+            child_envset_count=1;
+            child_envset_n=(char**)safe_alloc(1,sizeof(char*));
+            child_envset_v=(char**)safe_alloc(1,sizeof(char*));
+        }
+        else
+        {
+            char** tmp=(char**)safe_alloc((size_t)(child_envset_count+1),sizeof(char*));
+            for(int i=0;i<child_envset_count;++i)
+                tmp[i]=child_envset_n[i];
+            free(child_envset_n);
+            child_envset_n=tmp;
+            tmp=(char**)safe_alloc((size_t)(child_envset_count+1),sizeof(char*));
+            for(int i=0;i<child_envset_count;++i)
+                tmp[i]=child_envset_v[i];
+            free(child_envset_v);
+            child_envset_v=tmp;
+            ++child_envset_count;
+        }
+
+        int cur=child_envset_count-1;
+        child_envset_n[cur]=(char*)safe_alloc(n_len+1,1);
+        child_envset_n[cur][n_len]='\0';
+        strncpy(child_envset_n[cur],name,n_len);
+
+        if(v_len<1||value==NULL)
+            v_len=0;
+        child_envset_v[cur]=(char*)safe_alloc(v_len+1,1);
+        child_envset_v[cur][v_len]='\0';
+        if(v_len>0)
+            strncpy(child_envset_v[cur],value,v_len);
+
+        log_message(logger,LOG_INFO,"Added env variable to set %s=%s",LS(child_envset_n[cur]),LI(child_envset_v[cur]));
+        if(operation_status(0)!=0)
+            return 255;
+        return 0;
+    }
+    else
+        return 1;
+}
+
+static uint8_t operation_4(char* name, size_t n_len)
+{
+    if(n_len>0 && name!=NULL)
+    {
+
+        if(child_envdel_count==0)
+        {
+            child_envdel_count=1;
+            child_envdel_v=(char**)safe_alloc(1,sizeof(char*));
+        }
+        else
+        {
+            char** tmp=(char**)safe_alloc((size_t)(child_envdel_count+1),sizeof(char*));
+            for(int i=0;i<child_envdel_count;++i)
+                tmp[i]=child_envdel_v[i];
+            free(child_envdel_v);
+            child_envdel_v=tmp;
+            ++child_envdel_count;
+        }
+
+        int cur=child_envdel_count-1;
+        child_envdel_v[cur]=(char*)safe_alloc(n_len+1,1);
+        child_envdel_v[cur][n_len]='\0';
+        strncpy(child_envdel_v[cur],name,n_len);
+
+        log_message(logger,LOG_INFO,"Added env variable to delete %s",LS(child_envdel_v[cur]));
+        if(operation_status(0)!=0)
+            return 255;
+        return 0;
+    }
+    else
+        return 1;
+}
+
 static size_t bytes_avail(int fd)
 {
     int nbytes=0;
@@ -564,6 +679,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             close(stdin_pipe[0]);
             close(stdin_pipe[1]);
         }
+        //TODO: fill env
         execv(params[0],params);
         perror("execv failed");
         exit(1);
