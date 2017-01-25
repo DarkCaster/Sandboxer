@@ -57,6 +57,9 @@ static volatile uint8_t ignore_sigchld;
 static volatile uint8_t child_is_alive;
 static volatile uint8_t child_ec;
 
+static volatile int child_signal;
+static volatile uint8_t child_signal_set;
+
 //prototypes
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
@@ -66,6 +69,7 @@ static uint8_t operation_1(char* exec, size_t len);
 static uint8_t operation_2(char* param, size_t len);
 static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len);
 static uint8_t operation_4(char* name, size_t n_len);
+static uint8_t operation_5(uint8_t signal);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
 
 static void show_usage(void)
@@ -119,6 +123,8 @@ int main(int argc, char* argv[])
     ignore_sigchld=0;
     child_is_alive=0;
     child_ec=0;
+    child_signal_set=0;
+    child_signal=15;
 
     //logger
     logger=log_init();
@@ -226,9 +232,7 @@ int main(int argc, char* argv[])
     uint8_t phase=0;
     int32_t pl_len=0;
 
-    //TODO: add proper op-time detection
-
-    //TODO: replace "1" with volatile shutdown variable managed by signal handlers
+    //TODO: add proper operation time detection
     while(!shutdown)
     {
         if(phase==0)
@@ -294,6 +298,12 @@ int main(int argc, char* argv[])
                 break;
             case 4:
                 err=operation_4((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
+                break;
+            case 5:
+                if((size_t)pl_len-(size_t)CMDHDRSZ==1)
+                    err=operation_5(*(data_buf+(int)CMDHDRSZ));
+                else
+                    err=12;
                 break;
             case 100:
                 err=operation_100_101_200_201(0,0);
@@ -607,6 +617,21 @@ static uint8_t operation_4(char* name, size_t n_len)
         strncpy(child_envdel_v[cur],name,n_len);
 
         log_message(logger,LOG_INFO,"Added env variable to delete %s",LS(child_envdel_v[cur]));
+        if(operation_status(0)!=0)
+            return 255;
+        return 0;
+    }
+    else
+        return 1;
+}
+
+static uint8_t operation_5(uint8_t signal)
+{
+    if(signal<_NSIG)
+    {
+        child_signal=signal;
+        child_signal_set=1;
+        log_message(logger,LOG_INFO,"Signal to stop the process was set to %i",LI(signal));
         if(operation_status(0)!=0)
             return 255;
         return 0;
