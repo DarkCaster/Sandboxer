@@ -1,5 +1,4 @@
 - async\multi-threaded data read\write from\to child process
-- extra env setup for child process
 - request child process termination
 - proper timings calculation for io-operations
 ...
