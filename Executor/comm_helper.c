@@ -85,9 +85,23 @@ uint8_t message_read_header(int fd, uint8_t* const tmpbuf, int* time_limit)
         *time_limit=0;
         return 3;
     }
+
     //read msg_header
-    if(read(fd,tmpbuf,MSGHDRSZ)!=(ssize_t)MSGHDRSZ)
-        return 4;
+    uint8_t* rbuf=tmpbuf;
+    ssize_t data_left=(ssize_t)MSGHDRSZ;
+
+    while(data_left>0)
+    {
+        ssize_t ec=read(fd,rbuf,MSGHDRSZ);
+        if(ec<0 && errno==EINTR)
+            return 3;
+        else if(ec<0)
+            return 4;
+        data_left-=ec;
+        if(data_left<0)
+            return 6; //wtf ?!
+        rbuf=(rbuf+ec);
+    }
     return 0;
 }
 
@@ -107,9 +121,24 @@ uint8_t message_read_and_transform_payload(int fd, uint8_t* const tmpbuf, uint8_
         *time_limit=0;
         return 3;
     }
+
     //read msg payload
-    if(read(fd,(tmpbuf+pl_offset),pl_len)!=(ssize_t)pl_len)
-        return 4;
+    uint8_t* rbuf=(tmpbuf+pl_offset);
+    ssize_t data_left=pl_len;
+
+    while(data_left>0)
+    {
+        ssize_t ec=read(fd,rbuf,(size_t)data_left);
+        if(ec<0 && errno==EINTR)
+            return 3;
+        else if(ec<0)
+            return 4;
+        data_left-=ec;
+        if(data_left<0)
+            return 6; //wtf ?!
+        rbuf=(rbuf+ec);
+    }
+
     //decode payload
     *len=msg_decode(cmdbuf,offset,tmpbuf,0,seed);
     if(*len<0)
