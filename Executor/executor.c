@@ -831,9 +831,10 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         //read input from commander
         if(comm_alive)
         {
-            if(message_read(fdi,tmp_buf,data_buf,0,&in_len,key,REQ_TIMEOUT_MS)!=0)
+            uint8_t ec=message_read(fdi,tmp_buf,data_buf,0,&in_len,key,REQ_TIMEOUT_MS);
+            if(ec!=0)
             {
-                log_message(logger,LOG_WARNING,"Commander was timed-out/failed, disposing all stdout and stderr from child process");
+                log_message(logger,LOG_WARNING,"Commander was timed-out/failed, disposing all stdout and stderr from child process, error code=%i",LI(ec));
                 comm_alive=0;
             }
             else
