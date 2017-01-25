@@ -685,12 +685,27 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     int stderr_pipe[2];
     int stdin_pipe[2];
 
-    if(!use_pty)
+    if(use_pty)
+    {
+        if(!child_signal_set)
+        {
+            child_signal=SIGHUP;
+            child_signal_set=1;
+            log_message(logger,LOG_INFO,"Using default termination signal for pty-enabled session. signal=%i",LI(child_signal));
+        }
+    }
+    else
     {
         if ( pipe(stdout_pipe)!=0 || pipe(stderr_pipe)!=0 || pipe(stdin_pipe)!=0 )
         {
             log_message(logger,LOG_ERROR,"Failed to create pipe for use as stderr or stdout for child process");
             return 110;
+        }
+        if(!child_signal_set)
+        {
+            child_signal=SIGTERM;
+            child_signal_set=1;
+            log_message(logger,LOG_INFO,"Using default termination signal for non-pty-enabled session. signal=%i",LI(child_signal));
         }
     }
     log_message(logger,LOG_INFO,"Starting new process %s",LS(params[0]));
