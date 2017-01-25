@@ -126,15 +126,24 @@ static void signal_handler(int sig, siginfo_t* info, void* context)
         else
             log_message(logger,LOG_WARNING,"Received SIGCHLD signal for untracked child with with pid %i (exit code %i). This should not happen!",LI(ch_pid),LI(child_ec));
     }
-    else if(sig==SIGHUP || sig==SIGINT || sig==SIGTERM) //received external grace-shutdown signal
+    else if(sig==SIGHUP || sig==SIGINT || sig==SIGTERM || sig==SIGUSR2) //received external grace-shutdown signal
     {
         log_message(logger,LOG_INFO,"Initiating shutdown");
         shutdown=1;
-        //cut-down communication channel, because when executor in command loop is shuting down by a signal, there is no valuable data to loose
+        //cut-down communication channel if executor is slave and in command loop.
+        //because when executor in command loop is shuting down by a signal, there is no valuable data to loose
         //so, we need to shutdown as fast as possible and not to stuck in awaiting IO operation to complete
-        if(command_mode)
+        if(mode==1 && command_mode)
             comm_shutdown(1);
-        terminate_child_processes(1);
+        terminate_child_processes(sig==SIGUSR2?0:1);
+    }
+    else if(sig==SIGUSR1 && mode==0) //only master executor can send SIGUSR2 down to slave executors, when it receive SIGUSR1
+    {
+        for(int i=0;i<pid_count;++i)
+            if(kill(pid_list[i],SIGUSR2)!=0)
+                log_message(logger,LOG_INFO,"Failed to send SIGUSR2 signal to slave executor with pid %i, error=%i",LI(pid_list[i]),LI(errno));
+            else
+                log_message(logger,LOG_INFO,"Signal SIGUSR2 was sent to slave executor with pid %i",LI(pid_list[i]));
     }
     pid_unlock();
 }
@@ -199,6 +208,16 @@ int main(int argc, char* argv[])
     if(sigaction(SIGCHLD, &act, NULL) < 0)
     {
         log_message(logger,LOG_ERROR,"Failed to set SIGCHLD handler");
+        return 1;
+    }
+    if(sigaction(SIGUSR1, &act, NULL) < 0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGUSR1 handler");
+        return 1;
+    }
+    if(sigaction(SIGUSR2, &act, NULL) < 0)
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGUSR2 handler");
         return 1;
     }
 
