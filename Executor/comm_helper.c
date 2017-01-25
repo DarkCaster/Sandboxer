@@ -50,7 +50,7 @@ uint8_t message_send(int fd, uint8_t* const tmpbuf, const uint8_t* cmdbuf, int32
     {
         ssize_t ec=write(fd,rbuf,(size_t)data_left);
         if(ec<0 && errno==EINTR)
-            return 3;
+            continue;
         else if(ec<0)
             return 4;
         data_left-=ec;
@@ -105,7 +105,7 @@ uint8_t message_read_header(int fd, uint8_t* const tmpbuf, int* time_limit)
     {
         ssize_t ec=read(fd,rbuf,(size_t)data_left);
         if(ec<0 && errno==EINTR)
-            return 3;
+            continue;
         else if(ec<0)
             return 4;
         data_left-=ec;
@@ -141,7 +141,7 @@ uint8_t message_read_and_transform_payload(int fd, uint8_t* const tmpbuf, uint8_
     {
         ssize_t ec=read(fd,rbuf,(size_t)data_left);
         if(ec<0 && errno==EINTR)
-            return 3;
+            continue;
         else if(ec<0)
             return 4;
         data_left-=ec;
