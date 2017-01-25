@@ -76,7 +76,7 @@ static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
 static void terminate_child_processes(uint8_t grace_shutdown);
 static void signal_handler(int sig, siginfo_t* info, void* context);
-static uint8_t request_child_shutdown(uint8_t grace_shutdown);
+static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
@@ -687,7 +687,7 @@ static uint8_t operation_5(uint8_t signal)
         return 1;
 }
 
-static uint8_t request_child_shutdown(uint8_t grace_shutdown)
+static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce)
 {
     if(grace_shutdown)
         log_message(logger,LOG_INFO,"Gracefully terminating child processes");
@@ -697,8 +697,7 @@ static uint8_t request_child_shutdown(uint8_t grace_shutdown)
     pid_lock();
     terminate_child_processes(grace_shutdown);
     pid_unlock();
-
-    if(operation_status(0)!=0)
+    if(!skip_responce && operation_status(0)!=0)
         return 255;
     return 0;
 }
@@ -874,8 +873,13 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                     //child termination via signal (cmd 253)
                     else if(cmd.cmd_type==253)
                     {
-                        if(request_child_shutdown(1)!=0)
+                        if(in_len!=1)
+                        {
+                            log_message(logger,LOG_WARNING,"Bad payload length for termination request");
                             comm_alive=0;
+                        }
+                        else
+                            request_child_shutdown(*(data_buf+CMDHDRSZ),1);
                         in_len=0;
                     }
                     //TODO: terminal size update for pty-enabled mode (cmd 252)
@@ -898,7 +902,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                     if(rl!=(CMDHDRSZ+1))
                         log_message(logger,LOG_WARNING,"Bad payload length for termination request");
                     else
-                        request_child_shutdown(*(data_buf+CMDHDRSZ));
+                        request_child_shutdown(*(data_buf+CMDHDRSZ),0);
                 }
                 else if(rl!=CMDHDRSZ)
                     log_message(logger,LOG_INFO,"Recconect failed (bad length)");
