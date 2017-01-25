@@ -45,8 +45,21 @@ uint8_t message_send(int fd, uint8_t* const tmpbuf, const uint8_t* cmdbuf, int32
         return 255;
     if(op_time>=timeout)
         return 3;
-    if(write(fd,tmpbuf,(size_t)sndlen)!=(ssize_t)sndlen)
-        return 4;
+    //read msg_header
+    uint8_t* rbuf=tmpbuf;
+    ssize_t data_left=(ssize_t)sndlen;
+    while(data_left>0)
+    {
+        ssize_t ec=write(fd,rbuf,(size_t)data_left);
+        if(ec<0 && errno==EINTR)
+            return 3;
+        else if(ec<0)
+            return 4;
+        data_left-=ec;
+        if(data_left<0)
+            return 6; //wtf ?!
+        rbuf=(rbuf+ec);
+    }
     return 0;
 }
 
@@ -92,7 +105,7 @@ uint8_t message_read_header(int fd, uint8_t* const tmpbuf, int* time_limit)
 
     while(data_left>0)
     {
-        ssize_t ec=read(fd,rbuf,MSGHDRSZ);
+        ssize_t ec=read(fd,rbuf,(size_t)data_left);
         if(ec<0 && errno==EINTR)
             return 3;
         else if(ec<0)
