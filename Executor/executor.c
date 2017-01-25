@@ -60,7 +60,18 @@ static volatile uint8_t child_ec;
 static volatile int child_signal;
 static volatile uint8_t child_signal_set;
 
-//prototypes
+//pid_t list management lock
+static pthread_mutex_t pid_mutex;
+static pid_t* pid_list;
+static int pid_count;
+
+//pid_t management fuctions
+static void pid_lock(void);
+static void pid_unlock(void);
+static void pid_list_add(pid_t value);
+static uint8_t pid_list_remove(pid_t value);
+
+//other prototypes
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
 static uint8_t operation_status(uint8_t ec);
@@ -109,6 +120,12 @@ int main(int argc, char* argv[])
 {
     if( argc!=6 || !arg_is_numeric(argv[1]) || !arg_is_numeric(argv[2]) || !arg_is_numeric(argv[5]) || strnlen(argv[3], MAXARGLEN)>=MAXARGLEN || strnlen(argv[4], MAXARGLEN)>=MAXARGLEN)
         show_usage();
+
+    pthread_mutex_init(&pid_mutex,NULL);
+    pid_lock();
+    pid_list=NULL;
+    pid_count=0;
+    pid_unlock();
 
     //set config params
     self=argv[0];
@@ -657,6 +674,13 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
         return 105;
     }
+
+    if(sandbox_master)
+    {
+        log_message(logger,LOG_ERROR,"Cannot spawn user binaries when already spawned one or more slave-executors");
+        return 106;
+    }
+
     int stdout_pipe[2];
     int stderr_pipe[2];
     int stdin_pipe[2];
@@ -932,4 +956,62 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     }
 
     return 255;
+}
+
+static void pid_lock(void)
+{
+    pthread_mutex_lock(&pid_mutex);
+}
+
+static void pid_unlock(void)
+{
+    pthread_mutex_unlock(&pid_mutex);
+}
+
+static void pid_list_add(pid_t value)
+{
+    if(pid_list==NULL)
+    {
+        pid_list=(pid_t*)safe_alloc(1,sizeof(pid_t));
+        pid_count=1;
+    }
+    else
+    {
+        pid_t* tmp=(pid_t*)safe_alloc((size_t)(pid_count+1),sizeof(pid_t));
+        for(int i=0;i<pid_count;++i)
+            tmp[i]=pid_list[i];
+        free(pid_list);
+        pid_list=tmp;
+        ++pid_count;
+    }
+    pid_list[pid_count-1]=value;
+}
+
+static uint8_t pid_list_remove(pid_t value)
+{
+    if(pid_list==NULL)
+        return 0;
+    for(int i=0;i<pid_count;++i)
+        if(pid_list[i]==value)
+        {
+            --pid_count;
+            if(pid_count<1)
+            {
+                free(pid_list);
+                pid_count=0;
+                pid_list=NULL;
+            }
+            else
+            {
+                for(int j=i;j<pid_count;++j)
+                    pid_list[j]=pid_list[j+1];
+                pid_t* tmp=(pid_t*)safe_alloc((size_t)pid_count,sizeof(pid_t));
+                for(int j=0;j<pid_count;++j)
+                    tmp[j]=pid_list[j];
+                free(pid_list);
+                pid_list=tmp;
+                return 1;
+            }
+        }
+    return 0;
 }
