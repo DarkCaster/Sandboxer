@@ -53,7 +53,7 @@ static uint8_t chld_buf[MSGPLMAXLEN+1];
 
 //volatile variables, used for async-signal handling
 static volatile uint8_t shutdown;
-static volatile uint8_t sandbox_master;
+static volatile uint8_t command_mode;
 static volatile uint8_t child_is_alive;
 static volatile uint8_t child_ec;
 
@@ -94,7 +94,7 @@ static void show_usage(void)
 
 static void terminate_child_processes(uint8_t grace_shutdown)
 {
-    int send_sig=grace_shutdown?(sandbox_master?SIGTERM:child_signal):SIGKILL;
+    int send_sig=grace_shutdown?(command_mode?SIGTERM:child_signal):SIGKILL;
     for(int i=0;i<pid_count;++i)
         if(kill(pid_list[i],send_sig)!=0)
             log_message(logger,LOG_INFO,"Failed to send signal %i to child with pid %i, error=%i",LI(send_sig),LI(pid_list[i]),LI(errno));
@@ -125,7 +125,9 @@ static void signal_handler(int sig, siginfo_t* info, void* context)
     {
         log_message(logger,LOG_INFO,"Initiating shutdown");
         shutdown=1;
-        if(sandbox_master)
+        //cut-down communication channel, because when executor in command loop is shuting down by a signal, there is no valuable data to loose
+        //so, we need to shutdown as fast as possible and not to stuck in awaiting IO operation to complete
+        if(command_mode)
             comm_shutdown(1);
         terminate_child_processes(1);
     }
@@ -154,7 +156,7 @@ int main(int argc, char* argv[])
 
     //set status params
     shutdown=0;
-    sandbox_master=1; //until we attempt to launch user binary, this flag is set.
+    command_mode=1; //until we attempt to launch user binary, this flag is set.
     child_is_alive=0;
     child_ec=0;
     child_signal_set=0;
@@ -473,7 +475,6 @@ static uint8_t spawn_slave(char * new_channel)
         perror("execv failed!");
         exit(1);
     }
-    sandbox_master=1;
     if(pid_list_remove(pid))
         log_message(logger,LOG_ERROR,"Just launched pid is already registered! (spawn_slave)");
     pid_list_add(pid);
@@ -791,7 +792,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         log_message(logger,LOG_ERROR,"Just launched pid is already registered! (spawn_user_process)");
     pid_list_add(pid);
 
-    sandbox_master=0;
+    command_mode=0;
     pid_unlock();
 
     if(!use_pty)
