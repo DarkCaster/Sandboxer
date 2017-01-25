@@ -74,6 +74,8 @@ static uint8_t pid_list_remove(pid_t value);
 //other prototypes
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
+static void terminate_child_processes(uint8_t grace_shutdown);
+static void signal_handler(int sig, siginfo_t* info, void* context);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
@@ -90,29 +92,44 @@ static void show_usage(void)
     exit(1);
 }
 
+static void terminate_child_processes(uint8_t grace_shutdown)
+{
+    int send_sig=grace_shutdown?(sandbox_master?SIGTERM:child_signal):SIGKILL;
+    for(int i=0;i<pid_count;++i)
+        if(kill(pid_list[i],send_sig)!=0)
+            log_message(logger,LOG_INFO,"Failed to send signal %i to child with pid %i, error=%i",LI(send_sig),LI(pid_list[i]),LI(errno));
+        else
+            log_message(logger,LOG_INFO,"Signal %i was sent to child with pid %i",LI(send_sig),LI(pid_list[i]));
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 static void signal_handler(int sig, siginfo_t* info, void* context)
 {
     log_message(logger,LOG_INFO,"Received signal %i",LI(sig));
-    if(sig==SIGCHLD && !sandbox_master)
+    pid_lock();
+    if(sig==SIGCHLD) //child process exit
     {
-
-        child_ec=(uint8_t)(info->si_status);
-        log_message(logger,LOG_INFO,"Child terminated with exit code %i",LI(child_ec));
-        child_is_alive=0u;
-    }
-    else if(sig==SIGHUP || sig==SIGINT || sig==SIGTERM)
-    {
-        if(child_is_alive)
-            log_message(logger,LOG_INFO,"Cannot initiate shutdown while child is still running");
-        else
+        pid_t ch_pid=info->si_pid;
+        if(pid_list_remove(ch_pid))
         {
-            log_message(logger,LOG_INFO,"Initiating shutdown");
-            shutdown=1;
-            comm_shutdown(1);
+            log_message(logger,LOG_INFO,"Child process was exit with code %i",LI(child_ec));
+            child_ec=(uint8_t)(info->si_status);
+            if(pid_count<1)
+                child_is_alive=0u;
         }
+        else
+            log_message(logger,LOG_WARNING,"Received SIGCHLD signal for untracked child with with pid %i (exit code %i). This should not happen!",LI(ch_pid),LI(child_ec));
     }
+    else if(sig==SIGHUP || sig==SIGINT || sig==SIGTERM) //received external grace-shutdown signal
+    {
+        log_message(logger,LOG_INFO,"Initiating shutdown");
+        shutdown=1;
+        if(sandbox_master)
+            comm_shutdown(1);
+        terminate_child_processes(1);
+    }
+    pid_unlock();
 }
 #pragma GCC diagnostic pop
 
@@ -137,7 +154,7 @@ int main(int argc, char* argv[])
 
     //set status params
     shutdown=0;
-    sandbox_master=0;
+    sandbox_master=1; //until we attempt to launch user binary, this flag is set.
     child_is_alive=0;
     child_ec=0;
     child_signal_set=0;
@@ -442,10 +459,12 @@ static uint8_t spawn_slave(char * new_channel)
         skey,
         NULL
     };
+    pid_lock();
     pid_t pid = fork();
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
+        pid_unlock();
         return 2;
     }
     if(pid==0)
@@ -455,6 +474,10 @@ static uint8_t spawn_slave(char * new_channel)
         exit(1);
     }
     sandbox_master=1;
+    if(pid_list_remove(pid))
+        log_message(logger,LOG_ERROR,"Just launched pid is already registered! (spawn_slave)");
+    pid_list_add(pid);
+    pid_unlock();
     return 0;
 }
 
@@ -675,12 +698,6 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         return 105;
     }
 
-    if(sandbox_master)
-    {
-        log_message(logger,LOG_ERROR,"Cannot spawn user binaries when already spawned one or more slave-executors");
-        return 106;
-    }
-
     int stdout_pipe[2];
     int stderr_pipe[2];
     int stdin_pipe[2];
@@ -711,11 +728,19 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     log_message(logger,LOG_INFO,"Starting new process %s",LS(params[0]));
     child_is_alive=1;
 
+    pid_lock();
+    if(shutdown)
+    {
+        pid_unlock();
+        return 255;
+    }
+
     int fdm=-1;
     pid_t pid = use_pty ? forkpty(&fdm,NULL,NULL,NULL) : fork();
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
+        pid_unlock();
         return 120;
     }
 
@@ -762,6 +787,13 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         exit(1);
     }
 
+    if(pid_list_remove(pid))
+        log_message(logger,LOG_ERROR,"Just launched pid is already registered! (spawn_user_process)");
+    pid_list_add(pid);
+
+    sandbox_master=0;
+    pid_unlock();
+
     if(!use_pty)
     {
         if(close(stdout_pipe[1])!=0)
@@ -795,7 +827,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         {
             if(message_read(fdi,tmp_buf,data_buf,0,&in_len,key,REQ_TIMEOUT_MS)!=0)
             {
-                log_message(logger,LOG_WARNING,"Commander was timed out, disposing all stdout and stderr from child process");
+                log_message(logger,LOG_WARNING,"Commander was timed-out/failed, disposing all stdout and stderr from child process");
                 comm_alive=0;
             }
             else
@@ -947,13 +979,16 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     log_message(logger,LOG_INFO,"Process %s was finished, control loop complete",LS(params[0]));
 
     //send info about control loop completion and child exit code
-    CMDHDR cmd;
-    cmd.cmd_type=151;
-    cmdhdr_write(data_buf,0,cmd);
-    *(data_buf+CMDHDRSZ)=child_ec;
-    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ+1,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        log_message(logger,LOG_WARNING,"Failed to send child's process exit code ec=%i",LI(ec));
+    if(comm_alive)
+    {
+        CMDHDR cmd;
+        cmd.cmd_type=151;
+        cmdhdr_write(data_buf,0,cmd);
+        *(data_buf+CMDHDRSZ)=child_ec;
+        uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ+1,key,REQ_TIMEOUT_MS);
+        if(ec!=0)
+            log_message(logger,LOG_WARNING,"Failed to send child's process exit code ec=%i",LI(ec));
+    }
 
     if(use_pty)
     {
