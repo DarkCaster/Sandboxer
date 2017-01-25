@@ -21,12 +21,14 @@ int fd_wait(int fd, int timeout, short int events)
         int ec=poll(&fds,1,50);
         if(ec<0 && errno!=EINTR) //Error
             return -1;
-        else if(ec == 0) //TIMEOUT
+        else if(ec<0 && errno==EINTR)
+            return timeout;
+        else if(ec==0) //TIMEOUT
             cur_time+=50;
         else
             break;
         if(shutdown)
-            break;
+            return timeout;
     }
     return cur_time;
 }
