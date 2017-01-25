@@ -478,6 +478,7 @@ static uint8_t spawn_slave(char * new_channel)
     if(pid_list_remove(pid))
         log_message(logger,LOG_ERROR,"Just launched pid is already registered! (spawn_slave)");
     pid_list_add(pid);
+    log_message(logger,LOG_INFO,"Started new slave executor with pid %i",LI(pid));
     pid_unlock();
     return 0;
 }
@@ -1051,6 +1052,7 @@ static uint8_t pid_list_remove(pid_t value)
                 free(pid_list);
                 pid_count=0;
                 pid_list=NULL;
+                return 1;
             }
             else
             {
