@@ -113,10 +113,14 @@ static void signal_handler(int sig, siginfo_t* info, void* context)
         pid_t ch_pid=info->si_pid;
         if(pid_list_remove(ch_pid))
         {
-            log_message(logger,LOG_INFO,"Child process was exit with code %i",LI(child_ec));
             child_ec=(uint8_t)(info->si_status);
             if(pid_count<1)
                 child_is_alive=0u;
+            siginfo_t siginfo;
+            if(waitid(P_PID,(id_t)ch_pid,&siginfo,WEXITED|WNOHANG)!=0)
+                log_message(logger,LOG_ERROR,"waitid failed! pid=%i errno=%i",LI(ch_pid),LI(errno));
+            else
+                log_message(logger,LOG_INFO,"Child process with pid %i was exit with code %i",LI(ch_pid),LI(child_ec));
         }
         else
             log_message(logger,LOG_WARNING,"Received SIGCHLD signal for untracked child with with pid %i (exit code %i). This should not happen!",LI(ch_pid),LI(child_ec));
