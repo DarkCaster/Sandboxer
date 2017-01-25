@@ -45,6 +45,7 @@ static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_3(char* name, char* value);
 static uint8_t operation_4(char* name);
+static uint8_t operation_5(char* s_signal);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect);
 static uint8_t operation_101_201(uint8_t use_pty);
 static size_t bytes_avail(int fd);
@@ -199,6 +200,12 @@ int main(int argc, char* argv[])
         else
             err=operation_4(op_param[0]);
         break;
+    case 5:
+        if(p_count<1)
+            err=55;
+        else
+            err=operation_5(op_param[0]);
+        break;
     case 100:
         err=operation_100_200(0,&child_ec,0);
         break;
@@ -306,6 +313,15 @@ static uint8_t operation_0(void)
     return 0;
 }
 
+#define param_send_macro(xlen) \
+    { log_message(logger,LOG_INFO,"Sending request"); \
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,xlen,key,REQ_TIMEOUT_MS); if(ec!=0) return ec; \
+    xlen=0; log_message(logger,LOG_INFO,"Reading response"); \
+    ec=message_read(fdi,tmp_buf,data_buf,0,&xlen,key,REQ_TIMEOUT_MS); if(ec!=0) return ec; \
+    if(xlen!=(int32_t)CMDHDRSZ) { log_message(logger,LOG_ERROR,"Wrong response length detected!"); return 1; } \
+    if(cmdhdr_read(data_buf,0).cmd_type!=0) \
+    { log_message(logger,LOG_ERROR,"Executor module reports error while performing operation! error code=%i",LI(cmdhdr_read(data_buf,0).cmd_type)); return 2; } }
+
 //opcode 1 - set executable name
 static uint8_t operation_1_2(uint8_t op, char* param)
 {
@@ -319,27 +335,7 @@ static uint8_t operation_1_2(uint8_t op, char* param)
         strcpy((char*)(data_buf+cmdlen),param);
         cmdlen+=(int32_t)strlen(param);
     }
-    log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,cmdlen,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-    cmdlen=0;
-    log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-    //read response
-    if(cmdlen!=(int32_t)CMDHDRSZ)
-    {
-        log_message(logger,LOG_ERROR,"Wrong response length detected!");
-        return 1;
-    }
-    CMDHDR rcmd=cmdhdr_read(data_buf,0);
-    if(rcmd.cmd_type!=0)
-    {
-        log_message(logger,LOG_ERROR,"Executor module reports error while setting exec-name/exec-param!");
-        return 2;
-    }
+    param_send_macro(cmdlen);
     return 0;
 }
 
@@ -363,53 +359,42 @@ static uint8_t operation_3(char* name, char* value)
     CMDHDR cmd;
     cmd.cmd_type=3;
     cmdhdr_write(data_buf,0,cmd);
-
     int32_t len=(int32_t)CMDHDRSZ;
     uint16_t nl = name==NULL?0:(uint16_t)strlen(name);
     uint16_t vl = value==NULL?0:(uint16_t)strlen(value);
-
     u16_write(data_buf,len,nl);
     len+=2;
-
     u16_write(data_buf,len,vl);
     len+=2;
-
     if(nl>0)
     {
         strncpy((char*)(data_buf+len),name,nl);
         len+=nl;
     }
-
     if(vl>0)
     {
         strncpy((char*)(data_buf+len),value,vl);
         len+=vl;
     }
+    param_send_macro(len);
+    return 0;
+}
 
-    log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,len,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-
-    len=0;
-    log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fdi,tmp_buf,data_buf,0,&len,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-
-    //read response
-    if(len!=(int32_t)CMDHDRSZ)
+static uint8_t operation_5(char* s_signal)
+{
+    if(!arg_is_numeric(s_signal))
     {
-        log_message(logger,LOG_ERROR,"Wrong response length detected!");
+        log_message(logger,LOG_ERROR,"Signal argument must be numeric for now");
         return 1;
     }
-
-    if(cmdhdr_read(data_buf,0).cmd_type!=0)
-    {
-        log_message(logger,LOG_ERROR,"Executor module reports error while setting exec-name/exec-param!");
-        return 2;
-    }
-
+    uint8_t signal=(uint8_t)strtol(s_signal, NULL, 10);
+    CMDHDR cmd;
+    cmd.cmd_type=5;
+    cmdhdr_write(data_buf,0,cmd);
+    int32_t cmdlen=(int32_t)CMDHDRSZ;
+    *(data_buf+CMDHDRSZ)=signal;
+    ++cmdlen;
+    param_send_macro(cmdlen);
     return 0;
 }
 
@@ -419,26 +404,8 @@ static uint8_t operation_101_201(uint8_t use_pty)
     CMDHDR cmd;
     cmd.cmd_type=use_pty?201:101;
     cmdhdr_write(data_buf,0,cmd);
-    log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-    int cmdlen=0;
-    log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-    //decode response
-    if(cmdlen!=(int32_t)CMDHDRSZ)
-    {
-        log_message(logger,LOG_ERROR,"Wrong response length detected!");
-        return 1;
-    }
-    if(cmdhdr_read(data_buf,0).cmd_type!=0)
-    {
-        log_message(logger,LOG_ERROR,"Executor module reports error while performing child exec, error code=%i",cmdhdr_read(data_buf,0).cmd_type);
-        return 2;
-    }
+    int32_t cmdlen=CMDHDRSZ;
+    param_send_macro(cmdlen);
     return 0;
 }
 
@@ -448,26 +415,9 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
     CMDHDR cmd;
     cmd.cmd_type=reconnect?(use_pty?255:254):(use_pty?200:100);
     cmdhdr_write(data_buf,0,cmd);
-    log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-    int cmdlen=0;
-    log_message(logger,LOG_INFO,"Reading response");
-    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
-    if(ec!=0)
-        return ec;
-    //decode response
-    if(cmdlen!=(int32_t)CMDHDRSZ)
-    {
-        log_message(logger,LOG_ERROR,"Wrong response length detected!");
-        return 1;
-    }
-    if(cmdhdr_read(data_buf,0).cmd_type!=0)
-    {
-        log_message(logger,LOG_ERROR,"Executor module reports error while performing child exec, error code=%i",LI(cmdhdr_read(data_buf,0).cmd_type));
-        return 2;
-    }
+    int32_t cmdlen=CMDHDRSZ;
+    param_send_macro(cmdlen);
+
     //main command loop
     log_message(logger,LOG_INFO,"Commander module entering control loop");
     cmd.cmd_type=150;
@@ -496,8 +446,8 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
     #define restore_terminal if(ts_is_set)tcsetattr(STDOUT_FILENO,TCSANOW,&term_settings_backup)
     #define receive_data(data_len,out_fd) \
         { data_len=0; \
-        ec=message_read(fdi,tmp_buf,data_buf,0,&data_len,key,REQ_TIMEOUT_MS); \
-        if(ec!=0){ restore_terminal; return ec; } \
+        uint8_t ecx=message_read(fdi,tmp_buf,data_buf,0,&data_len,key,REQ_TIMEOUT_MS); \
+        if(ecx!=0){ restore_terminal; return ecx; } \
         data_len-=(int32_t)CMDHDRSZ; \
         if(data_len<0) \
             { restore_terminal; log_message(logger,LOG_ERROR,"Corrupted data received from executor"); return 2; } \
@@ -537,7 +487,7 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
 
         //send input
         cmdhdr_write(data_buf,0,cmd);
-        ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
+        uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
         if(ec!=0)
         {
             restore_terminal;
