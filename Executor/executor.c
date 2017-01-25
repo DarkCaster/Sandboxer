@@ -53,7 +53,7 @@ static uint8_t chld_buf[MSGPLMAXLEN+1];
 
 //volatile variables, used for async-signal handling
 static volatile uint8_t shutdown;
-static volatile uint8_t ignore_sigchld;
+static volatile uint8_t sandbox_master;
 static volatile uint8_t child_is_alive;
 static volatile uint8_t child_ec;
 
@@ -84,7 +84,7 @@ static void show_usage(void)
 static void signal_handler(int sig, siginfo_t* info, void* context)
 {
     log_message(logger,LOG_INFO,"Received signal %i",LI(sig));
-    if(sig==SIGCHLD && !ignore_sigchld)
+    if(sig==SIGCHLD && !sandbox_master)
     {
 
         child_ec=(uint8_t)(info->si_status);
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 
     //set status params
     shutdown=0;
-    ignore_sigchld=0;
+    sandbox_master=0;
     child_is_alive=0;
     child_ec=0;
     child_signal_set=0;
@@ -437,7 +437,7 @@ static uint8_t spawn_slave(char * new_channel)
         perror("execv failed!");
         exit(1);
     }
-    ignore_sigchld=1;
+    sandbox_master=1;
     return 0;
 }
 
