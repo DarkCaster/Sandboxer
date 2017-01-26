@@ -129,21 +129,23 @@ static void signal_handler(int sig, siginfo_t* info, void* context)
     else if(sig==SIGHUP || sig==SIGINT || sig==SIGTERM || sig==SIGUSR2) //received external grace-shutdown signal
     {
         log_message(logger,LOG_INFO,"Initiating shutdown");
+        terminate_child_processes(sig==SIGUSR2?0:1);
         shutdown=1;
         //cut-down communication channel if executor is slave and in command loop.
         //because when executor in command loop is shuting down by a signal, there is no valuable data to loose
         //so, we need to shutdown as fast as possible and not to stuck in awaiting IO operation to complete
         if(mode==1 && command_mode)
             comm_shutdown(1);
-        terminate_child_processes(sig==SIGUSR2?0:1);
     }
     else if(sig==SIGUSR1 && mode==0) //only master executor can send SIGUSR2 down to slave executors, when it receive SIGUSR1
     {
+        log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
         for(int i=0;i<pid_count;++i)
             if(kill(pid_list[i],SIGUSR2)!=0)
                 log_message(logger,LOG_INFO,"Failed to send SIGUSR2 signal to slave executor with pid %i, error=%i",LI(pid_list[i]),LI(errno));
             else
                 log_message(logger,LOG_INFO,"Signal SIGUSR2 was sent to slave executor with pid %i",LI(pid_list[i]));
+        shutdown=1;
     }
     pid_unlock();
 }
