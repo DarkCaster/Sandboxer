@@ -68,14 +68,13 @@ static int pid_count;
 //pid_t management fuctions
 static void pid_lock(void);
 static void pid_unlock(void);
-static void pid_list_add(pid_t value);
-static uint8_t pid_list_remove(pid_t value);
+
 
 //other prototypes
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
-static void terminate_child_processes(uint8_t grace_shutdown);
-static void signal_handler(int sig, siginfo_t* info, void* context);
+static void termination_signal_handler(int sig, siginfo_t* info, void* context);
+static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
@@ -93,62 +92,43 @@ static void show_usage(void)
     exit(1);
 }
 
-static void terminate_child_processes(uint8_t grace_shutdown)
-{
-    int send_sig=grace_shutdown?(command_mode?SIGTERM:child_signal):SIGKILL;
-    for(int i=0;i<pid_count;++i)
-        if(kill(pid_list[i],send_sig)!=0)
-            log_message(logger,LOG_INFO,"Failed to send signal %i to child with pid %i, error=%i",LI(send_sig),LI(pid_list[i]),LI(errno));
-        else
-            log_message(logger,LOG_INFO,"Signal %i was sent to child with pid %i",LI(send_sig),LI(pid_list[i]));
-}
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-static void signal_handler(int sig, siginfo_t* info, void* context)
+
+static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 {
-    log_message(logger,LOG_INFO,"Received signal %i",LI(sig));
+    log_message(logger,LOG_INFO,"Received termination signal %i",LI(sig));
     pid_lock();
-    if(sig==SIGCHLD) //child process exit
-    {
-        pid_t ch_pid=info->si_pid;
-        if(pid_list_remove(ch_pid))
-        {
-            child_ec=(uint8_t)(info->si_status);
-            if(pid_count<1)
-                child_is_alive=0u;
-            siginfo_t siginfo;
-            if(waitid(P_PID,(id_t)ch_pid,&siginfo,WEXITED|WNOHANG)!=0)
-                log_message(logger,LOG_ERROR,"waitid failed! pid=%i errno=%i",LI(ch_pid),LI(errno));
-            else
-                log_message(logger,LOG_INFO,"Child process with pid %i was exit with code %i",LI(ch_pid),LI(child_ec));
-        }
-        else
-            log_message(logger,LOG_WARNING,"Received SIGCHLD signal for untracked child with with pid %i (exit code %i). This should not happen!",LI(ch_pid),LI(child_ec));
-    }
-    else if(sig==SIGHUP || sig==SIGINT || sig==SIGTERM || sig==SIGUSR2) //received external grace-shutdown signal
-    {
-        log_message(logger,LOG_INFO,"Initiating shutdown");
-        terminate_child_processes(sig==SIGUSR2?0:1);
+
+    log_message(logger,LOG_INFO,"Initiating shutdown");
+    //TODO: read list from pid files, check pid is alive, send signals for affected pids, if signal is SIGUSR1, send SIGUSR2 to all childs
+
+        //terminate_child_processes(sig==SIGUSR2?0:1);
+        //int send_sig=grace_shutdown?(command_mode?SIGTERM:child_signal):SIGKILL;
         shutdown=1;
         //cut-down communication channel if executor is slave and in command loop.
         //because when executor in command loop is shuting down by a signal, there is no valuable data to loose
         //so, we need to shutdown as fast as possible and not to stuck in awaiting IO operation to complete
         if(mode==1 && command_mode)
             comm_shutdown(1);
-    }
-    else if(sig==SIGUSR1 && mode==0) //only master executor can send SIGUSR2 down to slave executors, when it receive SIGUSR1
-    {
-        log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-        for(int i=0;i<pid_count;++i)
-            if(kill(pid_list[i],SIGUSR2)!=0)
-                log_message(logger,LOG_INFO,"Failed to send SIGUSR2 signal to slave executor with pid %i, error=%i",LI(pid_list[i]),LI(errno));
-            else
-                log_message(logger,LOG_INFO,"Signal SIGUSR2 was sent to slave executor with pid %i",LI(pid_list[i]));
-        shutdown=1;
-    }
+
     pid_unlock();
 }
+
+static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context)
+{
+    pid_lock();
+    child_is_alive=0u;
+    child_ec=(uint8_t)(info->si_status);
+    id_t ch_pid=(id_t)(info->si_pid);
+    siginfo_t siginfo;
+    if(waitid(P_PID,ch_pid,&siginfo,WEXITED|WNOHANG)!=0)
+        log_message(logger,LOG_ERROR,"waitid failed! errno=%i",LI(errno));
+    else
+        log_message(logger,LOG_INFO,"Child process was exit with code %i",LI(child_ec));
+    pid_unlock();
+}
+
 #pragma GCC diagnostic pop
 
 int main(int argc, char* argv[])
@@ -186,41 +166,41 @@ int main(int argc, char* argv[])
     else
         log_stdout(logger,0);
 
-    //register signal handler
-    struct sigaction act;
-    memset(&act,0,sizeof(act));
-    act.sa_sigaction = &signal_handler;
-    act.sa_flags = SA_SIGINFO;
+    struct sigaction act[2];
+    memset(&act,2,sizeof(act));
 
-    if(sigaction(SIGTERM, &act, NULL) < 0)
+    //termination signals
+    act[0].sa_sigaction=&termination_signal_handler;
+    act[0].sa_flags=SA_SIGINFO;
+    if( sigaction(SIGTERM, &act[0], NULL) < 0 || sigaction(SIGINT, &act[0], NULL) < 0 || sigaction(SIGHUP, &act[0], NULL) < 0 )
     {
-        log_message(logger,LOG_ERROR,"Failed to set SIGTERM handler");
+        log_message(logger,LOG_ERROR,"Failed to set one of termination signals handler");
         return 1;
     }
-    if(sigaction(SIGINT, &act, NULL) < 0)
+
+    //SIGUSR1 will perform emergency shutdown. Handled by master executor process only.
+    //master executor will command all slave executors to kill it's tracked process
+    if(mode==0 && sigaction(SIGUSR1, &act[0], NULL)<0)
     {
-        log_message(logger,LOG_ERROR,"Failed to set SIGINT handler");
+        log_message(logger,LOG_ERROR,"Failed to set SIGUSR1 handler for master");
         return 1;
     }
-    if(sigaction(SIGHUP, &act, NULL) < 0)
+
+    if(mode==1 && sigaction(SIGUSR2, &act[0], NULL) < 0)
     {
-        log_message(logger,LOG_ERROR,"Failed to set SIGHUP handler");
+        log_message(logger,LOG_ERROR,"Failed to set SIGUSR2 handler for slave");
         return 1;
     }
-    if(sigaction(SIGCHLD, &act, NULL) < 0)
+
+    if(mode==1)
     {
-        log_message(logger,LOG_ERROR,"Failed to set SIGCHLD handler");
-        return 1;
-    }
-    if(sigaction(SIGUSR1, &act, NULL) < 0)
-    {
-        log_message(logger,LOG_ERROR,"Failed to set SIGUSR1 handler");
-        return 1;
-    }
-    if(sigaction(SIGUSR2, &act, NULL) < 0)
-    {
-        log_message(logger,LOG_ERROR,"Failed to set SIGUSR2 handler");
-        return 1;
+        act[1].sa_sigaction=&slave_sigchld_signal_handler;
+        act[1].sa_flags=SA_SIGINFO;
+        if(sigaction(SIGCHLD, &act[1], NULL) < 0)
+        {
+            log_message(logger,LOG_ERROR,"Failed to set SIGCHLD handler for slave");
+            return 1;
+        }
     }
 
     if(chdir("/")!=0 || chdir(ctldir)!=0)
@@ -404,6 +384,19 @@ int main(int argc, char* argv[])
     if(fdo>=0 && close(fdo)!=0)
         log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_out));
 
+    log_message(logger,LOG_INFO,"Awaiting for registered child processes to exit");
+    uint8_t child_complete=0;
+    while(!child_complete)
+    {
+        //pid_lock();
+        if(pid_count<1)
+            child_complete=1;
+       // pid_unlock();
+       sleep(1);
+       log_message(logger,LOG_INFO,"pid_count=%i",LI(pid_count));
+    }
+    log_message(logger,LOG_INFO,"Done!");
+
     int ec=remove(filename_in);
     if(ec!=0)
         log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(filename_in),LI(ec));
@@ -463,12 +456,12 @@ static uint8_t operation_status(uint8_t ec)
     return ec2;
 }
 
-static uint8_t spawn_slave(char * new_channel)
+static pid_t spawn_slave(char * new_channel)
 {
     if(self==NULL)
     {
         log_message(logger,LOG_ERROR,"Self exec not set, cannot re-spawn self");
-        return 1;
+        return 0;
     }
     //<mode 0-master 1-slave> <logfile 0-disable 1-enable> <control dir> <channel-name> <security key>
     char skey[256];
@@ -487,13 +480,12 @@ static uint8_t spawn_slave(char * new_channel)
         skey,
         NULL
     };
-    pid_lock();
     pid_t pid = fork();
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
         pid_unlock();
-        return 2;
+        return 0;
     }
     if(pid==0)
     {
@@ -501,11 +493,7 @@ static uint8_t spawn_slave(char * new_channel)
         perror("execv failed!");
         exit(1);
     }
-    if(pid_list_remove(pid))
-        log_message(logger,LOG_ERROR,"Just launched pid is already registered! (spawn_slave)");
-    pid_list_add(pid);
     log_message(logger,LOG_INFO,"Started new slave executor with pid %i",LI(pid));
-    pid_unlock();
     return 0;
 }
 
@@ -516,13 +504,18 @@ static uint8_t operation_0(void)
         log_message(logger,LOG_ERROR,"Slave executor for channel %s cannot spawn another slave executor",LI(channel));
         return 20;
     }
+
+    pid_lock();
+    //TODO: check that we are not shutting down right now
+
     char chn[256];
     sprintf(chn,"%04llx", current_timestamp());
-    uint8_t ec=spawn_slave(chn);
-    if(ec!=0)
+    pid_t pid=spawn_slave(chn);
+    if(pid==0)
     {
         log_message(logger,LOG_ERROR,"Failed to spawn slave executor for channel %s",LI(chn));
-        return ec;
+        pid_unlock();
+        return 12;
     }
     //try to open/close pipe
     int timeout=REQ_TIMEOUT_MS;
@@ -554,8 +547,13 @@ static uint8_t operation_0(void)
     if(timeout<=0)
     {
        log_message(logger,LOG_ERROR,"Slave channel test failed! (timeout)");
+       pid_unlock();
        return 11;
     }
+    //TODO: fillup pidfile, or registed somehow (process group ?)
+
+    pid_unlock();
+
     //send response
     CMDHDR response;
     response.cmd_type=0;
@@ -563,7 +561,7 @@ static uint8_t operation_0(void)
     size_t data_len=strnlen(chn,256);
     strncpy((char*)(data_buf+CMDHDRSZ),chn,data_len);
     data_len+=CMDHDRSZ;
-    ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)data_len,key,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)data_len,key,REQ_TIMEOUT_MS);
     if(ec!=0 && ec!=255)
         log_message(logger,LOG_ERROR,"Failed to send response with newly created channel name %i",LI(ec));
     return 0;
@@ -715,9 +713,11 @@ static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_respo
     else
         log_message(logger,LOG_INFO,"Sending SIGKILL signal to child processes");
 
-    pid_lock();
-    terminate_child_processes(grace_shutdown);
-    pid_unlock();
+    //TODO:
+    //pid_lock();
+    //terminate_child_processes(grace_shutdown);
+    //pid_unlock();
+
     if(!skip_responce && operation_status(0)!=0)
         return 255;
     return 0;
@@ -830,9 +830,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         exit(1);
     }
 
-    if(pid_list_remove(pid))
-        log_message(logger,LOG_ERROR,"Just launched pid is already registered! (spawn_user_process)");
-    pid_list_add(pid);
+    //TODO: register pid, to be able to terminate
 
     command_mode=0;
     pid_unlock();
@@ -1083,7 +1081,7 @@ static void pid_unlock(void)
     pthread_mutex_unlock(&pid_mutex);
 }
 
-static void pid_list_add(pid_t value)
+/*static void pid_list_add(pid_t value)
 {
     if(pid_list==NULL)
     {
@@ -1130,4 +1128,4 @@ static uint8_t pid_list_remove(pid_t value)
             }
         }
     return 0;
-}
+}*/
