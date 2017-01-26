@@ -78,6 +78,7 @@ static void request_shutdown(uint8_t lock);
 static void* master_watchdog(void* param);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
+static void slave_terminate_child(uint8_t sigkill);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
@@ -98,29 +99,57 @@ static void show_usage(void)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+static void slave_terminate_child(uint8_t sigkill)
+{
+    //TODO:
+}
+
 static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 {
     log_message(logger,LOG_INFO,"Received termination signal %i",LI(sig));
     pid_lock();
 
-   // if()
+    if(sig==SIGUSR1)
+    {
+        if(pid_group==0)
+        {
+            log_message(logger,LOG_INFO,"No child executors was started, performing shutdown");
+            request_shutdown(0);
+        }
+        else
+        {
+            log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
+            if(kill(0-pid_group,SIGUSR2)!=0)
+                log_message(logger,LOG_WARNING,"Failed to send SIGUSR2 to slaves. errno=%i",LI(errno));
+            //cut-down communications, while we waiting child processes to shutdown
+            if(command_mode)
+                comm_shutdown(1);
+        }
+    }
 
+    //TODO: deal with tracked user process
+    if(sig==SIGUSR2)
+        slave_terminate_child(1);
 
-
-
-
-
-    log_message(logger,LOG_INFO,"Initiating shutdown");
-    //TODO: read list from pid files, check pid is alive, send signals for affected pids, if signal is SIGUSR1, send SIGUSR2 to all childs
-
-        //terminate_child_processes(sig==SIGUSR2?0:1);
-        //int send_sig=grace_shutdown?(command_mode?SIGTERM:child_signal):SIGKILL;
-        shutdown=1;
-        //cut-down communication channel if executor is slave and in command loop.
-        //because when executor in command loop is shuting down by a signal, there is no valuable data to loose
-        //so, we need to shutdown as fast as possible and not to stuck in awaiting IO operation to complete
-        if(mode==1 && command_mode)
-            comm_shutdown(1);
+    if(sig==SIGTERM || sig==SIGHUP || sig==SIGINT)
+    {
+        if(mode==0)
+        {
+            if(pid_group==0)
+            {
+                log_message(logger,LOG_INFO,"No child executors was started, performing shutdown");
+                request_shutdown(0);
+            }
+            else
+            {
+                log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
+                if(kill(0-pid_group,SIGTERM)!=0)
+                    log_message(logger,LOG_WARNING,"Failed to send SIGTERM to slaves. errno=%i",LI(errno));
+            }
+        }
+        else
+            slave_terminate_child(0);
+    }
 
     pid_unlock();
 }
