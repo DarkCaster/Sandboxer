@@ -132,14 +132,6 @@ int main(int argc, char* argv[])
     if( argc!=6 || !arg_is_numeric(argv[1]) || !arg_is_numeric(argv[2]) || !arg_is_numeric(argv[5]) || strnlen(argv[3], MAXARGLEN)>=MAXARGLEN || strnlen(argv[4], MAXARGLEN)>=MAXARGLEN)
         show_usage();
 
-    pthread_mutex_init(&pid_mutex,NULL);
-    pid_group=getpid();
-    if(pid_group<=0)
-    {
-        fprintf(stderr,"getpid failed!\n");
-        exit(2);
-    }
-
     //set config params
     self=argv[0];
     mode=(uint8_t)strtol(argv[1], NULL, 10);
@@ -147,6 +139,10 @@ int main(int argc, char* argv[])
     ctldir=argv[3];
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
+
+    //set pid management parameters and stuff
+    pthread_mutex_init(&pid_mutex,NULL);
+    pid_group=0;
 
     //set status params
     shutdown=0;
@@ -201,6 +197,17 @@ int main(int argc, char* argv[])
         }
     }
 
+    if(mode==0)
+    {
+        act[1].sa_handler=SIG_IGN;
+        act[1].sa_flags=0;
+        if(sigaction(SIGCHLD,&act[1],NULL) < 0)
+        {
+            log_message(logger,LOG_ERROR,"Failed to set SIGCHLD handler for master to SIG_IGN");
+            return 1;
+        }
+    }
+
     if(chdir("/")!=0 || chdir(ctldir)!=0)
     {
         fprintf(stderr,"Failed to set ctldir");
@@ -219,9 +226,9 @@ int main(int argc, char* argv[])
     }
 
     if(mode==0)
-        log_message(logger,LOG_INFO,"Executor startup, master mode, self pgid=%i, slave pgid=%i",LI(getpgrp()),LI(pid_group));
+        log_message(logger,LOG_INFO,"Executor startup, master mode");
     else
-        log_message(logger,LOG_INFO,"Executor startup, slave mode, self pgid=%i",LI(getpgrp()));
+        log_message(logger,LOG_INFO,"Executor startup, slave mode");
 
     log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
@@ -491,7 +498,7 @@ static pid_t spawn_slave(char * new_channel)
         exit(2);
     }
     log_message(logger,LOG_INFO,"Started new slave executor with pid %i",LI(pid));
-    return 0;
+    return pid;
 }
 
 static uint8_t operation_0(void)
@@ -551,7 +558,7 @@ static uint8_t operation_0(void)
        pid_unlock();
        return 11;
     }
-    //as precaution, set pid_group equals to first pid started, if not already set
+    //set pid_group equals to first pid started, if not already set
     if(pid_group<=0)
         pid_group=pid;
     pid_unlock();
