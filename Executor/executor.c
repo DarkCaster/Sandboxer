@@ -62,13 +62,20 @@ static volatile uint8_t child_signal_set;
 
 //pid management stuff
 static pthread_mutex_t pid_mutex;
-static pid_t pid_group;
+static volatile pid_t pid_group;
 static void pid_lock(void);
 static void pid_unlock(void);
+static pthread_t* pid_watchdog_thread;
+
+//filename for control channel
+char filename_in[MAXARGLEN+5];
+char filename_out[MAXARGLEN+5];
 
 //other prototypes
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
+static void request_shutdown(uint8_t lock);
+static void* master_watchdog(void* param);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
@@ -95,6 +102,13 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 {
     log_message(logger,LOG_INFO,"Received termination signal %i",LI(sig));
     pid_lock();
+
+   // if()
+
+
+
+
+
 
     log_message(logger,LOG_INFO,"Initiating shutdown");
     //TODO: read list from pid files, check pid is alive, send signals for affected pids, if signal is SIGUSR1, send SIGUSR2 to all childs
@@ -125,7 +139,52 @@ static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context
     pid_unlock();
 }
 
+static void* master_watchdog(void* param)
+{
+    while( pid_group==0 && !shutdown )
+        usleep(DATA_WAIT_TIME_MS*1000);
+    while( pid_group!=0 )
+    {
+        siginfo_t info;
+        waitid(P_PGID,(id_t)pid_group,&info,WEXITED|WNOHANG);
+        pid_lock();
+        uint8_t exit=0;
+        if(kill(0-pid_group,0)!=0)
+        {
+            if(errno!=ESRCH)
+                log_message(logger,LOG_WARNING,"master_watchdog:kill check failed. errno=%i",LI(errno));
+            exit=1;
+            request_shutdown(0);
+        }
+        pid_unlock();
+        if(exit==1)
+            return 0;
+        usleep(DATA_WAIT_TIME_MS*1000);
+    }
+    request_shutdown(1);
+    return 0;
+}
+
 #pragma GCC diagnostic pop
+
+//request shutdown, delete comm-channel pipes (so no new connection to it can be made).
+//and if executor in command_mode mode, current connection also cut down
+static void request_shutdown(uint8_t lock)
+{
+    if(lock)
+        pid_lock();
+    if(command_mode)
+        comm_shutdown(1);
+    shutdown=1;
+    int ec=remove(filename_in);
+    if(ec!=0)
+        log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(filename_in),LI(ec));
+    ec=remove(filename_out);
+    if(ec!=0)
+        log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(filename_out),LI(ec));
+    if(lock)
+        pid_unlock();
+}
 
 int main(int argc, char* argv[])
 {
@@ -143,6 +202,10 @@ int main(int argc, char* argv[])
     //set pid management parameters and stuff
     pthread_mutex_init(&pid_mutex,NULL);
     pid_group=0;
+    if(mode==0)
+        pid_watchdog_thread=(pthread_t*)safe_alloc(1,sizeof(pthread_t));
+    else
+        pid_watchdog_thread=NULL;
 
     //set status params
     shutdown=0;
@@ -234,12 +297,10 @@ int main(int argc, char* argv[])
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
     log_message(logger,LOG_INFO,"Channel name is set to %s",LS(channel));
 
-    char filename_in[chn_len+4];
     strncpy(filename_in,channel,chn_len);
     strncpy(filename_in+chn_len,".in",3);
     filename_in[chn_len+3]='\0';
 
-    char filename_out[chn_len+5];
     strncpy(filename_out,channel,chn_len);
     strncpy(filename_out+chn_len,".out",4);
     filename_out[chn_len+4]='\0';
@@ -275,6 +336,16 @@ int main(int argc, char* argv[])
     {
         log_message(logger,LOG_ERROR,"Failed to open %s|%s pipe",LS(filename_in),LS(filename_out));
         teardown(22);
+    }
+
+    if(mode==0)
+    {
+        log_message(logger,LOG_INFO,"Starting pid watchdog");
+        if(pthread_create(pid_watchdog_thread,NULL,master_watchdog,NULL)!=0)
+        {
+            log_message(logger,LOG_ERROR,"Failed to start pid watchdog. errno=%i",LI(errno));
+            teardown(23);
+        }
     }
 
     log_message(logger,LOG_INFO,"Entering command loop, awaiting requests");
@@ -392,16 +463,15 @@ int main(int argc, char* argv[])
     if(fdo>=0 && close(fdo)!=0)
         log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_out));
 
-    //TODO: await process child group to complete (or child to complete)
-    log_message(logger,LOG_INFO,"Awaiting for registered child processes to exit");
-
-    int ec=remove(filename_in);
-    if(ec!=0)
-        log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(filename_in),LI(ec));
-
-    ec=remove(filename_out);
-    if(ec!=0)
-        log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(filename_out),LI(ec));
+    if(pid_watchdog_thread==NULL)
+        request_shutdown(1);
+    else
+    {
+        log_message(logger,LOG_INFO,"Awaiting for registered child processes to exit");
+        int ec=pthread_join(*pid_watchdog_thread,NULL);
+        if(ec!=0)
+            log_message(logger,LOG_ERROR,"Error awaiting for pid watchdog termination with pthread_join, ec==%i",ec);
+    }
 
     int pos=0;
     while(params[pos]!=NULL)
@@ -411,7 +481,6 @@ int main(int argc, char* argv[])
     }
     free(params);
 
-    //TODO: signals handling
     teardown(0);
 }
 
@@ -744,6 +813,14 @@ static size_t bytes_avail(int fd)
 
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
 {
+    //do not allow this operaion in master mode
+    if(mode==0)
+    {
+        log_message(logger,LOG_WARNING,"Spawning for user processes is not allowed in master mode!");
+        operation_status(107);
+        return 0;
+    }
+
     if(params[0]==NULL || params_count<1)
     {
         log_message(logger,LOG_ERROR,"Exec filename is not set, there is nothing to start");
@@ -1089,52 +1166,3 @@ static void pid_unlock(void)
 {
     pthread_mutex_unlock(&pid_mutex);
 }
-
-/*static void pid_list_add(pid_t value)
-{
-    if(pid_list==NULL)
-    {
-        pid_list=(pid_t*)safe_alloc(1,sizeof(pid_t));
-        pid_count=1;
-    }
-    else
-    {
-        pid_t* tmp=(pid_t*)safe_alloc((size_t)(pid_count+1),sizeof(pid_t));
-        for(int i=0;i<pid_count;++i)
-            tmp[i]=pid_list[i];
-        free(pid_list);
-        pid_list=tmp;
-        ++pid_count;
-    }
-    pid_list[pid_count-1]=value;
-}
-
-static uint8_t pid_list_remove(pid_t value)
-{
-    if(pid_list==NULL)
-        return 0;
-    for(int i=0;i<pid_count;++i)
-        if(pid_list[i]==value)
-        {
-            --pid_count;
-            if(pid_count<1)
-            {
-                free(pid_list);
-                pid_count=0;
-                pid_list=NULL;
-                return 1;
-            }
-            else
-            {
-                for(int j=i;j<pid_count;++j)
-                    pid_list[j]=pid_list[j+1];
-                pid_t* tmp=(pid_t*)safe_alloc((size_t)pid_count,sizeof(pid_t));
-                for(int j=0;j<pid_count;++j)
-                    tmp[j]=pid_list[j];
-                free(pid_list);
-                pid_list=tmp;
-                return 1;
-            }
-        }
-    return 0;
-}*/
