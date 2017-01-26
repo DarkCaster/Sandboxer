@@ -60,15 +60,11 @@ static volatile uint8_t child_ec;
 static volatile int child_signal;
 static volatile uint8_t child_signal_set;
 
-//pid_t list management lock
+//pid management stuff
 static pthread_mutex_t pid_mutex;
-static pid_t* pid_list;
-static int pid_count;
-
-//pid_t management fuctions
+static pid_t pid_group;
 static void pid_lock(void);
 static void pid_unlock(void);
-
 
 //other prototypes
 static void teardown(int code);
@@ -137,10 +133,12 @@ int main(int argc, char* argv[])
         show_usage();
 
     pthread_mutex_init(&pid_mutex,NULL);
-    pid_lock();
-    pid_list=NULL;
-    pid_count=0;
-    pid_unlock();
+    pid_group=getpid();
+    if(pid_group<=0)
+    {
+        fprintf(stderr,"getpid failed!\n");
+        exit(2);
+    }
 
     //set config params
     self=argv[0];
@@ -220,7 +218,10 @@ int main(int argc, char* argv[])
         log_logfile(logger,log_file);
     }
 
-    log_headline(logger,"Executor startup");
+    if(mode==0)
+        log_message(logger,LOG_INFO,"Executor startup, master mode, self pgid=%i, slave pgid=%i",LI(getpgrp()),LI(pid_group));
+    else
+        log_message(logger,LOG_INFO,"Executor startup, slave mode, self pgid=%i",LI(getpgrp()));
 
     log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
@@ -384,18 +385,8 @@ int main(int argc, char* argv[])
     if(fdo>=0 && close(fdo)!=0)
         log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_out));
 
+    //TODO: await process child group to complete (or child to complete)
     log_message(logger,LOG_INFO,"Awaiting for registered child processes to exit");
-    uint8_t child_complete=0;
-    while(!child_complete)
-    {
-        //pid_lock();
-        if(pid_count<1)
-            child_complete=1;
-       // pid_unlock();
-       sleep(1);
-       log_message(logger,LOG_INFO,"pid_count=%i",LI(pid_count));
-    }
-    log_message(logger,LOG_INFO,"Done!");
 
     int ec=remove(filename_in);
     if(ec!=0)
@@ -489,9 +480,15 @@ static pid_t spawn_slave(char * new_channel)
     }
     if(pid==0)
     {
+        //set process group
+        if(setpgid(0,pid_group)!=0)
+        {
+            perror("setpgid failed");
+            exit(1);
+        }
         execv(self,self_params);
-        perror("execv failed!");
-        exit(1);
+        perror("execv failed");
+        exit(2);
     }
     log_message(logger,LOG_INFO,"Started new slave executor with pid %i",LI(pid));
     return 0;
@@ -506,7 +503,11 @@ static uint8_t operation_0(void)
     }
 
     pid_lock();
-    //TODO: check that we are not shutting down right now
+    if(shutdown)
+    {
+        log_message(logger,LOG_WARNING,"Master is shutting down, will not attempt to spawn anything");
+        return 21;
+    }
 
     char chn[256];
     sprintf(chn,"%04llx", current_timestamp());
@@ -550,8 +551,9 @@ static uint8_t operation_0(void)
        pid_unlock();
        return 11;
     }
-    //TODO: fillup pidfile, or registed somehow (process group ?)
-
+    //as precaution, set pid_group equals to first pid started, if not already set
+    if(pid_group<=0)
+        pid_group=pid;
     pid_unlock();
 
     //send response
