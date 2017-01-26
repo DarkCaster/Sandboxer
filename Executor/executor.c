@@ -109,7 +109,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     log_message(logger,LOG_INFO,"Received termination signal %i",LI(sig));
     pid_lock();
 
-    if(sig==SIGUSR1)
+    if(sig==SIGUSR1 && mode==0)
     {
         if(pid_group==0)
         {
@@ -119,7 +119,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
         else
         {
             log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-            if(kill(0-pid_group,SIGUSR2)!=0)
+            if(kill(0-pid_group,SIGUSR1)!=0)
                 log_message(logger,LOG_WARNING,"Failed to send SIGUSR2 to slaves. errno=%i",LI(errno));
             //cut-down communications, while we waiting child processes to shutdown
             if(command_mode)
@@ -127,9 +127,10 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
         }
     }
 
-    //TODO: deal with tracked user process
-    if(sig==SIGUSR2)
+    if(sig==SIGUSR1 && mode==1)
+    {
         slave_terminate_child(1);
+    }
 
     if(sig==SIGTERM || sig==SIGHUP || sig==SIGINT)
     {
@@ -258,23 +259,9 @@ int main(int argc, char* argv[])
     //termination signals
     act[0].sa_sigaction=&termination_signal_handler;
     act[0].sa_flags=SA_SIGINFO;
-    if( sigaction(SIGTERM, &act[0], NULL) < 0 || sigaction(SIGINT, &act[0], NULL) < 0 || sigaction(SIGHUP, &act[0], NULL) < 0 )
+    if( sigaction(SIGTERM, &act[0], NULL) < 0 || sigaction(SIGINT, &act[0], NULL) < 0 || sigaction(SIGHUP, &act[0], NULL) < 0 || sigaction(SIGUSR1, &act[0], NULL) < 0 )
     {
         log_message(logger,LOG_ERROR,"Failed to set one of termination signals handler");
-        return 1;
-    }
-
-    //SIGUSR1 will perform emergency shutdown. Handled by master executor process only.
-    //master executor will command all slave executors to kill it's tracked process
-    if(mode==0 && sigaction(SIGUSR1, &act[0], NULL)<0)
-    {
-        log_message(logger,LOG_ERROR,"Failed to set SIGUSR1 handler for master");
-        return 1;
-    }
-
-    if(mode==1 && sigaction(SIGUSR2, &act[0], NULL) < 0)
-    {
-        log_message(logger,LOG_ERROR,"Failed to set SIGUSR2 handler for slave");
         return 1;
     }
 
