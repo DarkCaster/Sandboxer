@@ -58,6 +58,7 @@ static volatile uint8_t child_is_alive;
 static volatile uint8_t child_ec;
 
 static volatile int child_signal;
+static volatile pid_t child_pid;
 static volatile uint8_t child_signal_set;
 
 //pid management stuff
@@ -101,7 +102,18 @@ static void show_usage(void)
 
 static void slave_terminate_child(uint8_t sigkill)
 {
-    //TODO:
+    uint8_t terminate_tree=sigkill?1:(child_is_alive?0:1);
+
+    if(terminate_tree)
+    {
+        log_message(logger,LOG_INFO,"Attempting to terminate remaining child processes");
+    }
+    else
+    {
+        log_message(logger,LOG_INFO,"Terminating child process with signal %i",LI(child_signal));
+        if(kill(child_pid,child_signal)!=0)
+            log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
+    }
 }
 
 static void termination_signal_handler(int sig, siginfo_t* info, void* context)
