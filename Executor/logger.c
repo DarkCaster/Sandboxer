@@ -74,8 +74,9 @@ void log_stdout(const LogDef log_instance, const uint8_t enable_output)
     log_unlock(log_instance);
 }
 
-static void log_closefile(LogInstance* log)
+void log_closefile(const LogDef log_instance)
 {
+    LogInstance* const log=(LogInstance*)log_instance;
     if(log->logfile!=NULL)
     {
         fclose(log->logfile);
@@ -95,7 +96,7 @@ static void _log_logfile(const LogDef log_instance, const char * filename)
         log->logfile=fopen(log->filename,"a");
     }
     else
-        log_closefile(log);
+        log_closefile(log_instance);
 }
 
 void log_logfile(const LogDef log_instance, const char * filename)

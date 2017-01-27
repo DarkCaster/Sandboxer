@@ -618,6 +618,12 @@ static pid_t spawn_slave(char * new_channel)
             perror("setpgid failed");
             exit(1);
         }
+        log_closefile(logger);
+        if(close(fdi)!=0 || close(fdo)!=0)
+        {
+            perror("close of open file descriptors failed");
+            exit(1);
+        }
         execv(self,self_params);
         perror("execv failed");
         exit(2);
