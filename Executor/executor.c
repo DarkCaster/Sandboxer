@@ -141,9 +141,6 @@ static int terminate_orphans(int signal)
     return child_count;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 static void slave_terminate_child(uint8_t sigkill)
 {
     if(child_is_alive)
@@ -157,6 +154,9 @@ static void slave_terminate_child(uint8_t sigkill)
         request_shutdown(0);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 {
     log_message(logger,LOG_INFO,"Received termination signal %i",LI(sig));
@@ -164,14 +164,9 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 
     if(sig==SIGUSR1 && mode==0)
     {
-        if(pid_group==0)
-            log_message(logger,LOG_INFO,"No child executors was started, performing shutdown");
-        else
-        {
-            log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-            if(kill(0-pid_group,SIGUSR1)!=0)
-                log_message(logger,LOG_WARNING,"Failed to send SIGUSR2 to slaves. errno=%i",LI(errno));
-        }
+        log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
+        if(kill(0-pid_group,SIGUSR1)!=0)
+            log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to slaves. errno=%i",LI(errno));
         request_shutdown(0);
     }
 
@@ -182,14 +177,9 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     {
         if(mode==0)
         {
-            if(pid_group==0)
-                log_message(logger,LOG_INFO,"No child executors was started, performing shutdown");
-            else
-            {
-                log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
-                if(kill(0-pid_group,SIGTERM)!=0)
-                    log_message(logger,LOG_WARNING,"Failed to send SIGTERM to slaves. errno=%i",LI(errno));
-            }
+            log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
+            if(kill(0-pid_group,SIGTERM)!=0)
+                log_message(logger,LOG_WARNING,"Failed to send SIGTERM to slaves. errno=%i",LI(errno));
             request_shutdown(0);
         }
         else
@@ -215,25 +205,14 @@ static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context
 
 static void* master_watchdog(void* param)
 {
-    while( pid_group==0 && !shutdown )
-        usleep(DATA_WAIT_TIME_MS*1000);
-    while( pid_group!=0 )
-    {
-        siginfo_t info;
-        waitid(P_PGID,(id_t)pid_group,&info,WEXITED|WNOHANG);
-        pid_lock();
-        uint8_t exit=0;
-        if(kill(0-pid_group,0)!=0)
-        {
-            if(errno!=ESRCH)
-                log_message(logger,LOG_WARNING,"master_watchdog:kill check failed. errno=%i",LI(errno));
-            exit=1;
-        }
-        pid_unlock();
-        if(exit==1 && shutdown)
-            return 0;
-        usleep(WORKER_REACT_TIME_MS*2*1000);
-    }
+    if(pid_group<=0)
+        return NULL;
+    siginfo_t info;
+    //wait for pid holder process exit
+    waitid(P_PID,(id_t)pid_group,&info,WEXITED);
+    pid_lock();
+    shutdown=1;
+    pid_unlock();
     return NULL;
 }
 
@@ -245,6 +224,9 @@ static void request_shutdown(uint8_t lock)
 {
     if(lock)
         pid_lock();
+    //killing pid holder
+    if(pid_group<=0 && kill(pid_group,SIGKILL)!=0)
+        log_message(logger,LOG_WARNING,"Failed to send SIGKILL to pid holder!. errno=%i",LI(errno));
     if(command_mode)
         comm_shutdown(1);
     shutdown=1;
@@ -275,6 +257,7 @@ int main(int argc, char* argv[])
 
     //set pid management parameters and stuff
     pthread_mutex_init(&pid_mutex,NULL);
+    //TODO: launch pid group holder
     pid_group=0;
     if(mode==0)
         pid_watchdog_thread=(pthread_t*)safe_alloc(1,sizeof(pthread_t));
@@ -689,9 +672,6 @@ static uint8_t operation_0(void)
        pid_unlock();
        return 11;
     }
-    //set pid_group equals to first pid started, if not already set
-    if(pid_group<=0)
-        pid_group=pid;
     pid_unlock();
 
     //send response
