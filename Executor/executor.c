@@ -3,6 +3,7 @@
 #include "comm_helper.h"
 #include "message.h"
 #include "cmd_defs.h"
+#include "pid_group_holder.h"
 
 #include <signal.h>
 #include <unistd.h>
@@ -225,8 +226,9 @@ static void request_shutdown(uint8_t lock)
     if(lock)
         pid_lock();
     //killing pid holder
-    if(pid_group<=0 && kill(pid_group,SIGKILL)!=0)
+    if(pid_group!=0 && kill(pid_group,SIGKILL)!=0)
         log_message(logger,LOG_WARNING,"Failed to send SIGKILL to pid holder!. errno=%i",LI(errno));
+    pid_group=0;
     if(command_mode)
         comm_shutdown(1);
     shutdown=1;
@@ -257,12 +259,8 @@ int main(int argc, char* argv[])
 
     //set pid management parameters and stuff
     pthread_mutex_init(&pid_mutex,NULL);
-    //TODO: launch pid group holder
     pid_group=0;
-    if(mode==0)
-        pid_watchdog_thread=(pthread_t*)safe_alloc(1,sizeof(pthread_t));
-    else
-        pid_watchdog_thread=NULL;
+    pid_watchdog_thread=NULL;
 
     //set status params
     shutdown=0;
@@ -329,6 +327,14 @@ int main(int argc, char* argv[])
         log_file[chn_len+4]='\0';
         log_message(logger,LOG_INFO,"Enabling logfile %s",LS(log_file));
         log_logfile(logger,log_file);
+    }
+
+    if(mode==0)
+    {
+        pid_group=spawn_pid_holder();
+        if(pid_group<=0)
+            teardown(19);
+        pid_watchdog_thread=(pthread_t*)safe_alloc(1,sizeof(pthread_t));
     }
 
     if(mode==0)
@@ -531,6 +537,11 @@ int main(int argc, char* argv[])
 
 static void teardown(int code)
 {
+    pid_lock();
+    if(pid_group!=0 && kill(pid_group,SIGKILL)!=0)
+        log_message(logger,LOG_WARNING,"Failed tosend SIGKILL to pid holder!. errno=%i",LI(errno));
+    pid_group=0;
+    pid_unlock();
     if(logger!=NULL)
     {
         uint8_t msg_type=code!=0?LOG_ERROR:LOG_INFO;
