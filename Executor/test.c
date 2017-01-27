@@ -40,9 +40,17 @@ int main(void)
         sigfillset(&mask);
         sigprocmask(SIG_SETMASK, &mask, NULL);
 
+        char spam[4097];
+        memset((void*)spam,(int)'X',4096);
+        spam[4096]='\0';
+
         int msg=0;
         while(1)
         {
+            if(fwrite(spam,1,4096,stdout)!=4096)
+                log_message(log,LOG_ERROR,"Write to stdout failed!");
+            if(fflush(stdout)!=0)
+                log_message(log,LOG_ERROR,"fflush stdout failed!");
             log_message(log,LOG_INFO,"FORK, message #%i",LI(msg));
             ++msg;
             usleep(100*1000);
