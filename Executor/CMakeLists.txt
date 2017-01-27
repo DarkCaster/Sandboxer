@@ -83,6 +83,7 @@ check_include_file(poll.h HAVE_POLL_H)
 check_include_file(signal.h HAVE_SIGNAL_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(errno.h HAVE_ERRNO_H)
+check_include_file(dirent.h HAVE_DIRENT_H)
 
 if(NOT(HAVE_SYSSTAT_H))
  message(FATAL_ERROR "C header file sys/types.h not available for your platform. Cannot proceed.")
@@ -110,6 +111,9 @@ if(NOT(HAVE_ERRNO_H))
 endif()
 if(NOT(HAVE_SYSIOCTL_H))
  message(FATAL_ERROR "C header file sys/ioctl.h not available for your platform. Cannot proceed.")
+endif()
+if(NOT(HAVE_DIRENT_H))
+ message(FATAL_ERROR "C header file dirent.h not available for your platform. Cannot proceed.")
 endif()
 
 
