@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <pty.h>
+#include <dirent.h>
 
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -59,6 +60,7 @@ static volatile uint8_t child_ec;
 
 static volatile int child_signal;
 static volatile pid_t child_pid;
+static volatile pid_t self_pid;
 static volatile uint8_t child_signal_set;
 
 //pid management stuff
@@ -80,6 +82,7 @@ static void* master_watchdog(void* param);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_terminate_child(uint8_t sigkill);
+static int terminate_orphans(int signal);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
@@ -97,23 +100,61 @@ static void show_usage(void)
     exit(1);
 }
 
+//terminate all orphaned processes whose pid!=self_pid, and!=1;
+//if signal==0 - just enumerate such processes
+static int terminate_orphans(int signal)
+{
+    DIR* proc=opendir("/proc");
+    if(proc==NULL)
+    {
+        log_message(logger,LOG_ERROR,"Failed to open /proc errno=%i",LI(errno));
+        return 0;
+    }
+    struct dirent* d_entry=NULL;
+    int child_count=0;
+    char stat_path[MAXARGLEN+1];
+    FILE* stat_file=NULL;
+    pid_t pid=0;
+    pid_t ppid=0;
+    while((d_entry = readdir(proc)) != NULL)
+    {
+        if(!arg_is_numeric(d_entry->d_name))
+            continue;
+        sprintf(stat_path, "/proc/%s/stat", d_entry->d_name);
+        stat_file = fopen(stat_path,"r");
+        if(stat_file==NULL)
+            continue;
+        if(fscanf(stat_file, "%d %*s %*c %d", &pid, &ppid)!=2)
+            continue;
+        fclose(stat_file);
+        if(ppid==1 && pid!=self_pid && pid!=1)
+        {
+            if(signal>0)
+            {
+                log_message(logger,LOG_ERROR,"Sending %i signal to pid %i",LI(signal),LI(pid));
+                if(kill(pid,signal)!=0)
+                    log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
+            }
+            ++child_count;
+        }
+    }
+    return child_count;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
 static void slave_terminate_child(uint8_t sigkill)
 {
-    uint8_t terminate_tree=sigkill?1:(child_is_alive?0:1);
-
-    if(terminate_tree)
+    if(child_is_alive)
     {
-        log_message(logger,LOG_INFO,"Attempting to terminate remaining child processes");
-    }
-    else
-    {
+        int signal=sigkill?SIGKILL:child_signal;
         log_message(logger,LOG_INFO,"Terminating child process with signal %i",LI(child_signal));
-        if(kill(child_pid,child_signal)!=0)
+        if(kill(child_pid,signal)!=0)
             log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
     }
+    else
+        request_shutdown(0);
 }
 
 static void termination_signal_handler(int sig, siginfo_t* info, void* context)
@@ -124,41 +165,32 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     if(sig==SIGUSR1 && mode==0)
     {
         if(pid_group==0)
-        {
             log_message(logger,LOG_INFO,"No child executors was started, performing shutdown");
-            request_shutdown(0);
-        }
         else
         {
             log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
             if(kill(0-pid_group,SIGUSR1)!=0)
                 log_message(logger,LOG_WARNING,"Failed to send SIGUSR2 to slaves. errno=%i",LI(errno));
-            //cut-down communications, while we waiting child processes to shutdown
-            if(command_mode)
-                comm_shutdown(1);
         }
+        request_shutdown(0);
     }
 
     if(sig==SIGUSR1 && mode==1)
-    {
         slave_terminate_child(1);
-    }
 
     if(sig==SIGTERM || sig==SIGHUP || sig==SIGINT)
     {
         if(mode==0)
         {
             if(pid_group==0)
-            {
                 log_message(logger,LOG_INFO,"No child executors was started, performing shutdown");
-                request_shutdown(0);
-            }
             else
             {
                 log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
                 if(kill(0-pid_group,SIGTERM)!=0)
                     log_message(logger,LOG_WARNING,"Failed to send SIGTERM to slaves. errno=%i",LI(errno));
             }
+            request_shutdown(0);
         }
         else
             slave_terminate_child(0);
@@ -196,15 +228,13 @@ static void* master_watchdog(void* param)
             if(errno!=ESRCH)
                 log_message(logger,LOG_WARNING,"master_watchdog:kill check failed. errno=%i",LI(errno));
             exit=1;
-            request_shutdown(0);
         }
         pid_unlock();
-        if(exit==1)
+        if(exit==1 && shutdown)
             return 0;
-        usleep(DATA_WAIT_TIME_MS*1000);
+        usleep(WORKER_REACT_TIME_MS*2*1000);
     }
-    request_shutdown(1);
-    return 0;
+    return NULL;
 }
 
 #pragma GCC diagnostic pop
@@ -232,6 +262,8 @@ int main(int argc, char* argv[])
 {
     if( argc!=6 || !arg_is_numeric(argv[1]) || !arg_is_numeric(argv[2]) || !arg_is_numeric(argv[5]) || strnlen(argv[3], MAXARGLEN)>=MAXARGLEN || strnlen(argv[4], MAXARGLEN)>=MAXARGLEN)
         show_usage();
+
+    self_pid=getpid();
 
     //set config params
     self=argv[0];
