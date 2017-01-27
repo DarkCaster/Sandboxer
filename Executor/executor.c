@@ -996,12 +996,15 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     int32_t in_len=0;
     uint8_t o_data_empty=0;
     uint8_t e_data_empty=0;
+    uint8_t o_closed=0;
+    uint8_t e_closed=0;
+
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
 
     int ofd=use_pty?fdm:stdout_pipe[0];
     int ifd=use_pty?fdm:stdin_pipe[1];
 
-    while(child_is_alive || o_data_empty<4 || e_data_empty<4)
+    while(child_is_alive || o_data_empty<4 || e_data_empty<4 || !o_closed || !e_closed)
     {
         in_len=0;
 
@@ -1088,6 +1091,16 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             }
         }
 
+        //check stdout for hup
+        struct pollfd fds;
+        fds.fd=(ofd);
+        fds.events=0;
+        fds.revents=0;
+        poll(&fds,1,0);
+
+        if(fds.revents&POLLHUP || fds.revents&POLLERR || fds.revents&POLLNVAL)
+            o_closed=1;
+
         //read stdout from child
         size_t avail=bytes_avail(ofd);
         ssize_t out_count=0;
@@ -1123,9 +1136,22 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         }
 
         if(use_pty)
+        {
             e_data_empty=o_data_empty;
+            e_closed=o_closed;
+        }
         else
         {
+            //check stdout for hup
+            //struct pollfd fds;
+            fds.fd=(stderr_pipe[0]);
+            fds.events=0;
+            fds.revents=0;
+            poll(&fds,1,0);
+
+            if(fds.revents&POLLHUP || fds.revents&POLLERR || fds.revents&POLLNVAL)
+                e_closed=1;
+
             //and stderr from child
             avail=bytes_avail(stderr_pipe[0]);
             ssize_t err_count=0;
