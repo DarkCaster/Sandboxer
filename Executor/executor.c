@@ -281,7 +281,7 @@ int main(int argc, char* argv[])
         log_stdout(logger,0);
 
     struct sigaction act[2];
-    memset(&act,2,sizeof(act));
+    memset(&act,2,sizeof(struct sigaction));
 
     //termination signals
     act[0].sa_sigaction=&termination_signal_handler;
