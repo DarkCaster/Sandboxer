@@ -533,6 +533,8 @@ int main(int argc, char* argv[])
             log_message(logger,LOG_ERROR,"Error awaiting for pid watchdog termination with pthread_join, ec==%i",ec);
     }
 
+    //TODO: for master - TERM and KILL all orphan processes left
+
     int pos=0;
     while(params[pos]!=NULL)
     {
@@ -851,10 +853,9 @@ static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_respo
     else
         log_message(logger,LOG_INFO,"Sending SIGKILL signal to child processes");
 
-    //TODO:
-    //pid_lock();
-    //terminate_child_processes(grace_shutdown);
-    //pid_unlock();
+    pid_lock();
+    slave_terminate_child(!grace_shutdown);
+    pid_unlock();
 
     if(!skip_responce && operation_status(0)!=0)
         return 255;
@@ -915,7 +916,6 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         }
     }
     log_message(logger,LOG_INFO,"Starting new process %s",LS(params[0]));
-    child_is_alive=1;
 
     pid_lock();
     if(shutdown)
@@ -975,9 +975,8 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         perror("execv failed");
         exit(1);
     }
-
-    //TODO: register pid, to be able to terminate
-
+    child_is_alive=1;
+    child_pid=pid;
     command_mode=0;
     pid_unlock();
 
@@ -1199,6 +1198,8 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             log_message(logger,LOG_WARNING,"Failed to send child's process exit code ec=%i",LI(ec));
     }
 
+    //TODO: redirect output somewhere at process exit, so child process pipe not block
+    //(also confirm that it is happening)
     if(use_pty)
     {
         if(close(fdm)!=0)
