@@ -943,6 +943,19 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                 exit(4);
         }*/
 
+        //set process group
+        if(setpgid(0,0)!=0)
+        {
+            perror("setpgid failed");
+            exit(1);
+        }
+        log_closefile(logger);
+        if(close(fdi)!=0 || close(fdo)!=0)
+        {
+            perror("close of open file descriptors failed");
+            exit(1);
+        }
+
         if(!use_pty)
         {
             while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
