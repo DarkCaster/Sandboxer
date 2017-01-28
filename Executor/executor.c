@@ -1006,9 +1006,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     int ifd=use_pty?fdm:stdin_pipe[1];
 
 #define process_child_output(xfd, x_closed, x_data_empty) \
-        { struct pollfd fds; fds.fd=(xfd); fds.events=0; fds.revents=0;poll(&fds,1,0); \
-          if( fds.revents & POLLHUP || fds.revents & POLLERR || fds.revents & POLLNVAL ) x_closed=1; \
-          size_t avail=bytes_avail(xfd); ssize_t d_count=0; \
+        { size_t avail=bytes_avail(xfd); ssize_t d_count=0; \
           if(avail>0) \
           { if(avail>max_data_req) avail=max_data_req; \
             d_count=read(xfd,(void*)(chld_buf+CMDHDRSZ),avail); \
@@ -1018,6 +1016,8 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
               d_count=0; } \
             x_data_empty=0; } \
           else if(x_data_empty<4) ++x_data_empty; \
+          else if(!child_is_alive) { struct pollfd fds; fds.fd=(xfd); fds.events=0; fds.revents=0;poll(&fds,1,0); \
+              if( fds.revents & POLLHUP || fds.revents & POLLERR || fds.revents & POLLNVAL ) x_closed=1; } \
           if(comm_alive) \
           { CMDHDR cmd; cmd.cmd_type=150; cmdhdr_write(chld_buf,0,cmd); \
             uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,(int32_t)d_count+(int32_t)CMDHDRSZ,key,REQ_TIMEOUT_MS); \
