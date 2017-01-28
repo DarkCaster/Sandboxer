@@ -105,6 +105,7 @@ static void show_usage(void)
 //if signal==0 - just enumerate such processes
 static int terminate_orphans(int signal)
 {
+    //TODO: skip system processes, skip pid_holder process
     DIR* proc=opendir("/proc");
     if(proc==NULL)
     {
@@ -1004,6 +1005,24 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     int ofd=use_pty?fdm:stdout_pipe[0];
     int ifd=use_pty?fdm:stdin_pipe[1];
 
+#define process_child_output(xfd, x_closed, x_data_empty) \
+        { struct pollfd fds; fds.fd=(xfd); fds.events=0; fds.revents=0;poll(&fds,1,0); \
+          if( fds.revents & POLLHUP || fds.revents & POLLERR || fds.revents & POLLNVAL ) x_closed=1; \
+          size_t avail=bytes_avail(xfd); ssize_t d_count=0; \
+          if(avail>0) \
+          { if(avail>max_data_req) avail=max_data_req; \
+            d_count=read(xfd,(void*)(chld_buf+CMDHDRSZ),avail); \
+            if(d_count==-1) \
+            { int err=errno; \
+              if(err!=EINTR) log_message(logger,LOG_ERROR,"Error while reading stdout/stderr from child process %s, errno=%i",LS(params[0]),LI(err)); \
+              d_count=0; } \
+            x_data_empty=0; } \
+          else if(x_data_empty<4) ++x_data_empty; \
+          if(comm_alive) \
+          { CMDHDR cmd; cmd.cmd_type=150; cmdhdr_write(chld_buf,0,cmd); \
+            uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,(int32_t)d_count+(int32_t)CMDHDRSZ,key,REQ_TIMEOUT_MS); \
+            if(ec!=0) { log_message(logger,LOG_WARNING,"Commander goes offline while sending child stdout/stderr, disconnecting commander."); comm_alive=0; } } }
+
     while(child_is_alive || o_data_empty<4 || e_data_empty<4 || !o_closed || !e_closed)
     {
         in_len=0;
@@ -1091,49 +1110,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             }
         }
 
-        //check stdout for hup
-        struct pollfd fds;
-        fds.fd=(ofd);
-        fds.events=0;
-        fds.revents=0;
-        poll(&fds,1,0);
-
-        if(fds.revents&POLLHUP || fds.revents&POLLERR || fds.revents&POLLNVAL)
-            o_closed=1;
-
-        //read stdout from child
-        size_t avail=bytes_avail(ofd);
-        ssize_t out_count=0;
-        if(avail>0)
-        {
-            if(avail>max_data_req)
-                avail=max_data_req;
-            out_count=read(ofd,(void*)(chld_buf+CMDHDRSZ),avail);
-            if(out_count==-1)
-            {
-                int err=errno;
-                if(err!=EINTR)
-                    log_message(logger,LOG_ERROR,"Error while reading stdout from child process %s, errno=%i",LS(params[0]),LI(err));
-                out_count=0;
-            }
-            o_data_empty=0;
-        }
-        else if(o_data_empty<4)
-            ++o_data_empty;
-
-        if(comm_alive)
-        {
-            CMDHDR cmd;
-            cmd.cmd_type=150;
-            cmdhdr_write(chld_buf,0,cmd);
-            int32_t olen=(int32_t)out_count+(int32_t)CMDHDRSZ;
-            uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,olen,key,REQ_TIMEOUT_MS);
-            if(ec!=0)
-            {
-                log_message(logger,LOG_WARNING,"Commander goes offline while sending child stdout, disconnecting commander.");
-                comm_alive=0;
-            }
-        }
+        process_child_output(ofd,o_closed,o_data_empty);
 
         if(use_pty)
         {
@@ -1141,52 +1118,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             e_closed=o_closed;
         }
         else
-        {
-            //check stdout for hup
-            //struct pollfd fds;
-            fds.fd=(stderr_pipe[0]);
-            fds.events=0;
-            fds.revents=0;
-            poll(&fds,1,0);
-
-            if(fds.revents&POLLHUP || fds.revents&POLLERR || fds.revents&POLLNVAL)
-                e_closed=1;
-
-            //and stderr from child
-            avail=bytes_avail(stderr_pipe[0]);
-            ssize_t err_count=0;
-            if(avail>0)
-            {
-                if(avail>max_data_req)
-                    avail=max_data_req;
-                err_count=read(stderr_pipe[0],(void*)(chld_buf+CMDHDRSZ),avail);
-                if(err_count==-1)
-                {
-                    int err=errno;
-                    if(err!=EINTR)
-                        log_message(logger,LOG_ERROR,"Error while reading stderr from child process %s, errno=%i",LS(params[0]),LI(err));
-                    err_count=0;
-                }
-                e_data_empty=0;
-            }
-            else if(e_data_empty<4)
-                ++e_data_empty;
-
-            //send output down to commander
-            if(comm_alive)
-            {
-                CMDHDR cmd;
-                cmd.cmd_type=150;
-                cmdhdr_write(chld_buf,0,cmd);
-                int32_t elen=(int32_t)err_count+(int32_t)CMDHDRSZ;
-                uint8_t ec=message_send(fdo,tmp_buf,chld_buf,0,elen,key,REQ_TIMEOUT_MS);
-                if(ec!=0)
-                {
-                    log_message(logger,LOG_WARNING,"Commander goes offline while sending child stderr, disconnecting commander.");
-                    comm_alive=0;
-                }
-            }
-        }
+            process_child_output(stderr_pipe[0],e_closed,e_data_empty);
 
         //send input from commander to stdio of child
         if(in_len>0)
