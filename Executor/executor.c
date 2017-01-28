@@ -84,6 +84,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_terminate_child(uint8_t sigkill);
 static int terminate_orphans(int signal);
+static uint8_t check_target_is_child(pid_t parent, pid_t target);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
@@ -143,6 +144,36 @@ static int terminate_orphans(int signal)
     return child_count;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
+#define num_max_len(num) ({ int sz=sizeof num; sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
+
+//checks that target pid is belongs to parent pid tree
+static uint8_t check_target_is_child(pid_t parent, pid_t target)
+{
+    const int base_proc_stat_len=11; // /proc/<pid>/stat
+    char stat_path[base_proc_stat_len+(num_max_len(target))+1]; //because call is recursive, keep used stack space low as possible
+    sprintf(stat_path, "/proc/%d/stat", target);
+    FILE* stat_file = fopen(stat_path,"r");
+    if(stat_file==NULL)
+        return 0;
+    pid_t ppid=0;
+    if(fscanf(stat_file, "%*d %*s %*c %d", &ppid)!=1)
+    {
+        fclose(stat_file);
+        return 0;
+    }
+    fclose(stat_file);
+    if(ppid==parent)
+        return 1;
+    if(ppid==1)
+        return 0;
+    return check_target_is_child(parent,ppid);
+}
+
+#pragma GCC diagnostic pop
+
 static void slave_terminate_child(uint8_t sigkill)
 {
     if(child_is_alive)
@@ -152,8 +183,6 @@ static void slave_terminate_child(uint8_t sigkill)
         if(kill(child_pid,signal)!=0)
             log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
     }
-    else
-        request_shutdown(0);
 }
 
 #pragma GCC diagnostic push
