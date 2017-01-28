@@ -235,10 +235,10 @@ static void request_shutdown(uint8_t lock)
     shutdown=1;
     int ec=remove(filename_in);
     if(ec!=0)
-        log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(filename_in),LI(ec));
+        log_message(logger,LOG_WARNING,"Failed to remove pipe at %s, ec==%i",LS(filename_in),LI(ec));
     ec=remove(filename_out);
     if(ec!=0)
-        log_message(logger,LOG_ERROR,"Failed to remove pipe at %s, ec==%i",LS(filename_out),LI(ec));
+        log_message(logger,LOG_WARNING,"Failed to remove pipe at %s, ec==%i",LS(filename_out),LI(ec));
     if(lock)
         pid_unlock();
 }
@@ -1153,8 +1153,6 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             log_message(logger,LOG_WARNING,"Failed to send child's process exit code ec=%i",LI(ec));
     }
 
-    //TODO: redirect output somewhere at process exit, so child process pipe not block
-    //(also confirm that it is happening)
     if(use_pty)
     {
         if(close(fdm)!=0)
