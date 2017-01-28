@@ -84,7 +84,6 @@ static void* master_watchdog(void* param);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_terminate_child(int custom_signal);
-static int terminate_orphans(int signal);
 static void populate_child_pid_list(void);
 static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
@@ -104,48 +103,6 @@ static void show_usage(void)
     fprintf(stderr,"Error in parameters\n");
     fprintf(stderr,"Usage: <mode 0-master 1-slave> <logfile 0-disable 1-enable> <control dir> <channel-name> <security key>\n");
     exit(1);
-}
-
-//terminate all orphaned processes whose pid!=self_pid, and!=1;
-//if signal==0 - just enumerate such processes
-static int terminate_orphans(int signal)
-{
-    //TODO: skip system processes, skip pid_holder process
-    DIR* proc=opendir("/proc");
-    if(proc==NULL)
-    {
-        log_message(logger,LOG_ERROR,"Failed to open /proc errno=%i",LI(errno));
-        return 0;
-    }
-    struct dirent* d_entry=NULL;
-    int child_count=0;
-    char stat_path[MAXARGLEN+1];
-    FILE* stat_file=NULL;
-    pid_t pid=0;
-    pid_t ppid=0;
-    while((d_entry = readdir(proc)) != NULL)
-    {
-        if(!arg_is_numeric(d_entry->d_name))
-            continue;
-        sprintf(stat_path, "/proc/%s/stat", d_entry->d_name);
-        stat_file = fopen(stat_path,"r");
-        if(stat_file==NULL)
-            continue;
-        if(fscanf(stat_file, "%d %*s %*c %d", &pid, &ppid)!=2)
-            continue;
-        fclose(stat_file);
-        if(ppid==1 && pid!=self_pid && pid!=1)
-        {
-            if(signal>0)
-            {
-                log_message(logger,LOG_ERROR,"Sending %i signal to pid %i",LI(signal),LI(pid));
-                if(kill(pid,signal)!=0)
-                    log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
-            }
-            ++child_count;
-        }
-    }
-    return child_count;
 }
 
 static void ch_pid_list_add(pid_t value)
