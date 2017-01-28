@@ -62,13 +62,12 @@ static volatile uint8_t child_ec;
 static volatile int child_signal;
 static volatile pid_t self_pid;
 static volatile uint8_t child_signal_set;
-static pid_t* ch_pid_list;
-static int ch_pid_count;
 
 //pid management stuff
 static pthread_mutex_t pid_mutex;
 static void pid_lock(void);
 static void pid_unlock(void);
+static PidListDef slave_list;
 
 //filename for control channel
 char filename_in[MAXARGLEN+5];
@@ -81,11 +80,9 @@ static void request_shutdown(uint8_t lock);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_terminate_child(int custom_signal);
-static void populate_child_pid_list(void);
-static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target);
+//static void populate_child_pid_list(void);
+//static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
-static void ch_pid_list_add(pid_t value);
-static uint8_t ch_pid_list_remove(pid_t value);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
@@ -102,56 +99,6 @@ static void show_usage(void)
     exit(1);
 }
 
-static void ch_pid_list_add(pid_t value)
-{
-    if(ch_pid_list==NULL)
-    {
-        ch_pid_list=(pid_t*)safe_alloc(1,sizeof(pid_t));
-        ch_pid_count=1;
-    }
-    else
-    {
-        pid_t* tmp=(pid_t*)safe_alloc((size_t)(ch_pid_count+1),sizeof(pid_t));
-        for(int i=0;i<ch_pid_count;++i)
-            tmp[i]=ch_pid_list[i];
-        free(ch_pid_list);
-        ch_pid_list=tmp;
-        ++ch_pid_count;
-    }
-    ch_pid_list[ch_pid_count-1]=value;
-}
-
-static uint8_t ch_pid_list_remove(pid_t value)
-{
-    if(ch_pid_list==NULL)
-        return 0;
-    for(int i=0;i<ch_pid_count;++i)
-        if(ch_pid_list[i]==value)
-        {
-            --ch_pid_count;
-            if(ch_pid_count<1)
-            {
-                free(ch_pid_list);
-                ch_pid_count=0;
-                ch_pid_list=NULL;
-                return 1;
-            }
-            else
-            {
-                for(int j=i;j<ch_pid_count;++j)
-                    ch_pid_list[j]=ch_pid_list[j+1];
-                pid_t* tmp=(pid_t*)safe_alloc((size_t)ch_pid_count,sizeof(pid_t));
-                for(int j=0;j<ch_pid_count;++j)
-                    tmp[j]=ch_pid_list[j];
-                free(ch_pid_list);
-                ch_pid_list=tmp;
-                return 1;
-            }
-        }
-    return 0;
-}
-
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 
@@ -159,7 +106,7 @@ static uint8_t ch_pid_list_remove(pid_t value)
 #define num_t_max_len(num) ({ int sz=sizeof(num); sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
 
 //checks that target pid is belongs to parent pid tree
-static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target)
+/*static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target)
 {
     const int base_proc_stat_len=11; // /proc/<pid>/stat
     int stat_path_len=base_proc_stat_len+num_max_len(target);
@@ -236,21 +183,19 @@ static void populate_child_pid_list(void)
 
     if(closedir(proc)!=0)
         log_message(logger,LOG_ERROR,"populate_child_pid_list:closedir failed");
-}
-
-//static void
+}*/
 
 static void slave_terminate_child(int custom_signal)
 {
     int signal=custom_signal>0?custom_signal:child_signal;
-    populate_child_pid_list();
+    /*populate_child_pid_list();
     if(ch_pid_count>0)
         for(int i=0;i<ch_pid_count;++i)
         {
             log_message(logger,LOG_INFO,"Terminating child process with pid %i with signal %i",LI(ch_pid_list[i]),LI(child_signal));
             if(kill(ch_pid_list[i],signal)!=0)
                 log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
-        }
+        }*/
 }
 
 #pragma GCC diagnostic pop
@@ -345,8 +290,8 @@ int main(int argc, char* argv[])
     key=(uint32_t)strtol(argv[5], NULL, 10);
 
     //set pid management parameters and stuff
-    ch_pid_list=NULL;
-    ch_pid_count=0;
+    if(mode==0)
+        slave_list=pid_list_init();
 
     //set status params
     shutdown=0;
@@ -615,6 +560,9 @@ int main(int argc, char* argv[])
 
     //TODO: in master mode - kill slaves and\or orphans
 
+    if(mode==0)
+        pid_list_deinit(slave_list);
+
     int pos=0;
     while(params[pos]!=NULL)
     {
@@ -698,16 +646,20 @@ static pid_t spawn_slave(char * new_channel)
     }
     if(pid==0)
     {
-        //TODO: set new session
+        if(setsid()<0)
+        {
+            perror("setsid failed!");
+            exit(1);
+        }
         log_closefile(logger);
         if(close(fdi)!=0 || close(fdo)!=0)
         {
             perror("close of open file descriptors failed");
-            exit(1);
+            exit(2);
         }
         execv(self,self_params);
         perror("execv failed");
-        exit(2);
+        exit(3);
     }
     log_message(logger,LOG_INFO,"Started new slave executor with pid %i",LI(pid));
     return pid;
@@ -770,6 +722,7 @@ static uint8_t operation_0(void)
        pid_unlock();
        return 11;
     }
+    pid_list_add(slave_list,pid);
     pid_unlock();
 
     //send response
