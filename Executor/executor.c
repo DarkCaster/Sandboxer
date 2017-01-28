@@ -60,9 +60,10 @@ static volatile uint8_t child_is_alive;
 static volatile uint8_t child_ec;
 
 static volatile int child_signal;
-static volatile pid_t child_pid;
 static volatile pid_t self_pid;
 static volatile uint8_t child_signal_set;
+static pid_t* ch_pid_list;
+static int ch_pid_count;
 
 //pid management stuff
 static pthread_mutex_t pid_mutex;
@@ -82,10 +83,13 @@ static void request_shutdown(uint8_t lock);
 static void* master_watchdog(void* param);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
-static void slave_terminate_child(uint8_t sigkill);
+static void slave_terminate_child(int custom_signal);
 static int terminate_orphans(int signal);
-static uint8_t check_target_is_child(pid_t parent, pid_t target);
+static void populate_child_pid_list(void);
+static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
+static void ch_pid_list_add(pid_t value);
+static uint8_t ch_pid_list_remove(pid_t value);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
 static uint8_t operation_1(char* exec, size_t len);
@@ -144,16 +148,70 @@ static int terminate_orphans(int signal)
     return child_count;
 }
 
+static void ch_pid_list_add(pid_t value)
+{
+    if(ch_pid_list==NULL)
+    {
+        ch_pid_list=(pid_t*)safe_alloc(1,sizeof(pid_t));
+        ch_pid_count=1;
+    }
+    else
+    {
+        pid_t* tmp=(pid_t*)safe_alloc((size_t)(ch_pid_count+1),sizeof(pid_t));
+        for(int i=0;i<ch_pid_count;++i)
+            tmp[i]=ch_pid_list[i];
+        free(ch_pid_list);
+        ch_pid_list=tmp;
+        ++ch_pid_count;
+    }
+    ch_pid_list[ch_pid_count-1]=value;
+}
+
+static uint8_t ch_pid_list_remove(pid_t value)
+{
+    if(ch_pid_list==NULL)
+        return 0;
+    for(int i=0;i<ch_pid_count;++i)
+        if(ch_pid_list[i]==value)
+        {
+            --ch_pid_count;
+            if(ch_pid_count<1)
+            {
+                free(ch_pid_list);
+                ch_pid_count=0;
+                ch_pid_list=NULL;
+                return 1;
+            }
+            else
+            {
+                for(int j=i;j<ch_pid_count;++j)
+                    ch_pid_list[j]=ch_pid_list[j+1];
+                pid_t* tmp=(pid_t*)safe_alloc((size_t)ch_pid_count,sizeof(pid_t));
+                for(int j=0;j<ch_pid_count;++j)
+                    tmp[j]=ch_pid_list[j];
+                free(ch_pid_list);
+                ch_pid_list=tmp;
+                return 1;
+            }
+        }
+    return 0;
+}
+
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 
 #define num_max_len(num) ({ int sz=sizeof num; sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
+#define num_t_max_len(num) ({ int sz=sizeof(num); sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
 
 //checks that target pid is belongs to parent pid tree
-static uint8_t check_target_is_child(pid_t parent, pid_t target)
+static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target)
 {
     const int base_proc_stat_len=11; // /proc/<pid>/stat
-    char stat_path[base_proc_stat_len+(num_max_len(target))+1]; //because call is recursive, keep used stack space low as possible
+    int stat_path_len=base_proc_stat_len+num_max_len(target);
+    char stat_path[stat_path_len+1]; //because call is recursive, keep used stack space low as possible
+    stat_path[stat_path_len]='\0';
+
     sprintf(stat_path, "/proc/%d/stat", target);
     FILE* stat_file = fopen(stat_path,"r");
     if(stat_file==NULL)
@@ -167,23 +225,81 @@ static uint8_t check_target_is_child(pid_t parent, pid_t target)
     fclose(stat_file);
     if(ppid==parent)
         return 1;
+    for(int i=0;i<p_count;++i)
+        if(ppid==parents[i])
+            return 1;
     if(ppid==1)
         return 0;
-    return check_target_is_child(parent,ppid);
+    return check_target_is_child(parent,parents,p_count,ppid);
+}
+
+static void populate_child_pid_list(void)
+{
+    if(ch_pid_count>0)
+    {
+        pid_t tmp_list[ch_pid_count];
+        for(int i=0;i<ch_pid_count;++i)
+            tmp_list[i]=ch_pid_list[i];
+        int tmp_count=ch_pid_count;
+        for(int i=0;i<tmp_count;++i)
+            if(kill(tmp_list[i],0)!=0)
+                ch_pid_list_remove(tmp_list[i]);
+    }
+
+    DIR* proc=opendir("/proc");
+    if(proc==NULL)
+    {
+        log_message(logger,LOG_ERROR,"Failed to open /proc errno=%i",LI(errno));
+        return;
+    }
+
+    const int base_proc_stat_len=11; // /proc/<pid>/stat
+    int stat_path_len=base_proc_stat_len+num_t_max_len(pid_t);
+    char stat_path[stat_path_len+1];
+    stat_path[stat_path_len]='\0';
+
+    struct dirent* d_entry=NULL;
+    FILE* stat_file=NULL;
+    pid_t pid=0;
+    pid_t ppid=0;
+
+    while((d_entry = readdir(proc)) != NULL)
+    {
+        if(!arg_is_numeric(d_entry->d_name))
+            continue;
+        sprintf(stat_path, "/proc/%s/stat", d_entry->d_name);
+        stat_file = fopen(stat_path,"r");
+        if(stat_file==NULL)
+            continue;
+        int v_read=fscanf(stat_file, "%d %*s %*c %d", &pid, &ppid);
+        fclose(stat_file);
+        if(v_read!=2 || ppid==1 || pid==self_pid)
+            continue;
+
+        if(check_target_is_child(self_pid,ch_pid_list,ch_pid_count,pid))
+            ch_pid_list_add(pid);
+    }
+
+    if(closedir(proc)!=0)
+        log_message(logger,LOG_ERROR,"populate_child_pid_list:closedir failed");
+}
+
+//static void
+
+static void slave_terminate_child(int custom_signal)
+{
+    int signal=custom_signal>0?custom_signal:child_signal;
+    populate_child_pid_list();
+    if(ch_pid_count>0)
+        for(int i=0;i<ch_pid_count;++i)
+        {
+            log_message(logger,LOG_INFO,"Terminating child process with pid %i with signal %i",LI(ch_pid_list[i]),LI(child_signal));
+            if(kill(ch_pid_list[i],signal)!=0)
+                log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
+        }
 }
 
 #pragma GCC diagnostic pop
-
-static void slave_terminate_child(uint8_t sigkill)
-{
-    if(child_is_alive)
-    {
-        int signal=sigkill?SIGKILL:child_signal;
-        log_message(logger,LOG_INFO,"Terminating child process with signal %i",LI(child_signal));
-        if(kill(child_pid,signal)!=0)
-            log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
-    }
-}
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -202,7 +318,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     }
 
     if(sig==SIGUSR1 && mode==1)
-        slave_terminate_child(1);
+        slave_terminate_child(SIGKILL);
 
     if(sig==SIGTERM || sig==SIGHUP || sig==SIGINT)
     {
@@ -286,6 +402,9 @@ int main(int argc, char* argv[])
     ctldir=argv[3];
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
+
+    ch_pid_list=NULL;
+    ch_pid_count=0;
 
     //set pid management parameters and stuff
     pthread_mutex_init(&pid_mutex,NULL);
@@ -1047,7 +1166,6 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         exit(1);
     }
     child_is_alive=1;
-    child_pid=pid;
     command_mode=0;
     pid_unlock();
 
