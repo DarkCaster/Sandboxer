@@ -3,7 +3,7 @@
 #include "comm_helper.h"
 #include "message.h"
 #include "cmd_defs.h"
-#include "pid_group_holder.h"
+#include "pid_list.h"
 
 #include <signal.h>
 #include <unistd.h>
