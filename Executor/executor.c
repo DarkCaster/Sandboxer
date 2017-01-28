@@ -402,6 +402,7 @@ int main(int argc, char* argv[])
 
     uint8_t phase=0;
     int32_t pl_len=0;
+    uint32_t idle_time=0;
 
     //TODO: add proper operation time detection
     while(!shutdown)
@@ -414,6 +415,7 @@ int main(int argc, char* argv[])
             {
                 pl_len=0;
                 phase=1;
+                idle_time=0;
             }
             else if(ec!=3 && ec!=255)
             {
@@ -421,6 +423,8 @@ int main(int argc, char* argv[])
                 shutdown=1;
                 break;
             }
+            else
+                idle_time+=WORKER_REACT_TIME_MS;
         }
 
         if(phase==1)
@@ -428,13 +432,18 @@ int main(int argc, char* argv[])
             int time_limit=WORKER_REACT_TIME_MS;
             uint8_t ec=message_read_and_transform_payload(fdi,tmp_buf,data_buf,0,&pl_len,key,&time_limit);
             if(ec==0)
+            {
                 phase=2;
+                idle_time=0;
+            }
             else if(ec!=3 && ec!=255)
             {
                 log_message(logger,LOG_ERROR,"Read error on %s pipe (phase 1). ec=%i",LS(filename_out),LI(ec));
                 shutdown=1;
                 break;
             }
+            else
+                idle_time+=WORKER_REACT_TIME_MS;
         }
 
         if(phase==2)
@@ -505,7 +514,27 @@ int main(int argc, char* argv[])
             }
             phase=0;
         }
-    };
+
+        if(mode==1)
+        {
+            if(idle_time>=SLAVE_COMMAND_MODE_IDLE_TIME)
+            {
+                log_message(logger,LOG_INFO,"Performing slave shutdown because of timeout");
+                request_shutdown(1);
+            }
+        }
+        else if(mode==0)
+        {
+            if(idle_time>=MASTER_COMMAND_MODE_IDLE_TIME)
+            {
+                //TODO: check for slaves
+                //or
+                //TODO: check for slaves and orphans
+                //reset timer if there is something working background
+                idle_time=0;
+            }
+        }
+    }
 
     log_message(logger,LOG_INFO,"Command loop is shutting down");
     if(fdi>=0 && close(fdi)!=0)
@@ -523,7 +552,9 @@ int main(int argc, char* argv[])
             log_message(logger,LOG_ERROR,"Error awaiting for pid watchdog termination with pthread_join, ec==%i",ec);
     }
 
-    //TODO: for master - TERM and KILL all orphan processes left
+    //TODO: in master mode - terminate slaves and\or orphans
+
+    //TODO: in master mode - kill slaves and\or orphans
 
     int pos=0;
     while(params[pos]!=NULL)
