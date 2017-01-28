@@ -67,10 +67,8 @@ static int ch_pid_count;
 
 //pid management stuff
 static pthread_mutex_t pid_mutex;
-static volatile pid_t pid_group;
 static void pid_lock(void);
 static void pid_unlock(void);
-static pthread_t* pid_watchdog_thread;
 
 //filename for control channel
 char filename_in[MAXARGLEN+5];
@@ -80,7 +78,6 @@ char filename_out[MAXARGLEN+5];
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
 static void request_shutdown(uint8_t lock);
-static void* master_watchdog(void* param);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_terminate_child(int custom_signal);
@@ -269,8 +266,10 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     if(sig==SIGUSR1 && mode==0)
     {
         log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-        if(kill(0-pid_group,SIGUSR1)!=0)
-            log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to slaves. errno=%i",LI(errno));
+        //TODO: update slave executors list
+        //send signals
+        //if(kill(0-pid_group,SIGUSR1)!=0)
+        //    log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to slaves. errno=%i",LI(errno));
         request_shutdown(0);
     }
 
@@ -281,9 +280,11 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     {
         if(mode==0)
         {
-            log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
-            if(kill(0-pid_group,SIGTERM)!=0)
-                log_message(logger,LOG_WARNING,"Failed to send SIGTERM to slaves. errno=%i",LI(errno));
+            //TODO: update slave executors list
+            //send signals
+            //log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
+            //if(kill(0-pid_group,SIGTERM)!=0)
+            //    log_message(logger,LOG_WARNING,"Failed to send SIGTERM to slaves. errno=%i",LI(errno));
             request_shutdown(0);
         }
         else
@@ -307,19 +308,6 @@ static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context
     pid_unlock();
 }
 
-static void* master_watchdog(void* param)
-{
-    if(pid_group<=0)
-        return NULL;
-    siginfo_t info;
-    //wait for pid holder process exit
-    waitid(P_PID,(id_t)pid_group,&info,WEXITED);
-    pid_lock();
-    shutdown=1;
-    pid_unlock();
-    return NULL;
-}
-
 #pragma GCC diagnostic pop
 
 //request shutdown, delete comm-channel pipes (so no new connection to it can be made).
@@ -328,10 +316,6 @@ static void request_shutdown(uint8_t lock)
 {
     if(lock)
         pid_lock();
-    //killing pid holder
-    if(pid_group!=0 && kill(pid_group,SIGKILL)!=0)
-        log_message(logger,LOG_WARNING,"Failed to send SIGKILL to pid holder!. errno=%i",LI(errno));
-    pid_group=0;
     if(command_mode)
         comm_shutdown(1);
     shutdown=1;
@@ -360,13 +344,9 @@ int main(int argc, char* argv[])
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
 
+    //set pid management parameters and stuff
     ch_pid_list=NULL;
     ch_pid_count=0;
-
-    //set pid management parameters and stuff
-    pthread_mutex_init(&pid_mutex,NULL);
-    pid_group=0;
-    pid_watchdog_thread=NULL;
 
     //set status params
     shutdown=0;
@@ -436,14 +416,6 @@ int main(int argc, char* argv[])
     }
 
     if(mode==0)
-    {
-        pid_group=spawn_pid_holder();
-        if(pid_group<=0)
-            teardown(19);
-        pid_watchdog_thread=(pthread_t*)safe_alloc(1,sizeof(pthread_t));
-    }
-
-    if(mode==0)
         log_message(logger,LOG_INFO,"Executor startup, master mode");
     else
         log_message(logger,LOG_INFO,"Executor startup, slave mode");
@@ -491,16 +463,6 @@ int main(int argc, char* argv[])
     {
         log_message(logger,LOG_ERROR,"Failed to open %s|%s pipe",LS(filename_in),LS(filename_out));
         teardown(22);
-    }
-
-    if(mode==0)
-    {
-        log_message(logger,LOG_INFO,"Starting pid watchdog");
-        if(pthread_create(pid_watchdog_thread,NULL,master_watchdog,NULL)!=0)
-        {
-            log_message(logger,LOG_ERROR,"Failed to start pid watchdog. errno=%i",LI(errno));
-            teardown(23);
-        }
     }
 
     log_message(logger,LOG_INFO,"Entering command loop, awaiting requests");
@@ -647,15 +609,7 @@ int main(int argc, char* argv[])
     if(fdo>=0 && close(fdo)!=0)
         log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_out));
 
-    if(pid_watchdog_thread==NULL)
-        request_shutdown(1);
-    else
-    {
-        log_message(logger,LOG_INFO,"Awaiting for registered child processes to exit");
-        int ec=pthread_join(*pid_watchdog_thread,NULL);
-        if(ec!=0)
-            log_message(logger,LOG_ERROR,"Error awaiting for pid watchdog termination with pthread_join, ec==%i",ec);
-    }
+    request_shutdown(1);
 
     //TODO: in master mode - terminate slaves and\or orphans
 
@@ -674,11 +628,6 @@ int main(int argc, char* argv[])
 
 static void teardown(int code)
 {
-    pid_lock();
-    if(pid_group!=0 && kill(pid_group,SIGKILL)!=0)
-        log_message(logger,LOG_WARNING,"Failed tosend SIGKILL to pid holder!. errno=%i",LI(errno));
-    pid_group=0;
-    pid_unlock();
     if(logger!=NULL)
     {
         uint8_t msg_type=code!=0?LOG_ERROR:LOG_INFO;
@@ -749,12 +698,7 @@ static pid_t spawn_slave(char * new_channel)
     }
     if(pid==0)
     {
-        //set process group
-        if(setpgid(0,pid_group)!=0)
-        {
-            perror("setpgid failed");
-            exit(1);
-        }
+        //TODO: set new session
         log_closefile(logger);
         if(close(fdi)!=0 || close(fdo)!=0)
         {
