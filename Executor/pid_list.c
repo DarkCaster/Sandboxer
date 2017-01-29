@@ -9,7 +9,7 @@ struct strPidList {
     int count;
 };
 
-static uint8_t check_target_is_child(PidList* parents, pid_t target);
+static bool check_target_is_child(PidList* parents, pid_t target);
 
 PidListDef pid_list_init(void)
 {
@@ -47,11 +47,11 @@ void pid_list_add(PidListDef list_instance, pid_t value)
     list->list[list->count-1]=value;
 }
 
-uint8_t pid_list_remove(PidListDef list_instance, pid_t value)
+bool pid_list_remove(PidListDef list_instance, pid_t value)
 {
     PidList* const list=(PidList*)list_instance;
     if(list->list==NULL)
-        return 0;
+        return false;
     for(int i=0;i<list->count;++i)
         if(list->list[i]==value)
         {
@@ -61,7 +61,7 @@ uint8_t pid_list_remove(PidListDef list_instance, pid_t value)
                 free(list->list);
                 list->count=0;
                 list->list=NULL;
-                return 1;
+                return true;
             }
             else
             {
@@ -72,10 +72,10 @@ uint8_t pid_list_remove(PidListDef list_instance, pid_t value)
                     tmp[j]=list->list[j];
                 free(list->list);
                 list->list=tmp;
-                return 1;
+                return true;
             }
         }
-    return 0;
+    return false;
 }
 
 int pid_list_count(PidListDef list_instance)
@@ -90,19 +90,19 @@ void pid_list_copy(PidListDef list_instance, pid_t* target)
         target[i]=list->list[i];
 }
 
-uint8_t pid_list_signal(PidListDef list_instance, int signal)
+bool pid_list_signal(PidListDef list_instance, int signal)
 {
     PidList* const list=(PidList*)list_instance;
     if(list->count>0)
     {
-        uint8_t result=1;
+        bool result=true;
         for(int i=0; i<list->count; ++i)
             if(kill(list->list[i],signal)!=0)
-                result=0;
+                result=false;
         return result;
     }
     else
-        return 1;
+        return false;
 }
 
 #pragma GCC diagnostic push
@@ -144,7 +144,7 @@ void pid_list_validate(PidListDef list_instance, pid_t parent)
 }
 
 //checks that target pid is belongs to parent pid tree
-static uint8_t check_target_is_child(PidList* parents, pid_t target)
+static bool check_target_is_child(PidList* parents, pid_t target)
 {
     const int base_proc_stat_len=11; // /proc/<pid>/stat
     int stat_path_len=base_proc_stat_len+num_max_len(target);
@@ -154,17 +154,17 @@ static uint8_t check_target_is_child(PidList* parents, pid_t target)
     sprintf(stat_path, "/proc/%d/stat", target);
     FILE* stat_file = fopen(stat_path,"r");
     if(stat_file==NULL)
-        return 0;
+        return false;
     pid_t ppid=0;
     int v_read=fscanf(stat_file, "%*d %*s %*c %d", &ppid);
     fclose(stat_file);
     if(v_read!=1)
-        return 0;
+        return false;
     for(int i=0; i<parents->count; ++i)
         if(ppid==parents->list[i])
-            return 1;
+            return true;
     if(ppid==1)
-        return 0;
+        return false;
     return check_target_is_child(parents,ppid);
 }
 
