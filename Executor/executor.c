@@ -66,7 +66,7 @@ static volatile int child_signal;
 static pthread_mutex_t pid_mutex;
 static void pid_lock(void);
 static void pid_unlock(void);
-static PidListDef slave_list;
+static PidListDef _slave_list; //meant only to be accesed within pid_lock\pid_unlock
 
 //filename for control channel
 char filename_in[MAXARGLEN+5];
@@ -124,16 +124,16 @@ static void _slave_terminate_child(int custom_signal)
 static void _master_terminate_slaves(int signal)
 {
     log_message(logger,LOG_INFO,"Sending %i signal to all slave executors",LI(signal));
-    pid_list_validate_slave_executors(slave_list,getpid());
-    pid_list_remove(slave_list,getpid());
-    if(!pid_list_signal(slave_list,signal))
+    pid_list_validate_slave_executors(_slave_list,getpid());
+    pid_list_remove(_slave_list,getpid());
+    if(!pid_list_signal(_slave_list,signal))
         log_message(logger,LOG_WARNING,"Failed to send %i to some of slaves",LI(signal));
 }
 
 static int _master_get_slave_count(void)
 {
-    pid_list_validate_slave_executors(slave_list,getpid());
-    return pid_list_count(slave_list);
+    pid_list_validate_slave_executors(_slave_list,getpid());
+    return pid_list_count(_slave_list);
 }
 
 static void _master_terminate_orphans(int signal)
@@ -242,11 +242,13 @@ int main(int argc, char* argv[])
     child_signal_set=0;
     child_signal=15;
 
+    pid_lock();
     //set pid management parameters and stuff
     if(mode==0)
-        slave_list=pid_list_init();
+        _slave_list=pid_list_init();
     else
-        slave_list=NULL;
+        _slave_list=NULL;
+    pid_unlock();
 
     //logger
     logger=log_init();
@@ -685,7 +687,7 @@ static uint8_t operation_0(void)
        pid_unlock();
        return 11;
     }
-    pid_list_add(slave_list,pid);
+    pid_list_add(_slave_list,pid);
     pid_unlock();
 
     //send response
