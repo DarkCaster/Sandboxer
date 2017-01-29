@@ -77,13 +77,14 @@ char filename_out[MAXARGLEN+5];
 
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
-static void request_shutdown(uint8_t lock);
+static void _request_shutdown(void);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
-static void slave_terminate_child(int custom_signal);
-static void master_terminate_slaves(int signal);
-static void master_terminate_orphans(int signal);
-static int master_get_slave_count(void);
+static void _slave_terminate_child(int custom_signal);
+static void _master_terminate_slaves(int signal);
+static void _master_terminate_orphans(int signal);
+static int _master_get_slave_count(void);
+static int _master_get_orphans_count(void);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
@@ -101,7 +102,7 @@ static void show_usage(void)
     exit(1);
 }
 
-static void slave_terminate_child(int custom_signal)
+static void _slave_terminate_child(int custom_signal)
 {
     int signal=custom_signal>0?custom_signal:child_signal;
     PidListDef child_list=pid_list_init();
@@ -120,7 +121,7 @@ static void slave_terminate_child(int custom_signal)
     pid_list_deinit(child_list);
 }
 
-static void master_terminate_slaves(int signal)
+static void _master_terminate_slaves(int signal)
 {
     log_message(logger,LOG_INFO,"Sending %i signal to all slave executors",LI(signal));
     pid_list_validate_slave_executors(slave_list,getpid());
@@ -129,15 +130,21 @@ static void master_terminate_slaves(int signal)
         log_message(logger,LOG_WARNING,"Failed to send %i to some of slaves",LI(signal));
 }
 
-static void master_terminate_orphans(int signal)
+static int _master_get_slave_count(void)
+{
+    pid_list_validate_slave_executors(slave_list,getpid());
+    return pid_list_count(slave_list);
+}
+
+static void _master_terminate_orphans(int signal)
 {
     //TODO
 }
 
-static int master_get_slave_count(void)
+static int _master_get_orphans_count(void)
 {
-    pid_list_validate_slave_executors(slave_list,getpid());
-    return pid_list_count(slave_list);
+    //TODO
+    return 0;
 }
 
 #pragma GCC diagnostic push
@@ -151,26 +158,27 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
         log_message(logger,LOG_INFO,"Ignoring SIGHUP signal");
         return;
     }
+
     pid_lock();
 
     if(sig==SIGUSR1 && mode==0)
     {
-        master_terminate_slaves(SIGUSR1);
-        request_shutdown(0);
+        _master_terminate_slaves(SIGUSR1);
+        _request_shutdown();
     }
 
     if(sig==SIGUSR1 && mode==1)
-        slave_terminate_child(SIGKILL);
+        _slave_terminate_child(SIGKILL);
 
     if(sig==SIGTERM || sig==SIGINT)
     {
         if(mode==0)
         {
-            master_terminate_slaves(SIGTERM);
-            request_shutdown(0);
+            _master_terminate_slaves(SIGTERM);
+            _request_shutdown();
         }
         else
-            slave_terminate_child(0);
+            _slave_terminate_child(0);
     }
 
     pid_unlock();
@@ -194,10 +202,8 @@ static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context
 
 //request shutdown, delete comm-channel pipes (so no new connection to it can be made).
 //and if executor in command_mode mode, current connection also cut down
-static void request_shutdown(uint8_t lock)
+static void _request_shutdown(void)
 {
-    if(lock)
-        pid_lock();
     if(command_mode)
     {
         comm_shutdown(1);
@@ -212,8 +218,6 @@ static void request_shutdown(uint8_t lock)
             fdo=0;
     }
     shutdown=1;
-    if(lock)
-        pid_unlock();
 }
 
 int main(int argc, char* argv[])
@@ -474,16 +478,24 @@ int main(int argc, char* argv[])
             if(idle_time>=SLAVE_COMMAND_MODE_IDLE_TIME)
             {
                 log_message(logger,LOG_INFO,"Performing slave shutdown because of timeout");
-                request_shutdown(1);
+                pid_lock();
+                _request_shutdown();
+                pid_unlock();
             }
         }
         else if(mode==0)
         {
             if(idle_time>=MASTER_COMMAND_MODE_IDLE_TIME)
             {
-                //TODO: check for slaves
-                //or
-                //TODO: check for slaves and orphans
+                //check for slaves
+                pid_lock();
+                if(_master_get_slave_count()<=0)
+                {
+                    log_message(logger,LOG_INFO,"Performing shutdown because of timeout");
+                    _request_shutdown();
+                }
+                pid_unlock();
+                //TODO: check for slaves and orphans, when enabled
                 //reset timer if there is something working background
                 idle_time=0;
             }
@@ -492,11 +504,19 @@ int main(int argc, char* argv[])
 
     log_message(logger,LOG_INFO,"Command loop is shutting down");
     command_mode=1;
-    request_shutdown(1);
+    pid_lock();
+    _request_shutdown();
+    pid_unlock();
 
-    //TODO: in master mode - terminate slaves and\or orphans
+    //in master mode, terminate stuff that may left
+    if(mode==0)
+    {
 
-    //TODO: in master mode - kill slaves and\or orphans
+        //and\or orphans
+                 //TODO: in master mode - kill slaves and\or orphans
+    }
+
+
 
     int ec=remove(filename_in);
     if(ec!=0)
@@ -831,7 +851,7 @@ static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_respo
         log_message(logger,LOG_INFO,"Sending SIGKILL signal to child processes");
 
     pid_lock();
-    slave_terminate_child(!grace_shutdown);
+    _slave_terminate_child(!grace_shutdown);
     pid_unlock();
 
     if(!skip_responce && operation_status(0)!=0)
