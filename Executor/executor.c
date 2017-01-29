@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <pty.h>
+#include <utmp.h>
 #include <dirent.h>
 
 #include <sys/time.h>
@@ -924,6 +925,11 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     int stderr_pipe[2];
     int stdin_pipe[2];
 
+    int fdm=-1;
+    int stdout_bak=-1;
+    int stderr_bak=-1;
+    int stdin_bak=-1;
+
     if(use_pty)
     {
         if(!child_signal_set)
@@ -931,6 +937,23 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             child_signal=SIGHUP;
             child_signal_set=1;
             log_message(logger,LOG_INFO,"Using default termination signal for pty-enabled session. signal=%i",LI(child_signal));
+        }
+
+        //baskup current stdout,stderr,stdin
+        while( ((stdout_bak = dup(STDOUT_FILENO)) == -1) && (errno == EINTR)) {}
+        while( ((stderr_bak = dup(STDERR_FILENO)) == -1) && (errno == EINTR)) {}
+        while( ((stdin_bak = dup(STDIN_FILENO)) == -1) && (errno == EINTR)) {}
+
+        int fds=-1;
+        if(openpty(&fdm,&fds,NULL,NULL,NULL)<0)
+        {
+            log_message(logger,LOG_ERROR,"openpty failed, errno=%i",LI(errno));
+            return 111;
+        }
+        if(login_tty(fds)<0)
+        {
+            log_message(logger,LOG_ERROR,"login_tty failed, errno=%i",LI(errno));
+            return 112;
         }
     }
     else
@@ -956,8 +979,8 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         return 255;
     }
 
-    int fdm=-1;
-    pid_t pid = use_pty ? forkpty(&fdm,NULL,NULL,NULL) : fork();
+    //pid_t pid = use_pty ? forkpty(&fdm,NULL,NULL,NULL) : fork();
+    pid_t pid = fork();
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
@@ -977,6 +1000,20 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                 exit(4);
         }*/
 
+        if(use_pty)
+        {
+            if(close(fdm)!=0)
+            {
+                perror("close of master fd of pty failed");
+                exit(1);
+            }
+            if(close(stdout_bak)!=0 || close(stderr_bak)!=0 || close(stdin_bak)!=0)
+            {
+                perror("close of backup std file descriptors failed");
+                exit(1);
+            }
+        }
+
         log_closefile(logger);
         if(close(fdi)!=0 || close(fdo)!=0)
         {
@@ -984,14 +1021,15 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             exit(1);
         }
 
+        //set process as pid-group leader
+        if(setpgid(0,0)<0)
+        {
+            perror("setpgid failed");
+            exit(1);
+        }
+
         if(!use_pty)
         {
-            //set process as pid-group leader
-            if(setpgid(0,0)<0)
-            {
-                perror("setpgid failed");
-                exit(1);
-            }
             while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
             close(stdout_pipe[1]);
             close(stdout_pipe[0]);
@@ -1022,11 +1060,18 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         exit(1);
     }
 
+    //reconnect stdout
+    if(use_pty)
+    {
+        while((dup2(stdout_bak, STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+        while((dup2(stderr_bak, STDERR_FILENO) == -1) && (errno == EINTR)) {}
+        while((dup2(stdin_bak, STDIN_FILENO) == -1) && (errno == EINTR)) {}
+        if(close(stdout_bak)!=0 || close(stderr_bak)!=0 || close(stdin_bak)!=0)
+            log_message(logger,LOG_WARNING,"Failed to close backup std fds");
+    }
+
     command_mode=0;
     child_is_alive=1;
-    if(use_pty)
-        child_session=pid;
-
     pid_unlock();
 
     if(!use_pty)
