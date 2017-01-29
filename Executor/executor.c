@@ -106,59 +106,6 @@ static void show_usage(void)
 #define num_max_len(num) ({ int sz=sizeof num; sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
 #define num_t_max_len(num) ({ int sz=sizeof(num); sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
 
-/*
-
-static void populate_child_pid_list(void)
-{
-    if(ch_pid_count>0)
-    {
-        pid_t tmp_list[ch_pid_count];
-        for(int i=0;i<ch_pid_count;++i)
-            tmp_list[i]=ch_pid_list[i];
-        int tmp_count=ch_pid_count;
-        for(int i=0;i<tmp_count;++i)
-            if(kill(tmp_list[i],0)!=0)
-                ch_pid_list_remove(tmp_list[i]);
-    }
-
-    DIR* proc=opendir("/proc");
-    if(proc==NULL)
-    {
-        log_message(logger,LOG_ERROR,"Failed to open /proc errno=%i",LI(errno));
-        return;
-    }
-
-    const int base_proc_stat_len=11; // /proc/<pid>/stat
-    int stat_path_len=base_proc_stat_len+num_t_max_len(pid_t);
-    char stat_path[stat_path_len+1];
-    stat_path[stat_path_len]='\0';
-
-    struct dirent* d_entry=NULL;
-    FILE* stat_file=NULL;
-    pid_t pid=0;
-    pid_t ppid=0;
-
-    while((d_entry = readdir(proc)) != NULL)
-    {
-        if(!arg_is_numeric(d_entry->d_name))
-            continue;
-        sprintf(stat_path, "/proc/%s/stat", d_entry->d_name);
-        stat_file = fopen(stat_path,"r");
-        if(stat_file==NULL)
-            continue;
-        int v_read=fscanf(stat_file, "%d %*s %*c %d", &pid, &ppid);
-        fclose(stat_file);
-        if(v_read!=2 || ppid==1 || pid==self_pid)
-            continue;
-
-        if(check_target_is_child(self_pid,ch_pid_list,ch_pid_count,pid))
-            ch_pid_list_add(pid);
-    }
-
-    if(closedir(proc)!=0)
-        log_message(logger,LOG_ERROR,"populate_child_pid_list:closedir failed");
-}*/
-
 static void slave_terminate_child(int custom_signal)
 {
     int signal=custom_signal>0?custom_signal:child_signal;
