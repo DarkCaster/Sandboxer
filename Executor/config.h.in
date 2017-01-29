@@ -19,6 +19,7 @@
 #cmakedefine HAVE_ERRNO_H
 #cmakedefine HAVE_DIRENT_H
 #cmakedefine HAVE_UTMP_H
+#cmakedefine HAVE_STDBOOL_H
 
 #define LOG_FILENAMESZ 4095
 #define LOG_OUTBUFSZ 4095

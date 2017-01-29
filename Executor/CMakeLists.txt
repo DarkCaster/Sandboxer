@@ -79,6 +79,7 @@ check_include_file(sys/fcntl.h HAVE_FNCTL_H)
 check_include_file(sys/time.h HAVE_SYSTIME_H)
 check_include_file(sys/ioctl.h HAVE_SYSIOCTL_H)
 
+check_include_file(stdbool.h HAVE_STDBOOL_H)
 check_include_file(poll.h HAVE_POLL_H)
 check_include_file(signal.h HAVE_SIGNAL_H)
 check_include_file(unistd.h HAVE_UNISTD_H)

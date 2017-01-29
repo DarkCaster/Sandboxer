@@ -34,6 +34,7 @@
     #endif
 #endif
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 #define MAXALLOC 262144
