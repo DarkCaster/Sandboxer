@@ -190,14 +190,19 @@ static void request_shutdown(uint8_t lock)
     if(lock)
         pid_lock();
     if(command_mode)
+    {
         comm_shutdown(1);
+        if(fdi>=0 && close(fdi)!=0)
+            log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_in));
+        else
+            fdi=0;
+
+        if(fdo>=0 && close(fdo)!=0)
+            log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_out));
+        else
+            fdo=0;
+    }
     shutdown=1;
-    int ec=remove(filename_in);
-    if(ec!=0)
-        log_message(logger,LOG_WARNING,"Failed to remove pipe at %s, ec==%i",LS(filename_in),LI(ec));
-    ec=remove(filename_out);
-    if(ec!=0)
-        log_message(logger,LOG_WARNING,"Failed to remove pipe at %s, ec==%i",LS(filename_out),LI(ec));
     if(lock)
         pid_unlock();
 }
@@ -476,6 +481,8 @@ int main(int argc, char* argv[])
         }
     }
 
+    command_mode=0;
+
     log_message(logger,LOG_INFO,"Command loop is shutting down");
     if(fdi>=0 && close(fdi)!=0)
         log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_in));
@@ -487,6 +494,13 @@ int main(int argc, char* argv[])
     //TODO: in master mode - terminate slaves and\or orphans
 
     //TODO: in master mode - kill slaves and\or orphans
+
+    int ec=remove(filename_in);
+    if(ec!=0)
+        log_message(logger,LOG_WARNING,"Failed to remove pipe at %s, ec==%i",LS(filename_in),LI(ec));
+    ec=remove(filename_out);
+    if(ec!=0)
+        log_message(logger,LOG_WARNING,"Failed to remove pipe at %s, ec==%i",LS(filename_out),LI(ec));
 
     if(mode==0)
         pid_list_deinit(slave_list);

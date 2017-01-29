@@ -11,6 +11,8 @@ void comm_shutdown(uint8_t _shutdown)
 
 int fd_wait(int fd, int timeout, short int events)
 {
+    if(shutdown)
+        return timeout;
     struct pollfd fds;
     int cur_time=0;
     while(cur_time<timeout)
@@ -33,6 +35,8 @@ int fd_wait(int fd, int timeout, short int events)
 
 uint8_t message_send(int fd, uint8_t* const tmpbuf, const uint8_t* cmdbuf, int32_t offset, int32_t len, uint32_t seed, int timeout)
 {
+    if(shutdown)
+        return 255;
     int32_t sndlen=msg_encode(tmpbuf,0,cmdbuf,offset,len,seed);
     if(sndlen<0)
         return 1;
@@ -49,6 +53,8 @@ uint8_t message_send(int fd, uint8_t* const tmpbuf, const uint8_t* cmdbuf, int32
     while(data_left>0)
     {
         ssize_t ec=write(fd,rbuf,(size_t)data_left);
+        if(shutdown)
+            return 255;
         if(ec<0 && errno==EINTR)
             continue;
         else if(ec<0)
@@ -83,6 +89,8 @@ uint8_t message_read_header(int fd, uint8_t* const tmpbuf, int* time_limit)
     while(data_left>0)
     {
         ssize_t ec=read(fd,rbuf,(size_t)data_left);
+        if(shutdown)
+            return 255;
         if(ec<0 && errno==EINTR)
             continue;
         else if(ec<0)
@@ -119,6 +127,8 @@ uint8_t message_read_and_transform_payload(int fd, uint8_t* const tmpbuf, uint8_
     while(data_left>0)
     {
         ssize_t ec=read(fd,rbuf,(size_t)data_left);
+        if(shutdown)
+            return 255;
         if(ec<0 && errno==EINTR)
             continue;
         else if(ec<0)
