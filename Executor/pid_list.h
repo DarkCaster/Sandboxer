@@ -11,6 +11,7 @@ typedef void * PidListDef;
 
 PidListDef pid_list_init(void);
 void pid_list_deinit(PidListDef list_instance);
+bool pid_list_check(PidListDef list_instance, pid_t value);
 void pid_list_add(PidListDef list_instance, pid_t value);
 bool pid_list_remove(PidListDef list_instance, pid_t value);
 int pid_list_count(PidListDef list_instance);

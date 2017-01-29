@@ -30,8 +30,21 @@ void pid_list_deinit(PidListDef list_instance)
     free(list);
 }
 
+bool pid_list_check(PidListDef list_instance, pid_t value)
+{
+    PidList* const list=(PidList*)list_instance;
+    if(list->count<=0)
+        return false;
+    for(int i=0;i<list->count;++i)
+        if(list->list[i]==value)
+            return true;
+    return false;
+}
+
 void pid_list_add(PidListDef list_instance, pid_t value)
 {
+    if(pid_list_check(list_instance,value))
+        return;
     PidList* const list=(PidList*)list_instance;
     if(list->list==NULL)
     {
