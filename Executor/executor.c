@@ -58,10 +58,10 @@ static volatile uint8_t shutdown;
 static volatile uint8_t command_mode;
 static volatile uint8_t child_is_alive;
 static volatile uint8_t child_ec;
-
-static volatile int child_signal;
-static volatile pid_t self_pid;
 static volatile uint8_t child_signal_set;
+static volatile int child_signal;
+static volatile pid_t child_session;
+static volatile pid_t self_pid;
 
 //pid management stuff
 static pthread_mutex_t pid_mutex;
@@ -278,9 +278,7 @@ int main(int argc, char* argv[])
     if( argc!=6 || !arg_is_numeric(argv[1]) || !arg_is_numeric(argv[2]) || !arg_is_numeric(argv[5]) || strnlen(argv[3], MAXARGLEN)>=MAXARGLEN || strnlen(argv[4], MAXARGLEN)>=MAXARGLEN)
         show_usage();
 
-    self_pid=getpid();
-
-    //set config params
+    //set config from params
     self=argv[0];
     mode=(uint8_t)strtol(argv[1], NULL, 10);
     log_file_enabled=(uint8_t)strtol(argv[2], NULL, 10);
@@ -288,17 +286,21 @@ int main(int argc, char* argv[])
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
 
-    //set pid management parameters and stuff
-    if(mode==0)
-        slave_list=pid_list_init();
-
     //set status params
+    self_pid=getpid();
     shutdown=0;
     command_mode=1; //until we attempt to launch user binary, this flag is set.
     child_is_alive=0;
     child_ec=0;
     child_signal_set=0;
     child_signal=15;
+    child_session=getsid(0);
+
+    //set pid management parameters and stuff
+    if(mode==0)
+        slave_list=pid_list_init();
+    else
+        slave_list=NULL;
 
     //logger
     logger=log_init();
@@ -975,12 +977,6 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                 exit(4);
         }*/
 
-        //set process group
-        if(setpgid(0,0)!=0)
-        {
-            perror("setpgid failed");
-            exit(1);
-        }
         log_closefile(logger);
         if(close(fdi)!=0 || close(fdo)!=0)
         {
@@ -990,6 +986,12 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
 
         if(!use_pty)
         {
+            //set process as pid-group leader
+            if(setpgid(0,0)<0)
+            {
+                perror("setpgid failed");
+                exit(1);
+            }
             while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
             close(stdout_pipe[1]);
             close(stdout_pipe[0]);
@@ -1000,6 +1002,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             close(stdin_pipe[0]);
             close(stdin_pipe[1]);
         }
+
         if(child_envdel_count>0)
             for(int i=0;i<child_envdel_count;++i)
                 if(unsetenv(child_envdel_v[i])!=0)
@@ -1018,8 +1021,12 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         perror("execv failed");
         exit(1);
     }
-    child_is_alive=1;
+
     command_mode=0;
+    child_is_alive=1;
+    if(use_pty)
+        child_session=pid;
+
     pid_unlock();
 
     if(!use_pty)
