@@ -511,15 +511,59 @@ int main(int argc, char* argv[])
     _request_shutdown();
     pid_unlock();
 
-    //in master mode, terminate stuff that may left
+    //in master mode, terminate slaves that may be left
     if(mode==0)
     {
+        int s_cnt=0;
+        pid_lock();
+        s_cnt=_master_get_slave_count();
+        if(s_cnt>0)
+        {
+            log_message(logger,LOG_INFO,"There are %i slaves left, sending SIGTERM signal",LI(s_cnt));
+            _master_terminate_slaves(SIGTERM);
+        }
+        pid_unlock();
 
-        //and\or orphans
-                 //TODO: in master mode - kill slaves and\or orphans
+        int time_left=MASTER_COMMAND_MODE_IDLE_TIME;
+        while(time_left>0 && s_cnt>0)
+        {
+            pid_lock();
+            s_cnt=_master_get_slave_count();
+            pid_unlock();
+            if(s_cnt>0)
+                sleep(1);
+            time_left-=1000;
+        }
+
+        if(s_cnt>0)
+        {
+            pid_lock();
+            log_message(logger,LOG_INFO,"There are %i slaves still left, sending SIGUSR1 signal",LI(s_cnt));
+            _master_terminate_slaves(SIGUSR1);
+            pid_unlock();
+        }
+
+        time_left=MASTER_COMMAND_MODE_IDLE_TIME;
+        while(time_left>0 && s_cnt>0)
+        {
+            pid_lock();
+            s_cnt=_master_get_slave_count();
+            pid_unlock();
+            if(s_cnt>0)
+                sleep(1);
+            time_left-=1000;
+        }
+
+        if(s_cnt>0)
+        {
+            pid_lock();
+            log_message(logger,LOG_INFO,"There are %i slaves still left, sending SIGKILL signal",LI(s_cnt));
+            _master_terminate_slaves(SIGKILL);
+            pid_unlock();
+        }
+
+        //TODO: do the same with orphans, if enabled
     }
-
-
 
     int ec=remove(filename_in);
     if(ec!=0)
