@@ -136,7 +136,7 @@ static uint8_t arg_is_numeric(const char* arg)
     return 1;
 }
 
-void pid_list_validate(PidListDef list_instance, pid_t parent)
+void pid_list_validate_slave_executors(PidListDef list_instance, pid_t parent)
 {
     PidList* const list=(PidList*)list_instance;
 

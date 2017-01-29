@@ -139,7 +139,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     if(sig==SIGUSR1 && mode==0)
     {
         log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-        pid_list_validate(slave_list,getpid());
+        pid_list_validate_slave_executors(slave_list,getpid());
         pid_list_remove(slave_list,getpid());
         if(!pid_list_signal(slave_list,SIGUSR1))
             log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to some of slaves");
@@ -154,7 +154,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
         if(mode==0)
         {
             log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
-            pid_list_validate(slave_list,getpid());
+            pid_list_validate_slave_executors(slave_list,getpid());
             pid_list_remove(slave_list,getpid());
             if(!pid_list_signal(slave_list,SIGTERM))
                 log_message(logger,LOG_WARNING,"Failed to send SIGTERM to some of slaves");
