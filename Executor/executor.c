@@ -73,12 +73,17 @@ char filename_in[MAXARGLEN+5];
 char filename_out[MAXARGLEN+5];
 
 //other prototypes
+// "_" prefix means, that function meant to be executed within pid_lock\pid_unlock because it may be called by signal handlers
+
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
 static void request_shutdown(uint8_t lock);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_terminate_child(int custom_signal);
+static void master_terminate_slaves(int signal);
+static void master_terminate_orphans(int signal);
+static int master_get_slave_count(void);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
@@ -95,12 +100,6 @@ static void show_usage(void)
     fprintf(stderr,"Usage: <mode 0-master 1-slave> <logfile 0-disable 1-enable> <control dir> <channel-name> <security key>\n");
     exit(1);
 }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-
-#define num_max_len(num) ({ int sz=sizeof num; sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
-#define num_t_max_len(num) ({ int sz=sizeof(num); sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
 
 static void slave_terminate_child(int custom_signal)
 {
@@ -121,7 +120,25 @@ static void slave_terminate_child(int custom_signal)
     pid_list_deinit(child_list);
 }
 
-#pragma GCC diagnostic pop
+static void master_terminate_slaves(int signal)
+{
+    log_message(logger,LOG_INFO,"Sending %i signal to all slave executors",LI(signal));
+    pid_list_validate_slave_executors(slave_list,getpid());
+    pid_list_remove(slave_list,getpid());
+    if(!pid_list_signal(slave_list,signal))
+        log_message(logger,LOG_WARNING,"Failed to send %i to some of slaves",LI(signal));
+}
+
+static void master_terminate_orphans(int signal)
+{
+    //TODO
+}
+
+static int master_get_slave_count(void)
+{
+    pid_list_validate_slave_executors(slave_list,getpid());
+    return pid_list_count(slave_list);
+}
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -138,11 +155,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 
     if(sig==SIGUSR1 && mode==0)
     {
-        log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-        pid_list_validate_slave_executors(slave_list,getpid());
-        pid_list_remove(slave_list,getpid());
-        if(!pid_list_signal(slave_list,SIGUSR1))
-            log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to some of slaves");
+        master_terminate_slaves(SIGUSR1);
         request_shutdown(0);
     }
 
@@ -153,11 +166,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     {
         if(mode==0)
         {
-            log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
-            pid_list_validate_slave_executors(slave_list,getpid());
-            pid_list_remove(slave_list,getpid());
-            if(!pid_list_signal(slave_list,SIGTERM))
-                log_message(logger,LOG_WARNING,"Failed to send SIGTERM to some of slaves");
+            master_terminate_slaves(SIGTERM);
             request_shutdown(0);
         }
         else
