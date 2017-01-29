@@ -61,8 +61,6 @@ static volatile uint8_t child_is_alive;
 static volatile uint8_t child_ec;
 static volatile uint8_t child_signal_set;
 static volatile int child_signal;
-static volatile pid_t child_session;
-static volatile pid_t self_pid;
 
 //pid management stuff
 static pthread_mutex_t pid_mutex;
@@ -81,8 +79,6 @@ static void request_shutdown(uint8_t lock);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_terminate_child(int custom_signal);
-//static void populate_child_pid_list(void);
-//static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target);
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce);
 static uint8_t operation_status(uint8_t ec);
 static uint8_t operation_0(void);
@@ -132,7 +128,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     if(sig==SIGUSR1 && mode==0)
     {
         log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-        pid_list_validate(slave_list,self_pid);
+        pid_list_validate(slave_list,getpid());
         if(!pid_list_signal(slave_list,SIGUSR1))
             log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to some of slaves");
         request_shutdown(0);
@@ -208,14 +204,12 @@ int main(int argc, char* argv[])
     key=(uint32_t)strtol(argv[5], NULL, 10);
 
     //set status params
-    self_pid=getpid();
     shutdown=0;
     command_mode=1; //until we attempt to launch user binary, this flag is set.
     child_is_alive=0;
     child_ec=0;
     child_signal_set=0;
     child_signal=15;
-    child_session=getsid(0);
 
     //set pid management parameters and stuff
     if(mode==0)
@@ -799,6 +793,7 @@ static uint8_t operation_5(uint8_t signal)
         return 1;
 }
 
+//TODO: fix according to new logic
 static uint8_t request_child_shutdown(uint8_t grace_shutdown, uint8_t skip_responce)
 {
     if(grace_shutdown)
