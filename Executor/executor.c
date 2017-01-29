@@ -157,7 +157,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
             pid_list_validate(slave_list,getpid());
             pid_list_remove(slave_list,getpid());
             if(!pid_list_signal(slave_list,SIGTERM))
-                log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to some of slaves");
+                log_message(logger,LOG_WARNING,"Failed to send SIGTERM to some of slaves");
             request_shutdown(0);
         }
         else
@@ -481,14 +481,8 @@ int main(int argc, char* argv[])
         }
     }
 
-    command_mode=0;
-
     log_message(logger,LOG_INFO,"Command loop is shutting down");
-    if(fdi>=0 && close(fdi)!=0)
-        log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_in));
-    if(fdo>=0 && close(fdo)!=0)
-        log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_out));
-
+    command_mode=1;
     request_shutdown(1);
 
     //TODO: in master mode - terminate slaves and\or orphans
