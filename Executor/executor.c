@@ -234,6 +234,7 @@ int main(int argc, char* argv[])
     key=(uint32_t)strtol(argv[5], NULL, 10);
 
     //set status params
+    pthread_mutex_init(&pid_mutex,NULL);
     shutdown=0;
     command_mode=1; //until we attempt to launch user binary, this flag is set.
     child_is_alive=0;
