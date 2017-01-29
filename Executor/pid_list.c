@@ -194,7 +194,7 @@ bool populate_list_with_session_members(PidListDef list_instance, pid_t session)
     pid_t pid=0;
     pid_t sid=0;
 
-    for(int i=0;i<2;++i)
+    for(int i=0; i<2; ++i)
     {
         DIR* proc=opendir("/proc");
         if(proc==NULL)

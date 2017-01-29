@@ -105,14 +105,20 @@ static void show_usage(void)
 static void slave_terminate_child(int custom_signal)
 {
     int signal=custom_signal>0?custom_signal:child_signal;
-    /*populate_child_pid_list();
-    if(ch_pid_count>0)
-        for(int i=0;i<ch_pid_count;++i)
-        {
-            log_message(logger,LOG_INFO,"Terminating child process with pid %i with signal %i",LI(ch_pid_list[i]),LI(child_signal));
-            if(kill(ch_pid_list[i],signal)!=0)
-                log_message(logger,LOG_WARNING,"Failed to send signal to child. errno=%i",LI(errno));
-        }*/
+    PidListDef child_list=pid_list_init();
+    if(!populate_list_with_session_members(child_list,getsid(0)))
+    {
+        log_message(logger,LOG_ERROR,"Failed to populate session pid list. errno=%i",LI(errno));
+        pid_list_deinit(child_list);
+        return;
+    }
+    pid_list_remove(child_list,getpid());
+    log_message(logger,LOG_INFO,"Found %i pids for current session",LI(pid_list_count(child_list)));
+    if(!pid_list_signal(child_list,signal))
+        log_message(logger,LOG_WARNING,"Failed to send signal %i to some pids from child list",LI(signal));
+    else
+        log_message(logger,LOG_WARNING,"Signal %i was sent to all childs from the list",LI(signal));
+    pid_list_deinit(child_list);
 }
 
 #pragma GCC diagnostic pop
@@ -123,12 +129,18 @@ static void slave_terminate_child(int custom_signal)
 static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 {
     log_message(logger,LOG_INFO,"Received termination signal %i",LI(sig));
+    if(sig==SIGHUP)
+    {
+        log_message(logger,LOG_INFO,"Ignoring SIGHUP signal");
+        return;
+    }
     pid_lock();
 
     if(sig==SIGUSR1 && mode==0)
     {
         log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
         pid_list_validate(slave_list,getpid());
+        pid_list_remove(slave_list,getpid());
         if(!pid_list_signal(slave_list,SIGUSR1))
             log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to some of slaves");
         request_shutdown(0);
@@ -137,15 +149,15 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     if(sig==SIGUSR1 && mode==1)
         slave_terminate_child(SIGKILL);
 
-    if(sig==SIGTERM || sig==SIGHUP || sig==SIGINT)
+    if(sig==SIGTERM || sig==SIGINT)
     {
         if(mode==0)
         {
-            //TODO: update slave executors list
-            //send signals
-            //log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
-            //if(kill(0-pid_group,SIGTERM)!=0)
-            //    log_message(logger,LOG_WARNING,"Failed to send SIGTERM to slaves. errno=%i",LI(errno));
+            log_message(logger,LOG_INFO,"Requesting all slave executors to gracefully terminate it's tracked processes");
+            pid_list_validate(slave_list,getpid());
+            pid_list_remove(slave_list,getpid());
+            if(!pid_list_signal(slave_list,SIGTERM))
+                log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to some of slaves");
             request_shutdown(0);
         }
         else
