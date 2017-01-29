@@ -517,14 +517,28 @@ int main(int argc, char* argv[])
         int s_cnt=0;
         pid_lock();
         s_cnt=_master_get_slave_count();
-        if(s_cnt>0)
-        {
-            log_message(logger,LOG_INFO,"There are %i slaves left, sending SIGTERM signal",LI(s_cnt));
-            _master_terminate_slaves(SIGTERM);
-        }
         pid_unlock();
 
-        int time_left=MASTER_COMMAND_MODE_IDLE_TIME;
+        int time_left=MASTER_SHUTDOWN_WAIT_TIME_INTERVAL;
+        while(time_left>0 && s_cnt>0)
+        {
+            pid_lock();
+            s_cnt=_master_get_slave_count();
+            pid_unlock();
+            if(s_cnt>0)
+                sleep(1);
+            time_left-=1000;
+        }
+
+        if(s_cnt>0)
+        {
+            pid_lock();
+            log_message(logger,LOG_INFO,"There are %i slaves still left, sending SIGTERM signal",LI(s_cnt));
+            _master_terminate_slaves(SIGTERM);
+            pid_unlock();
+        }
+
+        time_left=MASTER_SHUTDOWN_WAIT_TIME_INTERVAL;
         while(time_left>0 && s_cnt>0)
         {
             pid_lock();
@@ -543,7 +557,7 @@ int main(int argc, char* argv[])
             pid_unlock();
         }
 
-        time_left=MASTER_COMMAND_MODE_IDLE_TIME;
+        time_left=MASTER_SHUTDOWN_WAIT_TIME_INTERVAL;
         while(time_left>0 && s_cnt>0)
         {
             pid_lock();
