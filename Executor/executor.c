@@ -117,7 +117,7 @@ static void slave_terminate_child(int custom_signal)
     if(!pid_list_signal(child_list,signal))
         log_message(logger,LOG_WARNING,"Failed to send signal %i to some pids from child list",LI(signal));
     else
-        log_message(logger,LOG_WARNING,"Signal %i was sent to all childs from the list",LI(signal));
+        log_message(logger,LOG_INFO,"Signal %i was sent to all childs from the list",LI(signal));
     pid_list_deinit(child_list);
 }
 
