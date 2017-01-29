@@ -9,6 +9,8 @@ struct strPidList {
     int count;
 };
 
+static uint8_t check_target_is_child(PidList* parents, pid_t target);
+
 PidListDef pid_list_init(void)
 {
     PidList* const result=(PidList*)safe_alloc(1,sizeof(PidList));
@@ -126,7 +128,7 @@ void pid_list_validate(PidListDef list_instance, pid_t parent)
             {
                 const int base_proc_stat_len=11; // /proc/<pid>/stat
                 int stat_path_len=base_proc_stat_len+num_max_len(tmp[i]);
-                char stat_path[stat_path_len+1]; //because call is recursive, keep used stack space low as possible
+                char stat_path[stat_path_len+1];
                 stat_path[stat_path_len]='\0';
                 sprintf(stat_path, "/proc/%d/stat", tmp[i]);
                 FILE* stat_file = fopen(stat_path,"r");
@@ -139,6 +141,31 @@ void pid_list_validate(PidListDef list_instance, pid_t parent)
                 { pid_list_remove(list_instance,tmp[i]); continue; }
             }
     }
+}
+
+//checks that target pid is belongs to parent pid tree
+static uint8_t check_target_is_child(PidList* parents, pid_t target)
+{
+    const int base_proc_stat_len=11; // /proc/<pid>/stat
+    int stat_path_len=base_proc_stat_len+num_max_len(target);
+    char stat_path[stat_path_len+1];
+    stat_path[stat_path_len]='\0';
+
+    sprintf(stat_path, "/proc/%d/stat", target);
+    FILE* stat_file = fopen(stat_path,"r");
+    if(stat_file==NULL)
+        return 0;
+    pid_t ppid=0;
+    int v_read=fscanf(stat_file, "%*d %*s %*c %d", &ppid);
+    fclose(stat_file);
+    if(v_read!=1)
+        return 0;
+    for(int i=0; i<parents->count; ++i)
+        if(ppid==parents->list[i])
+            return 1;
+    if(ppid==1)
+        return 0;
+    return check_target_is_child(parents,ppid);
 }
 
 #pragma GCC diagnostic pop

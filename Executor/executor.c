@@ -106,34 +106,7 @@ static void show_usage(void)
 #define num_max_len(num) ({ int sz=sizeof num; sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
 #define num_t_max_len(num) ({ int sz=sizeof(num); sz==1?3:(sz==2?5:(sz==4?10:(sz==8?20:256))); })
 
-//checks that target pid is belongs to parent pid tree
-/*static uint8_t check_target_is_child(pid_t parent, pid_t* parents, int p_count, pid_t target)
-{
-    const int base_proc_stat_len=11; // /proc/<pid>/stat
-    int stat_path_len=base_proc_stat_len+num_max_len(target);
-    char stat_path[stat_path_len+1]; //because call is recursive, keep used stack space low as possible
-    stat_path[stat_path_len]='\0';
-
-    sprintf(stat_path, "/proc/%d/stat", target);
-    FILE* stat_file = fopen(stat_path,"r");
-    if(stat_file==NULL)
-        return 0;
-    pid_t ppid=0;
-    if(fscanf(stat_file, "%*d %*s %*c %d", &ppid)!=1)
-    {
-        fclose(stat_file);
-        return 0;
-    }
-    fclose(stat_file);
-    if(ppid==parent)
-        return 1;
-    for(int i=0;i<p_count;++i)
-        if(ppid==parents[i])
-            return 1;
-    if(ppid==1)
-        return 0;
-    return check_target_is_child(parent,parents,p_count,ppid);
-}
+/*
 
 static void populate_child_pid_list(void)
 {
