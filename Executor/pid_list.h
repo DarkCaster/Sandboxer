@@ -14,6 +14,9 @@ void pid_list_deinit(PidListDef list_instance);
 void pid_list_add(PidListDef list_instance, pid_t value);
 uint8_t pid_list_remove(PidListDef list_instance, pid_t value);
 int pid_list_count(PidListDef list_instance);
+void pid_list_copy(PidListDef list_instance,pid_t* target);
+void pid_list_validate(PidListDef list_instance, pid_t parent);
+uint8_t pid_list_signal(PidListDef list_instance, int signal);
 
 #ifdef __cplusplus
 }
