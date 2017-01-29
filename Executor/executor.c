@@ -211,10 +211,9 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     if(sig==SIGUSR1 && mode==0)
     {
         log_message(logger,LOG_INFO,"Requesting all slave executors to kill it's tracked processes");
-        //TODO: update slave executors list
-        //send signals
-        //if(kill(0-pid_group,SIGUSR1)!=0)
-        //    log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to slaves. errno=%i",LI(errno));
+        pid_list_validate(slave_list,self_pid);
+        if(!pid_list_signal(slave_list,SIGUSR1))
+            log_message(logger,LOG_WARNING,"Failed to send SIGUSR1 to some of slaves");
         request_shutdown(0);
     }
 
