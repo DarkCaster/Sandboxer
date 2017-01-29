@@ -118,7 +118,7 @@ bool pid_list_signal(PidListDef list_instance, int signal)
         return result;
     }
     else
-        return false;
+        return true;
 }
 
 #pragma GCC diagnostic push

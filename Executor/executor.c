@@ -192,12 +192,12 @@ static void request_shutdown(uint8_t lock)
     if(command_mode)
     {
         comm_shutdown(1);
-        if(fdi>=0 && close(fdi)!=0)
+        if(fdi>0 && close(fdi)!=0)
             log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_in));
         else
             fdi=0;
 
-        if(fdo>=0 && close(fdo)!=0)
+        if(fdo>0 && close(fdo)!=0)
             log_message(logger,LOG_ERROR,"Failed to close %s pipe",LS(filename_out));
         else
             fdo=0;
