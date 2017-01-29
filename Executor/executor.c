@@ -1021,15 +1021,14 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             exit(1);
         }
 
-        //set process as pid-group leader
-        if(setpgid(0,0)<0)
-        {
-            perror("setpgid failed");
-            exit(1);
-        }
-
         if(!use_pty)
         {
+            //set process as pid-group leader
+            if(setpgid(0,0)<0)
+            {
+                perror("setpgid failed");
+                exit(1);
+            }
             while((dup2(stdout_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
             close(stdout_pipe[1]);
             close(stdout_pipe[0]);
@@ -1251,6 +1250,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
 
     if(use_pty)
     {
+        log_message(logger,LOG_INFO,"Closing master fd of pty");
         if(close(fdm)!=0)
             log_message(logger,LOG_WARNING,"Failed to close master pty. ec=%i",LI(errno)); //should not happen
     }
