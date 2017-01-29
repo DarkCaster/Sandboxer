@@ -526,9 +526,6 @@ int main(int argc, char* argv[])
     if(ec!=0)
         log_message(logger,LOG_WARNING,"Failed to remove pipe at %s, ec==%i",LS(filename_out),LI(ec));
 
-    if(mode==0)
-        pid_list_deinit(slave_list);
-
     int pos=0;
     while(params[pos]!=NULL)
     {
