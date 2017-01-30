@@ -59,7 +59,6 @@ static size_t bytes_avail(int fd);
 
 static void sigwinch_signal_handler(int sig, siginfo_t* info, void* context)
 {
-    log_message(logger,LOG_INFO,"SIGWINCH signal received");
     term_size_update_needed=true;
 }
 
