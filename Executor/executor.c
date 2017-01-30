@@ -468,6 +468,15 @@ int main(int argc, char* argv[])
             case 201:
                 err=operation_100_101_200_201(1,1);
                 break;
+            case 253:
+                err=operation_status(0)!=0?255:0;
+                if(err==0)
+                {
+                    pid_lock();
+                    _request_shutdown();
+                    pid_unlock();
+                }
+                break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
                 err=0;
