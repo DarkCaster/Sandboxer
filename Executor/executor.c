@@ -435,7 +435,7 @@ int main(int argc, char* argv[])
                 err=operation_2((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 3:
-                if((pl_len-(int32_t)CMDHDRSZ)<4)
+                if(pl_len<(int32_t)(CMDHDRSZ+4))
                     err=10;
                 else
                 {
