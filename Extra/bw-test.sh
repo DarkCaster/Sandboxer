@@ -4,9 +4,14 @@
 
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
+mkdir -p "$curdir/home"
+
 set -uo pipefail
-(exec bwrap --ro-bind /usr /usr \
-      --bind "$curdir/Build/Executor/build" /x \
+(exec bwrap \
+      --unshare-user \
+      --bind "$curdir/../Build/Executor/build" /x \
+	  --bind "$curdir/home" /home \
+      --ro-bind /usr /usr \
       --ro-bind /lib /lib \
       --ro-bind /lib64 /lib64 \
       --ro-bind /bin /bin \
