@@ -511,6 +511,17 @@ int main(int argc, char* argv[])
     _request_shutdown();
     pid_unlock();
 
+#define wait_for_term_routine(x_cnt, x_time_limit, x_count_func) \
+    { int time_left=x_time_limit; \
+      while(time_left>0 && x_cnt>0) \
+      { pid_lock(); x_cnt=x_count_func(); pid_unlock(); \
+        if(x_cnt>0) sleep(1); time_left-=1000; } }
+
+#define conditional_term_routine(x_cnt, x_term_func, x_signal) \
+    { if(x_cnt>0) \
+      { pid_lock(); log_message(logger,LOG_INFO,"There are still %i processes left, sending %i signal",LI(x_cnt),LI(x_signal)); \
+        x_term_func(x_signal); pid_unlock(); } }
+
     //in master mode, terminate slaves that may be left
     if(mode==0)
     {
@@ -519,62 +530,12 @@ int main(int argc, char* argv[])
         s_cnt=_master_get_slave_count();
         pid_unlock();
 
-        int time_left=MASTER_SHUTDOWN_WAIT_TIME_INTERVAL;
-        while(time_left>0 && s_cnt>0)
-        {
-            pid_lock();
-            s_cnt=_master_get_slave_count();
-            pid_unlock();
-            if(s_cnt>0)
-                sleep(1);
-            time_left-=1000;
-        }
-
-        if(s_cnt>0)
-        {
-            pid_lock();
-            log_message(logger,LOG_INFO,"There are %i slaves still left, sending SIGTERM signal",LI(s_cnt));
-            _master_terminate_slaves(SIGTERM);
-            pid_unlock();
-        }
-
-        time_left=MASTER_SHUTDOWN_WAIT_TIME_INTERVAL;
-        while(time_left>0 && s_cnt>0)
-        {
-            pid_lock();
-            s_cnt=_master_get_slave_count();
-            pid_unlock();
-            if(s_cnt>0)
-                sleep(1);
-            time_left-=1000;
-        }
-
-        if(s_cnt>0)
-        {
-            pid_lock();
-            log_message(logger,LOG_INFO,"There are %i slaves still left, sending SIGUSR1 signal",LI(s_cnt));
-            _master_terminate_slaves(SIGUSR1);
-            pid_unlock();
-        }
-
-        time_left=MASTER_SHUTDOWN_WAIT_TIME_INTERVAL;
-        while(time_left>0 && s_cnt>0)
-        {
-            pid_lock();
-            s_cnt=_master_get_slave_count();
-            pid_unlock();
-            if(s_cnt>0)
-                sleep(1);
-            time_left-=1000;
-        }
-
-        if(s_cnt>0)
-        {
-            pid_lock();
-            log_message(logger,LOG_INFO,"There are %i slaves still left, sending SIGKILL signal",LI(s_cnt));
-            _master_terminate_slaves(SIGKILL);
-            pid_unlock();
-        }
+        wait_for_term_routine(s_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_slave_count);
+        conditional_term_routine(s_cnt,_master_terminate_slaves,SIGTERM);
+        wait_for_term_routine(s_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_slave_count);
+        conditional_term_routine(s_cnt,_master_terminate_slaves,SIGUSR1);
+        wait_for_term_routine(s_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_slave_count);
+        conditional_term_routine(s_cnt,_master_terminate_slaves,SIGKILL);
 
         //TODO: do the same with orphans, if enabled
     }
