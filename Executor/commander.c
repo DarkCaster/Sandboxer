@@ -48,6 +48,7 @@ static uint8_t operation_4(char* name);
 static uint8_t operation_5(char* s_signal);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect);
 static uint8_t operation_101_201(uint8_t use_pty);
+static uint8_t operation_253(bool grace_shutdown);
 static size_t bytes_avail(int fd);
 
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
@@ -223,6 +224,14 @@ int main(int argc, char* argv[])
         break;
     case 202:
         err=operation_100_200(1,&child_ec,1);
+        break;
+    case 253:
+        if(p_count<1)
+            err=56;
+        else if(!arg_is_numeric(op_param[0]))
+            err=57;
+        else
+            err=operation_253((bool)(int)(strtol(op_param[0], NULL, 10)));
         break;
     default:
         log_message(logger,LOG_ERROR,"Unknown operation code %i",LI(op_code));
@@ -405,6 +414,18 @@ static uint8_t operation_101_201(uint8_t use_pty)
     cmd.cmd_type=use_pty?201:101;
     cmdhdr_write(data_buf,0,cmd);
     int32_t cmdlen=CMDHDRSZ;
+    param_send_macro(cmdlen);
+    return 0;
+}
+
+static uint8_t operation_253(bool grace_shutdown)
+{
+    CMDHDR cmd;
+    cmd.cmd_type=253;
+    cmdhdr_write(data_buf,0,cmd);
+    int32_t cmdlen=CMDHDRSZ;
+    *(data_buf+cmdlen)=(uint8_t)grace_shutdown;
+    ++cmdlen;
     param_send_macro(cmdlen);
     return 0;
 }
