@@ -517,7 +517,7 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         {
             struct winsize term_size;
             term_size_update_needed=false;
-            if(ioctl(STDOUT_FILENO,TIOCSWINSZ,&term_size)!=0)
+            if(ioctl(STDOUT_FILENO,TIOCGWINSZ,&term_size)!=0)
                 log_message(logger,LOG_WARNING,"Failed to get terminal size, error code=%i",LI(errno));
             else
             {
