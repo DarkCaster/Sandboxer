@@ -94,6 +94,7 @@ static uint8_t operation_2(char* param, size_t len);
 static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len);
 static uint8_t operation_4(char* name, size_t n_len);
 static uint8_t operation_5(uint8_t signal);
+static uint8_t operation_253(bool grace_shutdown);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
 
 static void show_usage(void)
@@ -469,13 +470,18 @@ int main(int argc, char* argv[])
                 err=operation_100_101_200_201(1,1);
                 break;
             case 253:
-                err=operation_status(0)!=0?255:0;
-                if(err==0)
+                if((size_t)pl_len-(size_t)CMDHDRSZ==1)
                 {
-                    pid_lock();
-                    _request_shutdown();
-                    pid_unlock();
+                    err=operation_253((bool)(*(data_buf+(int)CMDHDRSZ)));
+                    if(err==0)
+                    {
+                        pid_lock();
+                        _request_shutdown();
+                        pid_unlock();
+                    }
                 }
+                else
+                    err=13;
                 break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
@@ -888,6 +894,15 @@ static uint8_t operation_5(uint8_t signal)
     }
     else
         return 1;
+}
+
+static uint8_t operation_253(bool grace_shutdown)
+{
+    if(mode==0)
+        _master_terminate_slaves(grace_shutdown?SIGTERM:SIGUSR1);
+    if(operation_status(0)!=0)
+        return 255;
+    return 0;
 }
 
 static uint8_t request_child_shutdown(bool grace_shutdown, bool skip_responce)
