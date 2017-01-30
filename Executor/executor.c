@@ -36,6 +36,7 @@ static char* channel;
 static char* self;
 static int fdi;
 static int fdo;
+static bool terminate_orphans;
 
 //params to start child
 static char** params;
@@ -229,13 +230,17 @@ int main(int argc, char* argv[])
 
     //set config from params
     self=argv[0];
-    mode=(uint8_t)strtol(argv[1], NULL, 10);
+    mode=(uint8_t)strtol(argv[1], NULL, 10); if(mode>1) mode=1;
     log_file_enabled=(uint8_t)strtol(argv[2], NULL, 10);
     ctldir=argv[3];
     channel=argv[4];
     key=(uint32_t)strtol(argv[5], NULL, 10);
 
     //set status params
+    if(getppid()==1 && mode==0)
+        terminate_orphans=true;
+    else
+        terminate_orphans=false;
     pthread_mutex_init(&pid_mutex,NULL);
     shutdown=0;
     command_mode=1; //until we attempt to launch user binary, this flag is set.
@@ -315,6 +320,9 @@ int main(int argc, char* argv[])
         log_message(logger,LOG_INFO,"Executor startup, master mode");
     else
         log_message(logger,LOG_INFO,"Executor startup, slave mode");
+
+    if(terminate_orphans)
+        log_message(logger,LOG_WARNING,"Terminate orphans option is active. It is intended to work only in pid-namespace mode, and may lead to undesirable consequences otherwise!");
 
     log_message(logger,LOG_INFO,"Security key is set to %i",LI(key));
     log_message(logger,LOG_INFO,"Control directory is set to %s",LS(ctldir));
@@ -494,14 +502,14 @@ int main(int argc, char* argv[])
             {
                 //check for slaves
                 pid_lock();
-                if(_master_get_slave_count()<=0)
+                int msc = _master_get_slave_count();
+                int osc = terminate_orphans?_master_get_orphans_count():0;
+                if( msc<=0 && osc<=0 )
                 {
                     log_message(logger,LOG_INFO,"Performing shutdown because of timeout");
                     _request_shutdown();
                 }
                 pid_unlock();
-                //TODO: check for slaves and orphans, when enabled
-                //reset timer if there is something working background
                 idle_time=0;
             }
         }
@@ -527,11 +535,11 @@ int main(int argc, char* argv[])
     //in master mode, terminate slaves that may be left
     if(mode==0)
     {
+        log_message(logger,LOG_INFO,"Awaiting and terminating slave executors");
         int s_cnt=0;
         pid_lock();
         s_cnt=_master_get_slave_count();
         pid_unlock();
-
         wait_for_term_routine(s_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_slave_count);
         conditional_term_routine(s_cnt,_master_terminate_slaves,SIGTERM);
         wait_for_term_routine(s_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_slave_count);
@@ -539,7 +547,17 @@ int main(int argc, char* argv[])
         wait_for_term_routine(s_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_slave_count);
         conditional_term_routine(s_cnt,_master_terminate_slaves,SIGKILL);
 
-        //TODO: do the same with orphans, if enabled
+        if(terminate_orphans)
+        {
+            int o_cnt=0;
+            pid_lock();
+            o_cnt=_master_get_orphans_count();
+            pid_unlock();
+            log_message(logger,LOG_INFO,"Awaiting and terminating orphan processes");
+            conditional_term_routine(o_cnt,_master_terminate_orphans,SIGTERM);
+            wait_for_term_routine(o_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_orphans_count);
+            conditional_term_routine(o_cnt,_master_terminate_orphans,SIGKILL);
+        }
     }
 
     int ec=remove(filename_in);
