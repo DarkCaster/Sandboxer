@@ -1200,8 +1200,10 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                             term_size.ws_row=u16_read(data_buf,CMDHDRSZ+2);
                             term_size.ws_xpixel=0;
                             term_size.ws_ypixel=0;
-                            if(ioctl(STDOUT_FILENO,TIOCSWINSZ,&term_size)!=0)
+                            if(ioctl(ifd,TIOCSWINSZ,&term_size)!=0)
                                 log_message(logger,LOG_WARNING,"Failed to set terminal size");
+                            else
+                                log_message(logger,LOG_INFO,"Terminal size update requested to %ix%i",LI(term_size.ws_col),LI(term_size.ws_row));
                         }
                         in_len=0;
                     }
