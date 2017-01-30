@@ -119,6 +119,8 @@ static void _slave_terminate_child(int custom_signal)
     else
         log_message(logger,LOG_INFO,"Signal %i was sent to all childs from the list",LI(signal));
     pid_list_deinit(child_list);
+    if(command_mode)
+        _request_shutdown();
 }
 
 static void _master_terminate_slaves(int signal)
@@ -515,7 +517,7 @@ int main(int argc, char* argv[])
     { int time_left=x_time_limit; \
       while(time_left>0 && x_cnt>0) \
       { pid_lock(); x_cnt=x_count_func(); pid_unlock(); \
-        if(x_cnt>0) sleep(1); time_left-=1000; } }
+        if(x_cnt>0) usleep(250*1000); time_left-=250; } }
 
 #define conditional_term_routine(x_cnt, x_term_func, x_signal) \
     { if(x_cnt>0) \
