@@ -472,7 +472,6 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
     cmd.cmd_type=150;
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
     struct termios term_settings_backup;
-    struct winsize term_size;
     uint8_t ts_is_set=0;
     if(use_pty)
     {
@@ -516,8 +515,9 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         bool term_size_updated=false;
         if(term_size_update_needed && use_pty)
         {
+            struct winsize term_size;
             term_size_update_needed=false;
-            if(!ioctl(STDOUT_FILENO,TIOCSWINSZ,&term_size))
+            if(ioctl(STDOUT_FILENO,TIOCSWINSZ,&term_size)!=0)
                 log_message(logger,LOG_WARNING,"Failed to get terminal size, error code=%i",LI(errno));
             else
             {
