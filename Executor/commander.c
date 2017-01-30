@@ -36,6 +36,9 @@ static int fdo;
 static uint8_t tmp_buf[DATABUFSZ];
 static uint8_t data_buf[MSGPLMAXLEN+1];//as precaution
 
+//terminal size update flag
+static volatile bool term_size_update_needed;
+
 //proto
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
@@ -51,9 +54,21 @@ static uint8_t operation_101_201(uint8_t use_pty);
 static uint8_t operation_253(bool grace_shutdown);
 static size_t bytes_avail(int fd);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+static void sigwinch_signal_handler(int sig, siginfo_t* info, void* context)
+{
+    log_message(logger,LOG_INFO,"SIGWINCH signal received");
+    term_size_update_needed=true;
+}
+
+#pragma GCC diagnostic pop
+
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
 int main(int argc, char* argv[])
 {
+    term_size_update_needed=true;
     comm_shutdown(0u);
     //logger
     logger=log_init();
@@ -61,6 +76,19 @@ int main(int argc, char* argv[])
     log_stdout(logger,2u);
     log_headline(logger,"Commander startup");
     log_message(logger,LOG_INFO,"Parsing startup params");
+
+    //set sigwinch_signal_handler signal
+    struct sigaction act[2];
+    memset(act,2,sizeof(struct sigaction));
+
+    //termination signals
+    act[0].sa_sigaction=&sigwinch_signal_handler;
+    act[0].sa_flags=SA_SIGINFO;
+    if( sigaction(SIGTERM, &act[0], NULL) < 0 )
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGWINCH signal handler");
+        teardown(9);
+    }
 
     if(argc<5)
     {
@@ -444,11 +472,11 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
     cmd.cmd_type=150;
     const size_t max_data_req=(size_t)(MSGPLMAXLEN-CMDHDRSZ);
     struct termios term_settings_backup;
+    struct winsize term_size;
     uint8_t ts_is_set=0;
     if(use_pty)
     {
         log_message(logger,LOG_INFO,"Adjusting terminal settings");
-
         if(tcgetattr(STDOUT_FILENO,&term_settings_backup)!=0)
             log_message(logger,LOG_WARNING,"Failed to read terminal settings, error code=%i",LI(errno));
         else
@@ -483,31 +511,53 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
 
     while(1)
     {
-        //TODO: check if term size is changes, and send new params
-
         //read input
         int32_t send_data_len=CMDHDRSZ;
-        size_t avail=bytes_avail(STDIN_FILENO);
-        if(avail>0)
+        bool term_size_updated=false;
+        if(term_size_update_needed && use_pty)
         {
-            if(avail>max_data_req)
-                avail=max_data_req;
-            ssize_t rcount=read(STDIN_FILENO,(void*)(data_buf+CMDHDRSZ),avail);
-            if(rcount<0)
-            {
-                if(errno!=EINTR)
-                {
-                    restore_terminal;
-                    log_message(logger,LOG_ERROR,"Error while reading stdin");
-                    //TODO: send commander disconnect notification
-                }
-            }
+            term_size_update_needed=false;
+            if(!ioctl(STDOUT_FILENO,TIOCSWINSZ,&term_size))
+                log_message(logger,LOG_WARNING,"Failed to get terminal size, error code=%i",LI(errno));
             else
-                send_data_len+=(int32_t)rcount;
+            {
+                term_size_updated=true;
+                u16_write(data_buf,CMDHDRSZ,term_size.ws_col);
+                u16_write(data_buf,CMDHDRSZ+2,term_size.ws_row);
+                send_data_len+=4;
+            }
+        }
+        else
+        {
+            size_t avail=bytes_avail(STDIN_FILENO);
+            if(avail>0)
+            {
+                if(avail>max_data_req)
+                    avail=max_data_req;
+                ssize_t rcount=read(STDIN_FILENO,(void*)(data_buf+CMDHDRSZ),avail);
+                if(rcount<0)
+                {
+                    if(errno!=EINTR)
+                    {
+                        restore_terminal;
+                        log_message(logger,LOG_ERROR,"Error while reading stdin");
+                        //TODO: send commander disconnect notification
+                    }
+                }
+                else
+                    send_data_len+=(int32_t)rcount;
+            }
         }
 
         //send input
-        cmdhdr_write(data_buf,0,cmd);
+        if(term_size_updated)
+        {
+            CMDHDR tscmd;
+            tscmd.cmd_type=252;
+            cmdhdr_write(data_buf,0,tscmd);
+        }
+        else
+            cmdhdr_write(data_buf,0,cmd);
         uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
         if(ec!=0)
         {
