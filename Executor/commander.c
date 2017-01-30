@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     //termination signals
     act[0].sa_sigaction=&sigwinch_signal_handler;
     act[0].sa_flags=SA_SIGINFO;
-    if( sigaction(SIGTERM, &act[0], NULL) < 0 )
+    if( sigaction(SIGWINCH, &act[0], NULL) < 0 )
     {
         log_message(logger,LOG_ERROR,"Failed to set SIGWINCH signal handler");
         teardown(9);
