@@ -260,6 +260,8 @@ bool populate_list_with_orphans(PidListDef list_instance, PidListDef ignored_par
         if(!arg_is_numeric(d_entry->d_name))
             continue;
         pid_t pid=(pid_t)strtol(d_entry->d_name, NULL, 10);
+        if(pid==1)
+            continue;
         int check=check_target_is_child((PidList*)ignored_parents, pid);
         if(check>0 || check<0)
             continue;
