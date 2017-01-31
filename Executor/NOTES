@@ -4,6 +4,7 @@ master only:
 0 - spawn new slave executor, and create new fifo for communication, print fifo base name to stdout
 TODO: 0 <name> - optional parameter to define fifo name manually
 253 <1\0> - perform slaves shutdown. if param set to 1 - slaves will terminate it's chils with configured signals, sigkill otherwise. TODO: do not perform self shutdown when param is 1 - just send termination command to slaves.
+250 - return orphaned process count
 
 slave only:
 
