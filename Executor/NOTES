@@ -31,8 +31,10 @@ control mode:
 
 Global TODO list:
 
+- more robust communication protocol, add some logic to cleanup "stale" data left inside fifo-buffer when client silently gone offline,
+  or some garbage is written (for now - all communication commands signed with hash, all data encoded within "packets" with corresponding headers)
 - async\multi-threaded data read\write from\to child process
-- proper timings calculation for io-operations
+- proper timings calculation for io-operations, use non-blocking mode for communication pipe, or check available data size before read.
 ...
 - PROFIT!
 
