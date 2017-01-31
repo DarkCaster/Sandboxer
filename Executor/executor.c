@@ -82,6 +82,7 @@ static void _request_shutdown(void);
 static void termination_signal_handler(int sig, siginfo_t* info, void* context);
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context);
 static void _slave_terminate_child(int custom_signal);
+static PidListDef _create_orphans_list(void);
 static void _master_terminate_slaves(int signal);
 static void _master_terminate_orphans(int signal);
 static int _master_get_slave_count(void);
@@ -140,15 +141,36 @@ static int _master_get_slave_count(void)
     return pid_list_count(_slave_list);
 }
 
+static PidListDef _create_orphans_list(void)
+{
+    pid_list_validate_slave_executors(_slave_list,getpid());
+    PidListDef ignore_list=pid_list_init();
+    pid_list_copy_2(_slave_list,ignore_list);
+    pid_list_add(ignore_list,getpid());
+    PidListDef orphans_list=pid_list_init();
+    if(!populate_list_with_orphans(orphans_list,ignore_list))
+        log_message(logger,LOG_ERROR,"_create_orphans_list:populate_list_with_orphans failed! errno=",LI(errno));
+    pid_list_deinit(ignore_list);
+    return orphans_list;
+}
+
 static void _master_terminate_orphans(int signal)
 {
-    //TODO
+    PidListDef orphans_list=_create_orphans_list();
+    log_message(logger,LOG_INFO,"Found %i orphan pids",LI(pid_list_count(orphans_list)));
+    if(!pid_list_signal(orphans_list,signal))
+        log_message(logger,LOG_WARNING,"Failed to send signal %i to some pids from orphans list",LI(signal));
+    else
+        log_message(logger,LOG_INFO,"Signal %i was sent to all childs from the orphans list",LI(signal));
+    pid_list_deinit(orphans_list);
 }
 
 static int _master_get_orphans_count(void)
 {
-    //TODO
-    return 0;
+    PidListDef orphans_list=_create_orphans_list();
+    int count=pid_list_count(orphans_list);
+    pid_list_deinit(orphans_list);
+    return count;
 }
 
 #pragma GCC diagnostic push

@@ -106,6 +106,13 @@ void pid_list_copy(PidListDef list_instance, pid_t* target)
         target[i]=list->list[i];
 }
 
+void pid_list_copy_2(PidListDef source, PidListDef target)
+{
+    PidList* const s_list=(PidList*)source;
+    for(int i=0; i<s_list->count; ++i)
+        pid_list_add(target,s_list->list[i]);
+}
+
 bool pid_list_signal(PidListDef list_instance, int signal)
 {
     PidList* const list=(PidList*)list_instance;
@@ -260,7 +267,6 @@ bool populate_list_with_orphans(PidListDef list_instance, PidListDef ignored_par
     }
     if(closedir(proc)!=0)
         return false;
-
     return true;
 }
 
