@@ -19,6 +19,7 @@ void pid_list_copy(PidListDef list_instance,pid_t* target);
 void pid_list_validate_slave_executors(PidListDef list_instance, pid_t parent);
 bool pid_list_signal(PidListDef list_instance, int signal);
 bool populate_list_with_session_members(PidListDef list_instance, pid_t session);
+bool populate_list_with_orphans(PidListDef list_instance, PidListDef ignored_parents);
 
 #ifdef __cplusplus
 }

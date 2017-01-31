@@ -12,7 +12,7 @@ struct strPidList {
     int count;
 };
 
-static bool check_target_is_child(PidList* parents, pid_t target);
+static int check_target_is_child(PidList* parents, pid_t target);
 
 PidListDef pid_list_init(void)
 {
@@ -169,7 +169,7 @@ void pid_list_validate_slave_executors(PidListDef list_instance, pid_t parent)
 }
 
 //checks that target pid is belongs to parent pid tree
-static bool check_target_is_child(PidList* parents, pid_t target)
+static int check_target_is_child(PidList* parents, pid_t target)
 {
     const int base_proc_stat_len=11; // /proc/<pid>/stat
     int stat_path_len=base_proc_stat_len+num_max_len(target);
@@ -179,17 +179,17 @@ static bool check_target_is_child(PidList* parents, pid_t target)
     sprintf(stat_path, "/proc/%d/stat", target);
     FILE* stat_file = fopen(stat_path,"r");
     if(stat_file==NULL)
-        return false;
+        return -1;
     pid_t ppid=0;
     int v_read=fscanf(stat_file, "%*d %*s %*c %d", &ppid);
     fclose(stat_file);
     if(v_read!=1)
-        return false;
+        return -2;
     for(int i=0; i<parents->count; ++i)
         if(ppid==parents->list[i])
-            return true;
+            return 1;
     if(ppid==1)
-        return false;
+        return 0;
     return check_target_is_child(parents,ppid);
 }
 
@@ -232,13 +232,35 @@ bool populate_list_with_session_members(PidListDef list_instance, pid_t session)
             }
             else
             {
-                if(check_target_is_child(list,pid))
+                if(check_target_is_child(list,pid)==1)
                    pid_list_add(list_instance,pid);
             }
         }
         if(closedir(proc)!=0)
             return false;
     }
+    return true;
+}
+
+bool populate_list_with_orphans(PidListDef list_instance, PidListDef ignored_parents)
+{
+    struct dirent* d_entry=NULL;
+    DIR* proc=opendir("/proc");
+    if(proc==NULL)
+        return false;
+    while((d_entry = readdir(proc)) != NULL)
+    {
+        if(!arg_is_numeric(d_entry->d_name))
+            continue;
+        pid_t pid=(pid_t)strtol(d_entry->d_name, NULL, 10);
+        int check=check_target_is_child((PidList*)ignored_parents, pid);
+        if(check>0 || check<0)
+            continue;
+        pid_list_add(list_instance, pid);
+    }
+    if(closedir(proc)!=0)
+        return false;
+
     return true;
 }
 
