@@ -89,7 +89,7 @@ static int _master_get_slave_count(void);
 static int _master_get_orphans_count(void);
 static uint8_t request_child_shutdown(bool grace_shutdown, bool skip_responce);
 static uint8_t operation_status(uint8_t ec);
-static uint8_t operation_0(void);
+static uint8_t operation_0(char* channel_name, size_t len);
 static uint8_t operation_1(char* exec, size_t len);
 static uint8_t operation_2(char* param, size_t len);
 static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len);
@@ -449,7 +449,7 @@ int main(int argc, char* argv[])
             switch(cmdhdr.cmd_type)
             {
             case 0:
-                err=operation_0();
+                err=operation_0((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 1:
                 err=operation_1((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
@@ -710,7 +710,7 @@ static pid_t spawn_slave(char * new_channel)
     return pid;
 }
 
-static uint8_t operation_0(void)
+static uint8_t operation_0(char* channel_name, size_t len)
 {
     if(mode==1)
     {
@@ -725,9 +725,21 @@ static uint8_t operation_0(void)
         return 21;
     }
 
-    char chn[256];
-    sprintf(chn,"%04llx", current_timestamp());
-    pid_t pid=spawn_slave(chn);
+    pid_t pid;
+    char chn[len==0?256:(len+1)];
+    if(len==0)
+    {
+        sprintf(chn,"%04llx", current_timestamp());
+        pid=spawn_slave(chn);
+        len=256;
+    }
+    else
+    {
+        strncpy(chn,channel_name,len);
+        chn[len]='\0';
+        pid=spawn_slave(chn);
+    }
+
     if(pid==0)
     {
         log_message(logger,LOG_ERROR,"Failed to spawn slave executor for channel %s",LI(chn));
@@ -736,9 +748,9 @@ static uint8_t operation_0(void)
     }
     //try to open/close pipe
     int timeout=REQ_TIMEOUT_MS;
-    char chn_in[255];
+    char chn_in[len+4];
     sprintf(chn_in,"%s.in",chn);
-    char chn_out[255];
+    char chn_out[len+5];
     sprintf(chn_out,"%s.out",chn);
     while(timeout>0)
     {
@@ -774,7 +786,7 @@ static uint8_t operation_0(void)
     CMDHDR response;
     response.cmd_type=0;
     cmdhdr_write(data_buf,0,response);
-    size_t data_len=strnlen(chn,256);
+    size_t data_len=strnlen(chn,len);
     strncpy((char*)(data_buf+CMDHDRSZ),chn,data_len);
     data_len+=CMDHDRSZ;
     uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)data_len,key,REQ_TIMEOUT_MS);
