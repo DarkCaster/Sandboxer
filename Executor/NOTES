@@ -3,7 +3,7 @@ operation-codes list:
 master only:
 0 - spawn new slave executor, and create new fifo for communication, print fifo base name to stdout
 0 <name> - optional parameter to define fifo name manually
-253 <1\0> - perform slaves shutdown. if param set to 1 - slaves will terminate it's chils with configured signals, sigkill otherwise. TODO: do not perform self shutdown when param is 1 - just send termination command to slaves.
+253 <1\0> - perform slaves shutdown. if param set to 1 - slaves will terminate it's chils with configured signals, sigkill otherwise. do not perform self shutdown when param is 1 - just send termination command to slaves.
 250 - return orphaned process count
 
 slave only:
@@ -19,6 +19,7 @@ command mode:
 101 - same as 100, but start in detached mode instead, commander will exit after successfull start
 200 - start process in captive mode, perform pty-device allocation and create new session. useful for shells inside sandbox
 201 - same as 200, but start in detached mode instead, commander will exit after successfull start
+253 <1\0>- shutdown slave, parameter must be provided but it is not used now
 
 control mode:
 102 - reattach to detached session started with command 101
