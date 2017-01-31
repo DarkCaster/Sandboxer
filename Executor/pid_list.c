@@ -251,6 +251,7 @@ bool populate_list_with_session_members(PidListDef list_instance, pid_t session)
 
 bool populate_list_with_orphans(PidListDef list_instance, PidListDef ignored_parents)
 {
+    PidList* const i_list=(PidList*)ignored_parents;
     struct dirent* d_entry=NULL;
     DIR* proc=opendir("/proc");
     if(proc==NULL)
@@ -262,13 +263,15 @@ bool populate_list_with_orphans(PidListDef list_instance, PidListDef ignored_par
         pid_t pid=(pid_t)strtol(d_entry->d_name, NULL, 10);
         if(pid==1)
             continue;
-        int check=check_target_is_child((PidList*)ignored_parents, pid);
-        if(check>0 || check<0)
+        int check=check_target_is_child(i_list,pid);
+        if(check!=0)
             continue;
         pid_list_add(list_instance, pid);
     }
     if(closedir(proc)!=0)
         return false;
+    for(int i=0;i<i_list->count;++i)
+        pid_list_remove(list_instance,i_list->list[i]);
     return true;
 }
 
