@@ -42,7 +42,7 @@ static volatile bool term_size_update_needed;
 //proto
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
-static uint8_t operation_0(void);
+static uint8_t operation_0(char* channel);
 static uint8_t operation_1(char* exec);
 static uint8_t operation_2(char* param);
 static uint8_t operation_1_2(uint8_t op, char* param);
@@ -201,7 +201,10 @@ int main(int argc, char* argv[])
     switch(op_code)
     {
     case 0:
-        err=operation_0();
+        if(p_count<1)
+            err=operation_0(NULL);
+        else
+            err=operation_0(op_param[0]);
         break;
     case 1:
         if(p_count<1)
@@ -329,16 +332,23 @@ static uint8_t arg_is_numeric(const char* arg)
 }
 
 //opcode 0 - create new session with separate comm. channels
-static uint8_t operation_0(void)
+static uint8_t operation_0(char* channel)
 {
     CMDHDR cmd;
     cmd.cmd_type=0;
     cmdhdr_write(data_buf,0,cmd);
+    int32_t cmdlen=CMDHDRSZ;
+    if(channel!=NULL)
+    {
+        size_t cl=strlen(channel);
+        strncpy((char*)(data_buf+CMDHDRSZ),channel,cl);
+        cmdlen+=(int32_t)cl;
+    }
     log_message(logger,LOG_INFO,"Sending request");
-    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,cmdlen,key,REQ_TIMEOUT_MS);
     if(ec!=0)
         return ec;
-    int32_t cmdlen=0;
+    cmdlen=0;
     log_message(logger,LOG_INFO,"Reading response");
     ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
     if(ec!=0)
