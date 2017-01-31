@@ -498,8 +498,9 @@ int main(int argc, char* argv[])
             case 253:
                 if((size_t)pl_len-(size_t)CMDHDRSZ==1)
                 {
-                    err=operation_253((bool)(*(data_buf+(int)CMDHDRSZ)));
-                    if(err==0)
+                    bool grace_shutdown=(bool)(*(data_buf+CMDHDRSZ));
+                    err=operation_253(grace_shutdown);
+                    if( (err==0 && !grace_shutdown) || (err==0 && mode==1) )
                     {
                         pid_lock();
                         _request_shutdown();
