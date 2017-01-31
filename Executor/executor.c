@@ -95,6 +95,7 @@ static uint8_t operation_2(char* param, size_t len);
 static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len);
 static uint8_t operation_4(char* name, size_t n_len);
 static uint8_t operation_5(uint8_t signal);
+static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
 
@@ -490,6 +491,9 @@ int main(int argc, char* argv[])
                 break;
             case 201:
                 err=operation_100_101_200_201(1,1);
+                break;
+            case 250:
+                err=operation_250();
                 break;
             case 253:
                 if((size_t)pl_len-(size_t)CMDHDRSZ==1)
@@ -916,6 +920,27 @@ static uint8_t operation_5(uint8_t signal)
     }
     else
         return 1;
+}
+
+static uint8_t operation_250(void)
+{
+    if(mode==1)
+    {
+        log_message(logger,LOG_ERROR,"Operation is disabled for slave executor");
+        return 20;
+    }
+    pid_lock();
+    uint32_t count=(uint32_t)_master_get_orphans_count();
+    pid_unlock();
+    //send response
+    CMDHDR response;
+    response.cmd_type=0;
+    cmdhdr_write(data_buf,0,response);
+    u32_write(data_buf,CMDHDRSZ,count);
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)(CMDHDRSZ+4),key,REQ_TIMEOUT_MS);
+    if(ec!=0 && ec!=255)
+        log_message(logger,LOG_ERROR,"Failed to send response with orphans count",LI(ec));
+    return 0;
 }
 
 static uint8_t operation_253(bool grace_shutdown)
