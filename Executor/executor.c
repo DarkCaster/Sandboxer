@@ -41,6 +41,7 @@ static bool terminate_orphans;
 //params to start child
 static char** params;
 static int params_count;
+static char* workdir;
 
 //child env
 static char** child_envset_v;
@@ -95,6 +96,7 @@ static uint8_t operation_2(char* param, size_t len);
 static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len);
 static uint8_t operation_4(char* name, size_t n_len);
 static uint8_t operation_5(uint8_t signal);
+static uint8_t operation_6(char* dir, size_t len);
 static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
@@ -273,6 +275,20 @@ int main(int argc, char* argv[])
     child_signal_set=0;
     child_signal=15;
 
+    workdir=NULL;
+
+    params=(char**)safe_alloc(2,sizeof(char*));
+    params_count=1;
+    params[0]=NULL;
+    params[1]=NULL;
+
+    child_envset_v=NULL;
+    child_envset_n=NULL;
+    child_envset_count=0;
+
+    child_envdel_v=NULL;
+    child_envdel_count=0;
+
     pid_lock();
     //set pid management parameters and stuff
     if(mode==0)
@@ -372,18 +388,6 @@ int main(int argc, char* argv[])
         teardown(21);
     }
 
-    params=(char**)safe_alloc(2,sizeof(char*));
-    params_count=1;
-    params[0]=NULL;
-    params[1]=NULL;
-
-    child_envset_v=NULL;
-    child_envset_n=NULL;
-    child_envset_count=0;
-
-    child_envdel_v=NULL;
-    child_envdel_count=0;
-
     fdi=open(filename_in,O_RDWR);
     fdo=open(filename_out,O_RDWR);
 
@@ -479,6 +483,9 @@ int main(int argc, char* argv[])
                     err=operation_5(*(data_buf+(int)CMDHDRSZ));
                 else
                     err=12;
+                break;
+            case 6:
+                err=operation_6((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
                 break;
             case 100:
                 err=operation_100_101_200_201(0,0);
@@ -927,6 +934,24 @@ static uint8_t operation_5(uint8_t signal)
         child_signal=signal;
         child_signal_set=1;
         log_message(logger,LOG_INFO,"Signal to stop the process was set to %i",LI(signal));
+        if(operation_status(0)!=0)
+            return 255;
+        return 0;
+    }
+    else
+        return 1;
+}
+
+static uint8_t operation_6(char* dir, size_t len)
+{
+    if(len>0 && dir!=NULL)
+    {
+        if(workdir!=NULL)
+            free(workdir);
+        workdir=(char*)safe_alloc(len+1,1);
+        workdir[len]='\0';
+        strncpy(workdir,dir,len);
+        log_message(logger,LOG_INFO,"Workdir was set to %s",LS(workdir));
         if(operation_status(0)!=0)
             return 255;
         return 0;
