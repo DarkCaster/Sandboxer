@@ -1,0 +1,30 @@
+#!/bin/bash
+
+bash_lua_helper=""
+
+find_lua_user_dir="$@"
+find_lua_helper_dir="$( cd "$( dirname "$BASH_SOURCE" )" && pwd )"
+
+find_in_dir () {
+ test -z "$@" && return 1
+ if [ -f "$@/lua-helper.bash.in" ]; then
+  bash_lua_helper="$@/lua-helper.bash.in"
+  return 0
+ else
+  return 1
+ fi
+}
+
+find_in_dir "$find_lua_user_dir" || find_in_dir "$find_lua_helper_dir" || find_in_dir "$find_lua_helper_dir/../BashLuaHelper"
+
+if [ -z "$bash_lua_helper" ]; then
+ echo "lua-helper.bash.in not found!"
+ exit 1
+fi
+
+bash_lua_helper=`realpath "$bash_lua_helper"`
+
+unset find_lua_helper_dir
+unset find_lua_user_dir
+unset -f find_lua_in_dir
+
