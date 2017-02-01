@@ -1101,16 +1101,6 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
 
     if(pid==0)
     {
-        /*if(use_pty)
-        {
-            struct termios term_settings;
-            if(tcgetattr(fds, &term_settings)!=0)
-                exit(3);
-            cfmakeraw(&term_settings);
-            if(tcsetattr(fds,TCSANOW,&term_settings)!=0)
-                exit(4);
-        }*/
-
         if(use_pty)
         {
             if(close(fdm)!=0)
@@ -1149,6 +1139,12 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             while((dup2(stdin_pipe[0], STDIN_FILENO) == -1) && (errno == EINTR)) {}
             close(stdin_pipe[0]);
             close(stdin_pipe[1]);
+        }
+
+        if(chdir(workdir!=NULL?workdir:"/")!=0)
+        {
+            perror("chdir failed");
+            exit(4);
         }
 
         if(child_envdel_count>0)
