@@ -49,6 +49,7 @@ static uint8_t operation_1_2(uint8_t op, char* param);
 static uint8_t operation_3(char* name, char* value);
 static uint8_t operation_4(char* name);
 static uint8_t operation_5(char* s_signal);
+static uint8_t operation_6(char* dir);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect);
 static uint8_t operation_101_201(uint8_t use_pty);
 static uint8_t operation_250(void);
@@ -238,6 +239,12 @@ int main(int argc, char* argv[])
         else
             err=operation_5(op_param[0]);
         break;
+    case 6:
+        if(p_count<1)
+            err=56;
+        else
+            err=operation_6(op_param[0]);
+        break;
     case 100:
         err=operation_100_200(0,&child_ec,0);
         break;
@@ -402,6 +409,11 @@ static uint8_t operation_2(char* param)
 static uint8_t operation_4(char* name)
 {
     return operation_1_2(4u,name);
+}
+
+static uint8_t operation_6(char* dir)
+{
+    return operation_1_2(6u,dir);
 }
 
 static uint8_t operation_3(char* name, char* value)
