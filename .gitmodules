@@ -1,0 +1,3 @@
+[submodule "BashLuaHelper"]
+	path = BashLuaHelper
+	url = https://github.com/DarkCaster/Bash-Lua-Helper.git
