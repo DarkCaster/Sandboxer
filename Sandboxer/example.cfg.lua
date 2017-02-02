@@ -122,6 +122,11 @@ sandbox =
 			'cp -r "/etc/alternatives" "etc"; true',
 			'cp -r "/etc/alias"* "etc"; true',
 			'cp "/etc/adjtime" "etc"; true',
+			-- passwd and group files generation
+			'getent passwd root nobody > "etc/passwd"',
+			'echo "sandbox:x:'..config.uid..':'..config.gid..':sandbox:/home/sandbox:/bin/bash" >> "etc/passwd"',
+			'getent group root nobody nogroup > "etc/group"',
+			'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
 		},
 	},
 }

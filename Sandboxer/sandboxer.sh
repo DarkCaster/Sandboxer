@@ -16,12 +16,15 @@ test -z "$profile" && echo "usage: sandboxer.sh <config file> <exec profile> [ot
 shift 1
 
 #generate uid for given config file
-
 test ! -e "$config" && echo "config file not found: $config" && exit 1
 config_uid=`realpath -s "$config" | md5sum -t | cut -f1 -d" "`
 
+#user id and group id
+uid=`id -u`
+gid=`id -g`
+
 . "$script_dir/find-lua-helper.bash.in"
-. "$bash_lua_helper" "$config" -e sandbox -e profile -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -x "$@"
+. "$bash_lua_helper" "$config" -e sandbox -e profile -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
 
