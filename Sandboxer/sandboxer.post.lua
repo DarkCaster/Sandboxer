@@ -38,4 +38,5 @@ assert(type(sandbox.features.dbus)=="nil" or type(sandbox.features.dbus)=="boole
 if type(sandbox.features.dbus)=="nil" then sandbox.features.dbus=true end
 
 -- load profile, and perform it's verification
-profile=loadstring("return " .. loader.extra[1])()
+profile=loadstring("return " .. config.profile)()
+
