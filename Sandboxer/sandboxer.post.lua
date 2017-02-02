@@ -40,6 +40,17 @@ if type(sandbox.features.dbus)=="nil" then sandbox.features.dbus=true end
 -- setup table
 assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")
 assert(type(sandbox.setup.basedir)=="string", "sandbox.setup.basedir param incorrect")
+assert(type(sandbox.setup.static_executor)=="nil" or type(sandbox.setup.static_executor)=="boolean", "sandbox.setup.static_executor param incorrect")
+if type(sandbox.setup.static_executor)=="nil" then sandbox.setup.static_executor=false end
+assert(type(sandbox.setup.chroot)=="nil" or type(sandbox.setup.chroot)=="table", "sandbox.setup.chroot param incorrect")
+assert(type(sandbox.setup.custom_commands)=="nil" or type(sandbox.setup.custom_commands)=="table", "sandbox.setup.chroot param incorrect")
+
+-- custom command table
+if type(sandbox.setup.custom_commands)=="table" then
+ for index,field in ipairs(sandbox.setup.custom_commands) do
+  assert(type(field)=="string", "sandbox.setup.custom_commands[" .. index .. "] value is incorrect")
+ end
+end
 
 -- load profile, and perform it's verification
 profile=loadstring("return " .. config.profile)()
