@@ -1,0 +1,36 @@
+#!/bin/bash
+
+executor=""
+executor_static=""
+commander=""
+
+find_executor_user_dir="$@"
+find_executor_helper_dir="$( cd "$( dirname "$BASH_SOURCE" )" && pwd )"
+
+find_in_dir () {
+ test -z "$@" && return 1
+ if [ -x "$@/executor" ] && [ -x "$@/executor.static" ] && [ -x "$@/commander" ]; then
+  executor="$@/executor"
+  executor_static="$@/executor.static"
+  commander="$@/commander"
+  return 0
+ else
+  return 1
+ fi
+}
+
+find_in_dir "$find_executor_user_dir" || find_in_dir "$find_executor_helper_dir" || find_in_dir "$find_executor_helper_dir/../Build/Executor/build"
+
+if [ -z "$executor" ]; then
+ echo "executor binaries not found!"
+ exit 1
+fi
+
+executor=`realpath "$executor"`
+executor_static=`realpath "$executor_static"`
+commander=`realpath "$commander"`
+
+unset find_executor_user_dir
+unset find_executor_helper_dir
+unset -f find_in_dir
+

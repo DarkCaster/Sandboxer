@@ -27,6 +27,8 @@ shift $#
 
 test "${#cfg[@]}" = "0" && echo "can't find config storage variable populated by bash_lua_helper. bash_lua_helper failed!" && exit 1
 
+. "$script_dir/find-executor-binaries.bash.in"
+
 log () {
  echo "[ $@ ]"
 }
@@ -38,6 +40,42 @@ check_errors () {
   exit $status
  fi
 }
+
+basedir="${cfg[sandbox.setup.basedir]}"
+
+#construct control directory
+mkdir -p "$basedir"
+check_errors
+
+mkdir -p "$basedir/chroot"
+check_errors
+
+mkdir -p "$basedir/control"
+check_errors
+
+#copy executor binary
+
+bwrap_params=()
+bwrap_param_cnt=0
+
+bwrap_add_param() {
+ bwrap_params[$bwrap_param_cnt]="$@"
+ bwrap_param_cnt=$((bwrap_param_cnt+1))
+}
+
+#fillup main bwrap parameters
+test "${cfg[sandbox.lockdown.user]}" = "true" && bwrap_add_param "--unshare-user"
+test "${cfg[sandbox.lockdown.ipc]}" = "true" && bwrap_add_param "--unshare-ipc"
+test "${cfg[sandbox.lockdown.pid]}" = "true" && bwrap_add_param "--unshare-pid"
+test "${cfg[sandbox.lockdown.net]}" = "true" && bwrap_add_param "--unshare-net"
+test "${cfg[sandbox.lockdown.uts]}" = "true" && bwrap_add_param "--unshare-uts"
+test "${cfg[sandbox.lockdown.cgroup]}" = "true" && bwrap_add_param "--unshare-cgroup"
+check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_param "${cfg[sandbox.lockdown.uid]}"
+check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
+check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
+#TODO set\unset default env by bwrap
+#TODO integration
+#TODO features
 
 
 
