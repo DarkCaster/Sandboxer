@@ -131,11 +131,13 @@ sandbox =
 	},
 }
 
--- mounts for sandbox. applied by bwrap utility in order of appearence and form root directory layout for sandboxed application. 
--- presented here as separate definition in order to be able to use all definitions already done in sandbox table.
-sandbox.mounts =
+-- remaining parameters, applied to bwrap utility in order of appearence.
+-- recommended to add mount commands here to form root directory layout for sandboxed application.
+-- thos table presented here as separate definition in order to be able to use all definitions already done in sandbox table earlier.
+sandbox.bwrap =
 {
-
+	-- first option will be prepended by "--", second option processed by eval (so it can use bash variables)
+	{"x","y","z"},
 }
 
 -- configuration for applications to run inside this sandbox

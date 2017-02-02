@@ -52,11 +52,11 @@ if type(sandbox.setup.custom_commands)=="table" then
  end
 end
 
--- mounts table
-assert(type(sandbox.mounts)=="table", "sandbox.mounts param incorrect")
-for index,field in ipairs(sandbox.mounts) do
- assert(type(field)=="table", "sandbox.mounts[" .. index .. "] value is incorrect")
- for mi,mf in ipairs(field) do assert(type(mf)=="string", "sandbox.mounts["..index.."]["..mi.."] value is incorrect") end
+-- bwrap table
+assert(type(sandbox.bwrap)=="table", "sandbox.bwrap param incorrect")
+for index,field in ipairs(sandbox.bwrap) do
+ assert(type(field)=="table", "sandbox.bwrap[" .. index .. "] value is incorrect")
+ for mi,mf in ipairs(field) do assert(type(mf)=="string", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect") end
 end
 
 -- load profile, and perform it's verification
