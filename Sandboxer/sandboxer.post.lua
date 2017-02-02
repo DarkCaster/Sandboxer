@@ -37,6 +37,10 @@ if type(sandbox.features)=="nil" then sandbox.features={} end
 assert(type(sandbox.features.dbus)=="nil" or type(sandbox.features.dbus)=="boolean", "sandbox.features.dbus param incorrect")
 if type(sandbox.features.dbus)=="nil" then sandbox.features.dbus=true end
 
+-- setup table
+assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")
+assert(type(sandbox.setup.basedir)=="string", "sandbox.setup.basedir param incorrect")
+
 -- load profile, and perform it's verification
 profile=loadstring("return " .. config.profile)()
 
