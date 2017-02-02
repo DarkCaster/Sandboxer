@@ -35,8 +35,10 @@ log () {
 
 check_errors () {
  local status="$?"
+ local msg="$@"
  if [ "$status" != "0" ]; then
-  log "ERROR: last operation finished with error code $status"
+  log "ERROR: operation finished with error code $status"
+  test ! -z "$msg" && log "$msg"
   exit $status
  fi
 }
@@ -84,9 +86,8 @@ check_errors
 
 exec_cmd() {
  local setup_cmd_cnt="$1"
- log "executing custom chroot setup command block #$setup_cmd_cnt"
  eval "${cfg[sandbox.setup.custom_commands.$setup_cmd_cnt]}"
- check_errors
+ check_errors "custom chroot setup command block #$setup_cmd_cnt was failed!"
 }
 
 setup_cmd_cnt="1"
