@@ -54,6 +54,7 @@ mkdir -p "$basedir/control"
 check_errors
 
 #copy executor binary
+test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "$basedir/executor" || cp "$executor" "$basedir/executor"
 
 bwrap_params=()
 bwrap_param_cnt=0
@@ -74,8 +75,26 @@ check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_pa
 check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
 check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
 #TODO set\unset default env by bwrap
+
+#TODO default chroot construction
+
+#execute custom chroot construction commands
+cd "$basedir/chroot"
+check_errors
+
+exec_cmd() {
+ local setup_cmd_cnt="$1"
+ log "executing custom chroot setup command block #$setup_cmd_cnt"
+ eval "${cfg[sandbox.setup.custom_commands.$setup_cmd_cnt]}"
+ check_errors
+}
+
+setup_cmd_cnt="1"
+while `check_lua_export "sandbox.setup.custom_commands.$setup_cmd_cnt"`
+do
+ exec_cmd "$setup_cmd_cnt"
+ setup_cmd_cnt=`expr $setup_cmd_cnt + 1`
+done
+
 #TODO integration
 #TODO features
-
-
-
