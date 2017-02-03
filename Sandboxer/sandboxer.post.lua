@@ -48,7 +48,10 @@ assert(type(sandbox.setup.chroot)=="nil" or type(sandbox.setup.chroot)=="table",
 assert(type(sandbox.setup.custom_commands)=="nil" or type(sandbox.setup.custom_commands)=="table", "sandbox.setup.chroot param incorrect")
 if type(sandbox.setup.custom_commands)=="table" then
  for index,field in ipairs(sandbox.setup.custom_commands) do
-  assert(type(field)=="string", "sandbox.setup.custom_commands[" .. index .. "] value is incorrect")
+  assert(type(field)=="table", "sandbox.setup.custom_commands[" .. index .. "] value is incorrect")
+  for mi,mf in ipairs(field) do
+   assert(type(mf)=="string", "sandbox.setup.custom_commands["..index.."]["..mi.."] value is incorrect")
+  end
  end
 end
 

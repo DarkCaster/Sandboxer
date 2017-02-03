@@ -80,6 +80,7 @@ sandbox =
 		-- exit code from command group ($?) is examined, sandboxer.sh will automatically terminate is case of errors ($?!=0)
 		custom_commands = -- optional
 		{	-- TODO: move this to chroot table (above)
+			{
 			'mkdir -p "etc"',
 			'cp -r "/etc/zsh"* "etc"; true',
 			'cp "/etc/yp.conf" "etc"; true',
@@ -129,6 +130,7 @@ sandbox =
 			'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
 			-- create directory for persistent userdata
 			'mkdir -p "'..loader.path.combine(loader.workdir,"userdata")..'"',
+			}
 		},
 
 		-- blacklist for env variables.
