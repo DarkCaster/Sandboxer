@@ -105,16 +105,15 @@ check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bw
 
 #append remaining parameters from sandbox.bwrap table
 bwrap_cmdblk_cnt="1"
-echo "$cfg_list"
 while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt"`
 do
  bwrap_cmd_cnt="1"
  while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt"`
  do
   if [ "$bwrap_cmd_cnt" = "1" ]; then
-   bwrap_add_param "${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}"
+   bwrap_add_param "--${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}"
   else
-   eval bwrap_add_param '"'${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}'"'
+   bwrap_add_param "${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}"
   fi
   bwrap_cmd_cnt=`expr $bwrap_cmd_cnt + 1`
  done
