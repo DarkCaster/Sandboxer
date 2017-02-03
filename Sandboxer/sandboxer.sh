@@ -87,7 +87,6 @@ bwrap_param_cnt=0
 
 bwrap_add_param() {
  bwrap_params[$bwrap_param_cnt]="$@"
- echo "added: $@"
  bwrap_param_cnt=$((bwrap_param_cnt+1))
 }
 
