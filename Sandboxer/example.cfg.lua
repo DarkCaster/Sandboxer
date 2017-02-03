@@ -130,6 +130,39 @@ sandbox =
 			-- create directory for persistent userdata
 			'mkdir -p "'..loader.path.combine(loader.workdir,"userdata")..'"',
 		},
+
+		-- blacklist for env variables.
+		-- all variables from this list will be unset on start
+		env_blacklist =
+		{
+			"DBUS_SESSION_BUS_ADDRESS",
+			"DESKTOP_SESSION",
+			"FROM_HEADER",
+			"GPG_AGENT_INFO",
+			"GPG_TTY",
+			"INPUTRC",
+			"LOGNAME",
+			"MAIL",
+			"OLDPWD",
+			"SESSION_MANAGER",
+			"SSH_AGENT_PID",
+			"SSH_ASKPASS",
+			"SSH_AUTH_SOCK",
+			"WINDOWID",
+			"XAUTHORITY",
+			"XDG_SEAT",
+			"XDG_SEAT_PATH",
+		},
+
+		-- TODO: whitelist for env variables. all env variables not in list will be unset in sandboxed env
+		env_whitelist =
+		{
+		},
+
+		-- set custom env variables
+		env_set =
+		{
+		}
 	},
 }
 
