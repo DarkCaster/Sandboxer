@@ -73,7 +73,7 @@ sandbox =
 		},
 
 		-- table with custom user commands, that will be run when creating chroot after tasks from chroot table (see above) is complete.
-		-- current dir will be set to chroot directory.
+		-- current dir will be set to chroot directory, that is located at sandbox.setup.basedir/chroot
 		-- custom command-groups executed in order of appearence.
 		-- this can be used to dynamically create configuration files and other things to mount inside sandbox later.
 		-- command-groups are executed by using eval in context of main sandboxer.sh launcher script. so, be careful!
@@ -127,6 +127,8 @@ sandbox =
 			'echo "sandbox:x:'..config.uid..':'..config.gid..':sandbox:/home/sandbox:/bin/bash" >> "etc/passwd"',
 			'getent group root nobody nogroup > "etc/group"',
 			'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
+			-- create directory for persistent userdata
+			'mkdir -p "'..loader.path.combine(loader.workdir,"userdata")..'"',
 		},
 	},
 }
@@ -136,8 +138,18 @@ sandbox =
 -- thos table presented here as separate definition in order to be able to use all definitions already done in sandbox table earlier.
 sandbox.bwrap =
 {
-	-- first option will be prepended by "--", second option processed by eval (so it can use bash variables)
-	{"x","y","z"},
+	-- first option will be prepended by "--", all options will be processes as strings
+	{"bind",loader.path.combine(loader.workdir,"userdata"),"/home"},
+	{"ro-bind",loader.path.combine(sandbox.setup.basedir,"chroot","etc"),"/etc"},
+	{"ro-bind","/bin","/bin"},
+	{"ro-bind","/usr","/usr"},
+	{"ro-bind","/lib","/lib"},
+	{"ro-bind","/lib64","/lib64"},
+	{"dir","/tmp"},
+	{"proc","/proc"},
+	{"dev","/dev"},
+	{"dir",loader.path.combine("/run","user",config.uid)},
+	{"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)},
 }
 
 -- configuration for applications to run inside this sandbox
