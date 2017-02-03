@@ -56,7 +56,13 @@ end
 assert(type(sandbox.bwrap)=="table", "sandbox.bwrap param incorrect")
 for index,field in ipairs(sandbox.bwrap) do
  assert(type(field)=="table", "sandbox.bwrap[" .. index .. "] value is incorrect")
- for mi,mf in ipairs(field) do assert(type(mf)=="string", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect") end
+ for mi,mf in ipairs(field) do
+  if mi==1 then
+   assert(type(mf)=="string", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect")
+  else
+   assert(type(mf)~="table" and type(mf)~="function" and type(mf)~="nil", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect")
+  end
+ end
 end
 
 -- load profile, and perform it's verification

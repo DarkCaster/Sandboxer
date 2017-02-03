@@ -61,26 +61,6 @@ check_errors
 #copy executor binary
 test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "$basedir/executor" || cp "$executor" "$basedir/executor"
 
-bwrap_params=()
-bwrap_param_cnt=0
-
-bwrap_add_param() {
- bwrap_params[$bwrap_param_cnt]="$@"
- bwrap_param_cnt=$((bwrap_param_cnt+1))
-}
-
-#fillup main bwrap parameters
-test "${cfg[sandbox.lockdown.user]}" = "true" && bwrap_add_param "--unshare-user"
-test "${cfg[sandbox.lockdown.ipc]}" = "true" && bwrap_add_param "--unshare-ipc"
-test "${cfg[sandbox.lockdown.pid]}" = "true" && bwrap_add_param "--unshare-pid"
-test "${cfg[sandbox.lockdown.net]}" = "true" && bwrap_add_param "--unshare-net"
-test "${cfg[sandbox.lockdown.uts]}" = "true" && bwrap_add_param "--unshare-uts"
-test "${cfg[sandbox.lockdown.cgroup]}" = "true" && bwrap_add_param "--unshare-cgroup"
-check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_param "${cfg[sandbox.lockdown.uid]}"
-check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
-check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
-#TODO set\unset default env by bwrap
-
 #TODO default chroot construction
 
 #execute custom chroot construction commands
@@ -99,6 +79,30 @@ do
  exec_cmd "$setup_cmd_cnt"
  setup_cmd_cnt=`expr $setup_cmd_cnt + 1`
 done
+
+#fillup main bwrap command line parameters
+
+bwrap_params=()
+bwrap_param_cnt=0
+
+bwrap_add_param() {
+ bwrap_params[$bwrap_param_cnt]="$@"
+ bwrap_param_cnt=$((bwrap_param_cnt+1))
+}
+
+#main parameters
+test "${cfg[sandbox.lockdown.user]}" = "true" && bwrap_add_param "--unshare-user"
+test "${cfg[sandbox.lockdown.ipc]}" = "true" && bwrap_add_param "--unshare-ipc"
+test "${cfg[sandbox.lockdown.pid]}" = "true" && bwrap_add_param "--unshare-pid"
+test "${cfg[sandbox.lockdown.net]}" = "true" && bwrap_add_param "--unshare-net"
+test "${cfg[sandbox.lockdown.uts]}" = "true" && bwrap_add_param "--unshare-uts"
+test "${cfg[sandbox.lockdown.cgroup]}" = "true" && bwrap_add_param "--unshare-cgroup"
+check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_param "${cfg[sandbox.lockdown.uid]}"
+check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
+check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
+#TODO set\unset default env by bwrap
+
+#append remaining parameters from sandbox.bwrap table
 
 #TODO integration
 #TODO features
