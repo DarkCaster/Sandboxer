@@ -119,7 +119,18 @@ do
  bwrap_cmdblk_cnt=`expr $bwrap_cmdblk_cnt + 1`
 done
 
-###eval $lua_export_list_name'=`ls -1 "'"$lua_cache_dir"'"`'
+#append parameters to mount executor binary and control directory
+bwrap_add_param "--dir"
+bwrap_add_param "/executor"
+bwrap_add_param "--ro-bind"
+bwrap_add_param "$basedir/executor"
+bwrap_add_param "/executor/executor"
+bwrap_add_param "--bind"
+bwrap_add_param "$basedir/control"
+bwrap_add_param "/executor/control"
+
+#run bwrap and start executor
+bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" 42
 
 #TODO integration
 #TODO features
