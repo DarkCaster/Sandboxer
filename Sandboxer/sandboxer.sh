@@ -68,16 +68,24 @@ cd "$basedir/chroot"
 check_errors
 
 exec_cmd() {
- local setup_cmd_cnt="$1"
- eval "${cfg[sandbox.setup.custom_commands.$setup_cmd_cnt]}"
- check_errors "custom chroot setup command block #$setup_cmd_cnt was failed!"
+ local setup_cmdgrp_cnt="$1"
+ local setup_cmd_cnt="$2"
+ #debug
+ #echo "exec: ${cfg[sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt]}"
+ eval "${cfg[sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt]}"
+ check_errors "custom chroot setup command #$setup_cmdgrp_cnt.$setup_cmd_cnt was failed!"
 }
 
-setup_cmd_cnt="1"
-while `check_lua_export "sandbox.setup.custom_commands.$setup_cmd_cnt"`
+setup_cmdgrp_cnt="1"
+while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt"`
 do
- exec_cmd "$setup_cmd_cnt"
- setup_cmd_cnt=`expr $setup_cmd_cnt + 1`
+ setup_cmd_cnt="1"
+ while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt"`
+ do
+  exec_cmd "$setup_cmdgrp_cnt" "$setup_cmd_cnt"
+  setup_cmd_cnt=`expr $setup_cmd_cnt + 1`
+ done
+ setup_cmdgrp_cnt=`expr $setup_cmdgrp_cnt + 1`
 done
 
 #fillup main bwrap command line parameters
