@@ -79,58 +79,12 @@ sandbox =
 		-- command-groups are executed by using eval in context of main sandboxer.sh launcher script. so, be careful!
 		-- exit code from command group ($?) is examined, sandboxer.sh will automatically terminate is case of errors ($?!=0)
 		custom_commands = -- optional
-		{	-- TODO: move this to chroot table (above)
-			{
-			'mkdir -p "etc"',
-			'cp -r "/etc/zsh"* "etc"; true',
-			'cp "/etc/yp.conf" "etc"; true',
-			'cp -r "/etc/X11" "etc"; true',
-			'cp "/etc/wgetrc" "etc"; true',
-			'cp "/etc/vimrc" "etc"; true',
-			'cp "/etc/vdpau_wrapper.cfg" "etc"; true',
-			'cp "/etc/termcap" "etc"; true',
-			'cp -r "/etc/security" "etc"; true',
-			'cp "/etc/resolv.conf" "etc"; true',
-			'cp -r "/etc/pulse" "etc"; true',
-			'cp "/etc/profile" "etc"; true',
-			'cp -r "/etc/profile.d" "etc"; true',
-			'cp "/etc/protocols" "etc"; true',
-			'cp "/etc/os-release" "etc"; true',
-			'cp "/etc/nsswitch.conf" "etc"; true',
-			'cp "/etc/nscd.conf" "etc"; true',
-			'cp "/etc/networks" "etc"; true',
-			'rm -f "etc/mtab"; ln -s "/proc/self/mounts" "etc/mtab"',
-			'cp "/etc/mime.types" "etc"; true',
-			'cp "/etc/localtime" "etc"; true',
-			'cp -r "/etc/ld.so"* "etc"; true',
-			'cp "/etc/libao.conf" "etc"; true',
-			'cp "/etc/ksh.kshrc" "etc"; true',
-			'cp "/etc/krb5.conf" "etc"; true',
-			'cp -r "/etc/kde4" "etc"; true',
-			'cp -r "/etc/java" "etc"; true',
-			'cp "/etc/inputrc" "etc"; true',
-			'cp "/etc/host"* "etc"; true',
-			'cp "/etc/HOSTNAME" "etc"; true',
-			'cp "/etc/freshwrapper.conf" "etc"; true',
-			'cp "/etc/ethers" "etc"; true',
-			'cp "/etc/drirc" "etc"; true',
-			'cp "/etc/DIR_COLORS" "etc"; true',
-			'cp "/etc/dialogrc" "etc"; true',
-			'cp "/etc/csh"* "etc"; true',
-			'cp -r "/etc/ca-certificates" "etc"; true',
-			'cp "/etc/asound-pulse.conf" "etc"; true',
-			'cp "/etc/alsa-pulse.conf" "etc"; true',
-			'cp -r "/etc/alternatives" "etc"; true',
-			'cp -r "/etc/alias"* "etc"; true',
-			'cp "/etc/adjtime" "etc"; true',
-			-- passwd and group files generation
-			'getent passwd root nobody > "etc/passwd"',
-			'echo "sandbox:x:'..config.uid..':'..config.gid..':sandbox:/home/sandbox:/bin/bash" >> "etc/passwd"',
-			'getent group root nobody nogroup > "etc/group"',
-			'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
-			-- create directory for persistent userdata
-			'mkdir -p "'..loader.path.combine(loader.workdir,"userdata")..'"',
-			}
+		{
+			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
+			defaults.custom_commands.pwd, -- default commands to generate /etc/passwd and /etc/group files 
+			{ -- create directory for persistent userdata
+				'mkdir -p "'..loader.path.combine(loader.workdir,"userdata")..'"',
+			},
 		},
 
 		-- blacklist for env variables.
