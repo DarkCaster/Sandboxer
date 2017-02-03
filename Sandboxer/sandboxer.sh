@@ -24,7 +24,7 @@ uid=`id -u`
 gid=`id -g`
 
 . "$script_dir/find-lua-helper.bash.in"
-. "$bash_lua_helper" "$config" -e sandbox -e profile -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
+. "$bash_lua_helper" "$config" -e sandbox -e profile -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
 

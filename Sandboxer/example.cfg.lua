@@ -3,7 +3,7 @@
 
 -- example config for sandbox and exec profile
 -- following global identifiers (tables) reserved for system use:
---   loader (used by bash-lua-helper),
+--   loader (used by bash-lua-helper), some helper stuff: loader.workdir - base directory of this config file, loader.path.combine(path1,path2,...) - combine path components
 --   config (defined by sandboxer, store some dynamic configuration parameters for current session)
 --   profile (defined by sandboxer at post-script, will overwrite same define made here)
 --   TODO: default (some sane defaults for current linux distribution to simplify config file creation and improve it's portability across different linux distributions)
