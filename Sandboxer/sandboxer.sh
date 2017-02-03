@@ -95,6 +95,8 @@ bwrap_param_cnt=0
 
 bwrap_add_param() {
  bwrap_params[$bwrap_param_cnt]="$@"
+ #debug
+ #echo "added: $@"
  bwrap_param_cnt=$((bwrap_param_cnt+1))
 }
 
@@ -108,7 +110,40 @@ test "${cfg[sandbox.lockdown.cgroup]}" = "true" && bwrap_add_param "--unshare-cg
 check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_param "${cfg[sandbox.lockdown.uid]}"
 check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
 check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
-#TODO set\unset default env by bwrap
+
+bwrap_env_set_unset() {
+ local env_op="$1"
+ local env_table="$2"
+ local env_blk_cnt="1"
+ while `check_lua_export "$env_table.$env_blk_cnt"`
+ do
+  local env_cmd_cnt="1"
+  while `check_lua_export "$env_table.$env_blk_cnt.$env_cmd_cnt"`
+  do
+   if [ "$env_op" = "unset" ]; then
+    bwrap_add_param "--unsetenv"
+    bwrap_add_param "${cfg[$env_table.$env_blk_cnt.$env_cmd_cnt]}"
+   elif [ "$env_op" = "set" ]; then
+    bwrap_add_param "--setenv"
+    bwrap_add_param "${cfg[$env_table.$env_blk_cnt.$env_cmd_cnt.1]}"
+    bwrap_add_param "${cfg[$env_table.$env_blk_cnt.$env_cmd_cnt.2]}"
+   else
+	log "internal error: unsupported env operation"
+    exit 1
+   fi
+   env_cmd_cnt=`expr $env_cmd_cnt + 1`
+  done
+  env_blk_cnt=`expr $env_blk_cnt + 1`
+ done
+}
+
+#TODO env white list
+
+#unset default env by bwrap
+bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
+
+#set default env by bwrap
+bwrap_env_set_unset "set" "sandbox.setup.env_set"
 
 #append remaining parameters from sandbox.bwrap table
 bwrap_cmdblk_cnt="1"
