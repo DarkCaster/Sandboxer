@@ -71,3 +71,31 @@ defaults.custom_commands.pwd=
 'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
 }
 
+defaults.env={}
+defaults.env.blacklist=
+{
+"DBUS_SESSION_BUS_ADDRESS",
+"DESKTOP_SESSION",
+"FROM_HEADER",
+"GPG_AGENT_INFO",
+"GPG_TTY",
+"INPUTRC",
+"LOGNAME",
+"MAIL",
+"OLDPWD",
+"SESSION_MANAGER",
+"SSH_AGENT_PID",
+"SSH_ASKPASS",
+"SSH_AUTH_SOCK",
+"WINDOWID",
+"XAUTHORITY",
+"XDG_SEAT",
+"XDG_SEAT_PATH",
+}
+
+defaults.env.set=
+{
+ {"HOME","/home/sandbox"},
+ {"PATH","/usr/bin:/bin:/usr/bin/X11"},
+}
+

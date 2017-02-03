@@ -6,7 +6,7 @@
 --   loader (used by bash-lua-helper), some helper stuff: loader.workdir - base directory of this config file, loader.path.combine(path1,path2,...) - combine path components
 --   config (defined by sandboxer, store some dynamic configuration parameters for current session)
 --   profile (defined by sandboxer at post-script, will overwrite same define made here)
---   TODO: default (some sane defaults for current linux distribution to simplify config file creation and improve it's portability across different linux distributions)
+--   defaults (some sane defaults for current linux distribution to simplify config file creation and improve it's portability across different linux distributions. see sandboxer.pre.lua for more info)
 -- try not to redefine this identifiers accidentally (TODO add some more checks)
 
 sandbox =
@@ -91,23 +91,7 @@ sandbox =
 		-- all variables from this list will be unset on start
 		env_blacklist =
 		{
-			"DBUS_SESSION_BUS_ADDRESS",
-			"DESKTOP_SESSION",
-			"FROM_HEADER",
-			"GPG_AGENT_INFO",
-			"GPG_TTY",
-			"INPUTRC",
-			"LOGNAME",
-			"MAIL",
-			"OLDPWD",
-			"SESSION_MANAGER",
-			"SSH_AGENT_PID",
-			"SSH_ASKPASS",
-			"SSH_AUTH_SOCK",
-			"WINDOWID",
-			"XAUTHORITY",
-			"XDG_SEAT",
-			"XDG_SEAT_PATH",
+			defaults.env.blacklist,
 		},
 
 		-- TODO: whitelist for env variables. all env variables not in list will be unset in sandboxed env
@@ -115,9 +99,10 @@ sandbox =
 		{
 		},
 
-		-- set custom env variables
+		-- set custom env variables,
 		env_set =
 		{
+			defaults.env.set,
 		}
 	},
 }

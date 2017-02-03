@@ -1,3 +1,6 @@
+-- load profile
+profile=loadstring("return " .. config.profile)()
+
 -- sandbox table verification
 assert(type(sandbox)=="table", "sandbox param incorrect")
 
@@ -44,13 +47,39 @@ assert(type(sandbox.setup.static_executor)=="nil" or type(sandbox.setup.static_e
 if type(sandbox.setup.static_executor)=="nil" then sandbox.setup.static_executor=false end
 assert(type(sandbox.setup.chroot)=="nil" or type(sandbox.setup.chroot)=="table", "sandbox.setup.chroot param incorrect")
 
+function loader.check_two_level_string_list(target, name)
+ assert(type(target)=="nil" or type(target)=="table", name.." table is incorrect")
+ if type(target)=="table" then
+  for index,field in ipairs(target) do
+   assert(type(field)=="table", name.."[" .. index .. "] subtable is incorrect")
+   for mi,mf in ipairs(field) do
+    assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
+   end
+  end
+ end
+end
+
 -- custom command table
-assert(type(sandbox.setup.custom_commands)=="nil" or type(sandbox.setup.custom_commands)=="table", "sandbox.setup.chroot param incorrect")
-if type(sandbox.setup.custom_commands)=="table" then
- for index,field in ipairs(sandbox.setup.custom_commands) do
-  assert(type(field)=="table", "sandbox.setup.custom_commands[" .. index .. "] value is incorrect")
+loader.check_two_level_string_list(sandbox.setup.custom_commands,"sandbox.setup.custom_commands")
+
+-- env tables
+loader.check_two_level_string_list(sandbox.setup.env_blacklist,"sandbox.setup.env_blacklist")
+loader.check_two_level_string_list(sandbox.setup.env_whitelist,"sandbox.setup.env_whitelist")
+
+-- env set table
+assert(type(sandbox.setup.env_set)=="nil" or type(sandbox.setup.env_set)=="table","sandbox.setup.env_set table is incorrect")
+if type(sandbox.setup.env_set)=="table" then
+ for index,field in ipairs(sandbox.setup.env_set) do
+  assert(type(field)=="table", "sandbox.setup.env_set["..index.."] subtable is incorrect")
   for mi,mf in ipairs(field) do
-   assert(type(mf)=="string", "sandbox.setup.custom_commands["..index.."]["..mi.."] value is incorrect")
+   assert(type(mf)=="table", "sandbox.setup.env_set["..index.."]["..mi.."] value is incorrect")
+   env_idx=0
+   for vi,vf in ipairs(mf) do
+    assert(vi<3,"sandbox.setup.env_set["..index.."]["..mi.."] has incorrect strings count")
+    assert(type(vf)=="string","sandbox.setup.env_set["..index.."]["..mi.."]["..vi.."] value is incorrect")
+    env_idx=env_idx+1
+   end
+   assert(env_idx==2,"sandbox.setup.env_set["..index.."]["..mi.."] has incorrect strings count")
   end
  end
 end
@@ -68,6 +97,4 @@ for index,field in ipairs(sandbox.bwrap) do
  end
 end
 
--- load profile, and perform it's verification
-profile=loadstring("return " .. config.profile)()
 
