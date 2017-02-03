@@ -87,6 +87,7 @@ bwrap_param_cnt=0
 
 bwrap_add_param() {
  bwrap_params[$bwrap_param_cnt]="$@"
+ echo "added: $@"
  bwrap_param_cnt=$((bwrap_param_cnt+1))
 }
 
@@ -103,6 +104,24 @@ check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bw
 #TODO set\unset default env by bwrap
 
 #append remaining parameters from sandbox.bwrap table
+bwrap_cmdblk_cnt="1"
+echo "$cfg_list"
+while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt"`
+do
+ bwrap_cmd_cnt="1"
+ while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt"`
+ do
+  if [ "$bwrap_cmd_cnt" = "1" ]; then
+   bwrap_add_param "${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}"
+  else
+   eval bwrap_add_param '"'${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}'"'
+  fi
+  bwrap_cmd_cnt=`expr $bwrap_cmd_cnt + 1`
+ done
+ bwrap_cmdblk_cnt=`expr $bwrap_cmdblk_cnt + 1`
+done
+
+###eval $lua_export_list_name'=`ls -1 "'"$lua_cache_dir"'"`'
 
 #TODO integration
 #TODO features
