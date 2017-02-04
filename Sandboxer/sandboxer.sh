@@ -50,7 +50,11 @@ basedir="${cfg[sandbox.setup.basedir]}"
 
 #enter lock
 
+###############################
 #check that executor is running
+if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]; then
+
+log "creating sandbox"
 
 #if executor is not running
 
@@ -179,8 +183,28 @@ bwrap_add_param "--bind"
 bwrap_add_param "$basedir/control"
 bwrap_add_param "/executor/control"
 
+log "starting new master executor"
+
 #run bwrap and start executor
 &>"$basedir/control/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" 42 &
+
+log "waiting for control comm-channels to appear"
+
+comm_wait="200"
+while [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]
+do
+ if [ $comm_wait -lt 1 ]; then
+  log "timeout while waiting control channels"
+  exit 1
+ fi
+ sleep 0.05
+ comm_wait=`expr $comm_wait - 1`
+done
+
+#check that executor is running
+###############################
+fi
+
 
 #TODO integration
 #TODO features
