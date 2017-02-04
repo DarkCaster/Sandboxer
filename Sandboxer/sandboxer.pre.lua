@@ -13,8 +13,10 @@ config.gid = loader.extra[9]
 -- TODO: make different defaults-sets optimized for different linux-distributions (maintain it in different config files, included there)
 
 defaults={}
+
 defaults.custom_commands={}
 -- TODO: move this to chroot table (not complete yet)
+
 defaults.custom_commands.etc=
 {
 'mkdir -p "etc"',
@@ -81,7 +83,21 @@ defaults.custom_commands.home=
  true',
 }
 
+-- /run directory. TODO: populate it with some things if needed
+defaults.custom_commands.run=
+{
+'mkdir -p "run"'
+}
+
+-- create xdg runtime directory, inside custom /run dir
+defaults.custom_commands.xdg_runtime=
+{
+'mkdir -p "'..loader.path.combine("run","user",config.uid)..'"',
+'chmod 700 "'..loader.path.combine("run","user",config.uid)..'"',
+}
+
 defaults.env={}
+
 defaults.env.blacklist_main=
 { -- main blacklist, include variables that may leak sensitive information
 -- or will be incorrect inside sandbox because of isolation. (TODO: ability to use subsystems defined by such variables)
@@ -144,6 +160,20 @@ defaults.env.blacklist_home=
 "PROFILEREAD",
 }
 
+defaults.env.blacklist_xdg=
+{ -- blacklist some XDG env variables that may leak some information
+-- recommended to include, especially if your app does not use X11
+"XDG_CURRENT_DESKTOP",
+"XDG_RUNTIME_DIR",
+"XDG_SEAT",
+"XDG_SEAT_PATH",
+"XDG_SESSION_CLASS",
+"XDG_SESSION_DESKTOP",
+"XDG_SESSION_ID",
+"XDG_SESSION_PATH",
+"XDG_SESSION_TYPE",
+}
+
 defaults.env.set_home=
 {
 -- setup user env, essential for normal operation (especially, for shells and scripts)
@@ -158,8 +188,16 @@ defaults.env.set_home=
 }
 
 defaults.bwrap={}
+
 defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid),"/home"}
+
 function defaults.bwrap.etc_mount(basedir)
  return {"ro-bind",loader.path.combine(basedir,"chroot","etc"),"/etc"}
 end
+
+function defaults.bwrap.run_mount(basedir)
+ return {"bind",loader.path.combine(basedir,"chroot","run"),"/run"}
+end
+
+defaults.bwrap.xdg_runtime = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)}
 
