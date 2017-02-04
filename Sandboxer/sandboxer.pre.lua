@@ -118,7 +118,7 @@ defaults.env.blacklist_desktop=
 -- recommended to include if your sandboxed app is console app.
 -- may be safely used with x11 (TODO: wayland) feature (it will define all needed variables automatically),
 -- so, it is recommended to include this blacklist in any case
-"DESKTOP_SESSION"
+"DESKTOP_SESSION",
 "DISPLAY",
 "MATE_DESKTOP_SESSION_ID",
 "SESSION_MANAGER",
@@ -146,12 +146,14 @@ defaults.env.blacklist_home=
 
 defaults.env.set_home=
 {
--- setup user evn, essential for normal operation.
--- use this when defaults.custom_commands.pwd used when constructing sandbox (recommended)
+-- setup user env, essential for normal operation (especially, for shells and scripts)
+-- use this when "defaults.custom_commands.pwd" used when constructing sandbox (recommended)
+-- also define some env variables normally only defined when launching "login" shell
+-- (it is usually overkill for sandbox and it may also expose some unneded env variables unset earlier by blacklist feature)
  {"HOME","/home/sandbox"},
  {"PATH","/usr/bin:/bin:/usr/bin/X11"},
  {"USER","sandbox"},
- --{"INPUTRC","/home/sandbox/.inputrc"},
+ {"INPUTRC","/home/sandbox/.inputrc"},
  {"LOGNAME","sandbox"}
 }
 
