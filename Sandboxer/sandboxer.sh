@@ -36,19 +36,52 @@ log () {
  echo "[ $@ ]"
 }
 
+basedir="${cfg[sandbox.setup.basedir]}"
+
+lock_entered="false"
+
+lock_enter() {
+ local nowait="$1"
+ if mkdir "$basedir/executor.lock" 2>/dev/null; then
+  lock_entered="true"
+  return 0
+ else
+  test ! -z "$nowait" && return 1
+  log "awaiting lock release"
+  while ! lock_enter "nowait"; do
+   sleep 1
+  done
+  lock_entered="true"
+  return 0
+ fi
+}
+
+lock_exit() {
+ if [ "$lock_entered" = "true" ]; then
+  rmdir "$basedir/executor.lock" 2>/dev/null
+  lock_entered="false"
+ fi
+ true
+}
+
+teardown() {
+ local status="$1"
+ lock_exit
+ exit $status
+}
+
 check_errors () {
  local status="$?"
  local msg="$@"
  if [ "$status" != "0" ]; then
   log "ERROR: operation finished with error code $status"
   test ! -z "$msg" && log "$msg"
-  exit $status
+  teardown "$status"
  fi
 }
 
-basedir="${cfg[sandbox.setup.basedir]}"
-
 #enter lock
+lock_enter
 
 ###############################
 #check that executor is running
@@ -140,7 +173,7 @@ bwrap_env_set_unset() {
     bwrap_add_param "${cfg[$env_table.$env_blk_cnt.$env_cmd_cnt.2]}"
    else
 	log "internal error: unsupported env operation"
-    exit 1
+    teardown 1
    fi
    env_cmd_cnt=`expr $env_cmd_cnt + 1`
   done
@@ -185,6 +218,8 @@ bwrap_add_param "/executor/control"
 
 log "starting new master executor"
 
+#TODO: custom security key (42 for now)
+
 #run bwrap and start executor
 &>"$basedir/control/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" 42 &
 
@@ -195,7 +230,7 @@ while [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control
 do
  if [ $comm_wait -lt 1 ]; then
   log "timeout while waiting control channels"
-  exit 1
+  teardown 1
  fi
  sleep 0.05
  comm_wait=`expr $comm_wait - 1`
@@ -205,6 +240,18 @@ done
 ###############################
 fi
 
+#create new executor's sub-session inside sandbox and get new control channel name
+
+#TODO: custom session name
+
+channel=`2>/dev/null "$commander" "$basedir/control" control 42 0`
+
+test -z "$channel" && log "failed to create new session to run selected exec-profile" && teardown 1
+
+#exit lock
+lock_exit
+
+log "running exec-profile $profile, using control channel $channel"
 
 #TODO integration
 #TODO features
