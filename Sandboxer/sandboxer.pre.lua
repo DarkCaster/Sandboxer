@@ -82,32 +82,77 @@ defaults.custom_commands.home=
 }
 
 defaults.env={}
-defaults.env.blacklist=
-{
+defaults.env.blacklist_main=
+{ -- main blacklist, include variables that may leak sensitive information
+-- or will be incorrect inside sandbox because of isolation. (TODO: ability to use subsystems defined by such variables)
+-- this list does not include variables for current X11 session and DE,
+-- does not include variables regad
 "DBUS_SESSION_BUS_ADDRESS",
-"DESKTOP_SESSION",
 "FROM_HEADER",
 "GPG_AGENT_INFO",
 "GPG_TTY",
-"INPUTRC",
-"LOGNAME",
 "MAIL",
 "OLDPWD",
-"SESSION_MANAGER",
+"SHELL",
+"SHLVL",
 "SSH_AGENT_PID",
 "SSH_ASKPASS",
 "SSH_AUTH_SOCK",
 "WINDOWID",
-"XAUTHORITY",
-"XDG_SEAT",
-"XDG_SEAT_PATH",
+"TERM",
 }
 
-defaults.env.set=
+defaults.env.blacklist_audio=
+{ -- blacklist that include variables used to alsa\pulse env setup,
+-- recommended to include if your sandboxed app is not using audio.
+-- may be safely used with pulseaudio feature (it will define all needed variables automatically),
+-- so, it is recommended to include this blacklist in any case
+"ALSA_CONFIG_PATH",
+"AUDIODRIVER",
+"QEMU_AUDIO_DRV",
+"SDL_AUDIODRIVER",
+}
+
+defaults.env.blacklist_desktop=
+{ -- blacklist that include variables set\used by X11 (TODO: wayland?) and DE.
+-- recommended to include if your sandboxed app is console app.
+-- may be safely used with x11 (TODO: wayland) feature (it will define all needed variables automatically),
+-- so, it is recommended to include this blacklist in any case
+"DESKTOP_SESSION"
+"DISPLAY",
+"MATE_DESKTOP_SESSION_ID",
+"SESSION_MANAGER",
+"VDPAU_DRIVER",
+"WINDOWMANAGER",
+"XAUTHLOCALHOSTNAME",
+"XAUTHORITY",
+"XCURSOR_THEME",
+"XKEYSYMDB",
+"XMODIFIERS",
+"XNLSPATH",
+"XSESSION_IS_UP",
+}
+
+defaults.env.blacklist_home=
+{ -- blacklist, that include some variables related to currently logged-in user env
+-- use with caution, may brake things if some of this variables not set
+"HOME",
+"PATH",
+"USER",
+"INPUTRC",
+"LOGNAME",
+"PROFILEREAD",
+}
+
+defaults.env.set_home=
 {
+-- setup user evn, essential for normal operation.
+-- use this when defaults.custom_commands.pwd used when constructing sandbox (recommended)
  {"HOME","/home/sandbox"},
  {"PATH","/usr/bin:/bin:/usr/bin/X11"},
  {"USER","sandbox"},
+ --{"INPUTRC","/home/sandbox/.inputrc"},
+ {"LOGNAME","sandbox"}
 }
 
 defaults.bwrap={}
