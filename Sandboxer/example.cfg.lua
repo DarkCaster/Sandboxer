@@ -82,9 +82,7 @@ sandbox =
 		{
 			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
 			defaults.custom_commands.pwd, -- default commands to generate /etc/passwd and /etc/group files 
-			{ -- create directory for persistent userdata
-				'mkdir -p "'..loader.path.combine(loader.workdir,"userdata")..'"',
-			},
+			defaults.custom_commands.home, -- create userdata directory at directory
 		},
 
 		-- blacklist for env variables.
@@ -113,8 +111,8 @@ sandbox =
 sandbox.bwrap =
 {
 	-- first option will be prepended by "--", all options will be processes as strings
-	{"bind",loader.path.combine(loader.workdir,"userdata"),"/home"},
-	{"ro-bind",loader.path.combine(sandbox.setup.basedir,"chroot","etc"),"/etc"},
+	defaults.bwrap.home_mount,
+	defaults.bwrap.etc_mount(sandbox.setup.basedir),
 	{"ro-bind","/bin","/bin"},
 	{"ro-bind","/usr","/usr"},
 	{"ro-bind","/lib","/lib"},

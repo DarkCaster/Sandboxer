@@ -71,6 +71,14 @@ defaults.custom_commands.pwd=
 'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
 }
 
+defaults.custom_commands.home=
+{
+'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)..'"',
+'test ! -d "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox")..'" && \
+ 2>/dev/null cp -rf /etc/skel "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox")..'" || \
+ true',
+}
+
 defaults.env={}
 defaults.env.blacklist=
 {
@@ -98,4 +106,10 @@ defaults.env.set=
  {"HOME","/home/sandbox"},
  {"PATH","/usr/bin:/bin:/usr/bin/X11"},
 }
+
+defaults.bwrap={}
+defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid),"/home"}
+function defaults.bwrap.etc_mount(basedir)
+ return {"ro-bind",loader.path.combine(basedir,"chroot","etc"),"/etc"}
+end
 
