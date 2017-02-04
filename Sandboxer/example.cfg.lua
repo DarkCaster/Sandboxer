@@ -81,8 +81,10 @@ sandbox =
 		custom_commands = -- optional
 		{
 			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
-			defaults.custom_commands.pwd, -- default commands to generate /etc/passwd and /etc/group files 
-			defaults.custom_commands.home, -- create userdata directory at directory
+			defaults.custom_commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
+			defaults.custom_commands.home, -- create userdata directory at this config file directory, if missing
+			defaults.custom_commands.run, -- create run directory inside sandbox
+			defaults.custom_commands.xdg_runtime, -- create xdg_runtime directory inside sandbox
 		},
 
 		-- blacklist for env variables.
@@ -93,6 +95,7 @@ sandbox =
 			defaults.env.blacklist_audio,
 			defaults.env.blacklist_desktop,
 			defaults.env.blacklist_home,
+			defaults.env.blacklist_xdg,
 		},
 
 		-- TODO: whitelist for env variables. all env variables not in list will be unset in sandboxed env
@@ -118,6 +121,8 @@ sandbox.bwrap =
 	-- first option will be prepended by "--", all options will be processes as strings
 	defaults.bwrap.home_mount,
 	defaults.bwrap.etc_mount(sandbox.setup.basedir),
+	defaults.bwrap.run_mount(sandbox.setup.basedir),
+	defaults.bwrap.xdg_runtime,
 	{"ro-bind","/bin","/bin"},
 	{"ro-bind","/usr","/usr"},
 	{"ro-bind","/lib","/lib"},
@@ -125,8 +130,6 @@ sandbox.bwrap =
 	{"dir","/tmp"},
 	{"proc","/proc"},
 	{"dev","/dev"},
-	{"dir",loader.path.combine("/run","user",config.uid)},
-	{"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)},
 }
 
 -- configuration for applications to run inside this sandbox
