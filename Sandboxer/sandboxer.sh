@@ -48,6 +48,12 @@ check_errors () {
 
 basedir="${cfg[sandbox.setup.basedir]}"
 
+#enter lock
+
+#check that executor is running
+
+#if executor is not running
+
 #construct control directory
 mkdir -p "$basedir"
 check_errors
@@ -174,7 +180,7 @@ bwrap_add_param "$basedir/control"
 bwrap_add_param "/executor/control"
 
 #run bwrap and start executor
-bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" 42
+&>"$basedir/control/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" 42 &
 
 #TODO integration
 #TODO features
