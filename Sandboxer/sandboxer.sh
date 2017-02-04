@@ -101,6 +101,7 @@ bwrap_add_param() {
 }
 
 #main parameters
+bwrap_add_param "--new-session"
 test "${cfg[sandbox.lockdown.user]}" = "true" && bwrap_add_param "--unshare-user"
 test "${cfg[sandbox.lockdown.ipc]}" = "true" && bwrap_add_param "--unshare-ipc"
 test "${cfg[sandbox.lockdown.pid]}" = "true" && bwrap_add_param "--unshare-pid"
