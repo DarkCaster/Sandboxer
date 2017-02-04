@@ -54,6 +54,8 @@ defaults.custom_commands.etc=
 'cp "/etc/dialogrc" "etc"; true',
 'cp "/etc/csh"* "etc"; true',
 'cp -r "/etc/ca-certificates" "etc"; true',
+'cp -r "/etc/bash"* "etc"; true',
+'cp -r "/etc/mc" "etc"; true',
 'cp "/etc/asound-pulse.conf" "etc"; true',
 'cp "/etc/alsa-pulse.conf" "etc"; true',
 'cp -r "/etc/alternatives" "etc"; true',
@@ -105,6 +107,7 @@ defaults.env.set=
 {
  {"HOME","/home/sandbox"},
  {"PATH","/usr/bin:/bin:/usr/bin/X11"},
+ {"USER","sandbox"},
 }
 
 defaults.bwrap={}
