@@ -89,18 +89,23 @@ sandbox =
 		-- all variables from this list will be unset on start
 		env_blacklist =
 		{
-			defaults.env.blacklist,
+			defaults.env.blacklist_main,
+			defaults.env.blacklist_audio,
+			defaults.env.blacklist_desktop,
+			defaults.env.blacklist_home,
 		},
 
 		-- TODO: whitelist for env variables. all env variables not in list will be unset in sandboxed env
-		env_whitelist =
-		{
-		},
+		-- opposite to blacklist, blacklist processing will be skipped if env_whitelist is defined (even if it is empty!)
+		--
+		--env_whitelist =
+		--{
+		--},
 
 		-- set custom env variables,
 		env_set =
 		{
-			defaults.env.set,
+			defaults.env.set_home,
 		}
 	},
 }
