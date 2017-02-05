@@ -141,6 +141,6 @@ end
 end
 
 loader.check_profile(profile,config.profile)
-loader.check_profile(dbus,config.profile)
-loader.check_profile(pulse,config.profile)
+loader.check_profile(dbus,"dbus")
+loader.check_profile(pulse,"pulse")
 
