@@ -28,20 +28,14 @@ sandbox =
 		-- hostname=sandbox, -- not set by default, will not be set at all if missing
 	},
 
-	-- integration options.
-	-- allow applications inside sandbox to use some features from host user session
-	-- missing options will be filled by default values listed below
-	integration =
-	{
-		pulse=true, -- TODO
-		x11=true, -- TODO
-	},
-
-	-- sandbox features
-	-- some service features or subsystems that applications may use inside sandbox
-	-- missing options will be set to default values listed below
+	-- sandbox features and integration options.
+	-- enable\disable some service features or subsystems that applications may use inside sandbox.
+	-- some features enables communication with non-sandboxed host components.
+	-- missing options will be set to default values listed below.
 	features =
 	{
+		pulse=false, -- TODO
+		x11=false, -- TODO
 		dbus=true, -- TODO
 	},
 

@@ -34,19 +34,18 @@ if type(sandbox.lockdown.uid)=="number" then sandbox.lockdown.user=true end
 if type(sandbox.lockdown.gid)=="number" then sandbox.lockdown.user=true end
 if type(sandbox.lockdown.hostname)=="string" then sandbox.lockdown.uts=true end
 
--- integration table
-assert(type(sandbox.integration)=="nil" or type(sandbox.integration)=="table", "sandbox.integration param incorrect")
-if type(sandbox.integration)=="nil" then sandbox.integration={} end
-assert(type(sandbox.integration.pulse)=="nil" or type(sandbox.integration.pulse)=="boolean", "sandbox.integration.pulse param incorrect")
-assert(type(sandbox.integration.x11)=="nil" or type(sandbox.integration.x11)=="boolean", "sandbox.integration.x11 param incorrect")
-if type(sandbox.integration.pulse)=="nil" then sandbox.integration.pulse=true end
-if type(sandbox.integration.x11)=="nil" then sandbox.integration.x11=true end
-
 -- features table
 assert(type(sandbox.features)=="nil" or type(sandbox.features)=="table", "sandbox.features param incorrect")
 if type(sandbox.features)=="nil" then sandbox.features={} end
+
 assert(type(sandbox.features.dbus)=="nil" or type(sandbox.features.dbus)=="boolean", "sandbox.features.dbus param incorrect")
 if type(sandbox.features.dbus)=="nil" then sandbox.features.dbus=true end
+
+assert(type(sandbox.features.pulse)=="nil" or type(sandbox.features.pulse)=="boolean", "sandbox.features.pulse param incorrect")
+if type(sandbox.features.pulse)=="nil" then sandbox.features.pulse=false end
+
+assert(type(sandbox.features.x11)=="nil" or type(sandbox.features.x11)=="boolean", "sandbox.features.x11 param incorrect")
+if type(sandbox.features.x11)=="nil" then sandbox.features.x11=false end
 
 -- setup table
 assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")
