@@ -24,7 +24,7 @@ uid=`id -u`
 gid=`id -g`
 
 . "$script_dir/find-lua-helper.bash.in"
-. "$bash_lua_helper" "$config" -e sandbox -e profile -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
+. "$bash_lua_helper" "$config" -e sandbox -e profile -e dbus -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
 
@@ -240,6 +240,9 @@ done
 ###############################
 fi
 
+#TODO integration
+#TODO features
+
 #create new executor's sub-session inside sandbox and get new control channel name
 
 #TODO: custom session name
@@ -253,5 +256,5 @@ lock_exit
 
 log "running exec-profile $profile, using control channel $channel"
 
-#TODO integration
-#TODO features
+#start selected exec profile
+
