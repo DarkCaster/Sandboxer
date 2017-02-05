@@ -57,8 +57,10 @@ assert(type(sandbox.setup.chroot)=="nil" or type(sandbox.setup.chroot)=="table",
 
 function loader.check_one_level_string_list(target, name)
  assert(type(target)=="nil" or type(target)=="table", name.." table is incorrect")
- for index,field in ipairs(target) do
-  assert(type(field)=="string", name.."[".. index .."] value is incorrect")
+ if type(target)=="table" then
+  for index,field in ipairs(target) do
+   assert(type(field)=="string", name.."[".. index .."] value is incorrect")
+  end
  end
 end
 
