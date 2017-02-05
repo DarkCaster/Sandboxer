@@ -117,3 +117,14 @@ if type(profile.attach)=="nil" then profile.attach=false end
 assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", "profile.pty value is incorrect or missing")
 if type(profile.pty)=="nil" then profile.pty=false end
 
+-- start command
+if profile.attach==true and profile.pty==false then
+ profile.start_opcode=100
+elseif profile.attach==false and profile.pty==false then
+ profile.start_opcode=101
+elseif profile.attach==true and profile.pty==true then
+ profile.start_opcode=200
+elseif profile.attach==false and profile.pty==true then
+ profile.start_opcode=201
+end
+
