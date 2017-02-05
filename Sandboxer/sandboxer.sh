@@ -84,6 +84,14 @@ check_errors () {
  fi
 }
 
+exec_cmd() {
+ local cmd_path="$1"
+ #debug
+ #echo "exec: ${cfg[$cmd_path]}"
+ eval "${cfg[$cmd_path]}"
+ check_errors "chroot setup command $cmd_path was failed!"
+}
+
 #enter lock
 lock_enter
 
@@ -94,7 +102,6 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
 log "creating sandbox"
 
 #if executor is not running
-
 mkdir -p "$basedir/chroot"
 check_errors
 
@@ -110,22 +117,13 @@ test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "
 cd "$basedir/chroot"
 check_errors
 
-exec_cmd() {
- local setup_cmdgrp_cnt="$1"
- local setup_cmd_cnt="$2"
- #debug
- #echo "exec: ${cfg[sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt]}"
- eval "${cfg[sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt]}"
- check_errors "custom chroot setup command #$setup_cmdgrp_cnt.$setup_cmd_cnt was failed!"
-}
-
 setup_cmdgrp_cnt="1"
 while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt"`
 do
  setup_cmd_cnt="1"
  while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt"`
  do
-  exec_cmd "$setup_cmdgrp_cnt" "$setup_cmd_cnt"
+  exec_cmd "sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt"
   setup_cmd_cnt=`expr $setup_cmd_cnt + 1`
  done
  setup_cmdgrp_cnt=`expr $setup_cmdgrp_cnt + 1`
