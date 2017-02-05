@@ -239,3 +239,23 @@ end
 
 defaults.bwrap.xdg_runtime = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)}
 
+-- define service profiles
+
+dbus =
+{
+	exec="/bin/false", -- TODO
+	path="/",
+	term_signal=defaults.signals.SIGTERM,
+	attach=false,
+	pty=false,
+}
+
+pulse =
+{
+	exec="/bin/false", -- TODO
+	path="/",
+	term_signal=defaults.signals.SIGTERM,
+	attach=false,
+	pty=false,
+}
+
