@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# clear internal variable
+channel=""
+
+if [ "${cfg[$exec_profile.exclusive]}" = "true" ]; then
+ test "$exec_profile" = "profile" && req_channel="$profile" || req_channel="$exec_profile"
+ if [ -p "$basedir/control/$req_channel.in" ] || [ -p "$basedir/control/$req_channel.out" ]; then
+  log "exclusive exec-profile $req_channel already running"
+  teardown 1
+ fi
+else
+ req_channel=""
+fi
+
+channel=`2>/dev/null "$commander" "$basedir/control" control 42 0 "$req_channel"`
+test -z "$channel" && log "failed to create new session to run selected exec-profile" && teardown 1
+
