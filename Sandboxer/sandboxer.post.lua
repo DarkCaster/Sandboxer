@@ -1,3 +1,11 @@
+assert(config.profile~="dbus" and
+ config.profile~="pulse" and
+ config.profile~="profile" and
+ config.profile~="loader" and
+ config.profile~="config" and
+ config.profile~="defaults",
+ "cannot use service table name as profile: "..config.profile)
+
 -- load profile
 profile=loadstring("return " .. config.profile)()
 
@@ -105,19 +113,21 @@ for index,field in ipairs(sandbox.bwrap) do
 end
 
 -- check profile
-assert(type(profile)=="table", "profile is incorrect")
-assert(type(profile.exec)=="string", "profile.exec value is incorrect or missing")
-assert(type(profile.path)=="string" or type(profile.path)=="nil", "profile.path value is incorrect or missing")
-loader.check_one_level_string_list(profile.args,"profile.args")
-loader.check_one_level_string_list(profile.env_unset,"profile.env_unset")
-loader.check_two_level_string_list(profile.env_set,"profile.env_set")
-assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", "profile.term_signal value is incorrect or missing")
-assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", "profile.attach value is incorrect or missing")
+function loader.check_profile(profile, name)
+
+assert(type(profile)=="table", name.." profile is incorrect")
+assert(type(profile.exec)=="string", name..".exec value is incorrect or missing")
+assert(type(profile.path)=="string" or type(profile.path)=="nil", name..".path value is incorrect or missing")
+loader.check_one_level_string_list(profile.args, name..".args")
+loader.check_one_level_string_list(profile.env_unset, name..".env_unset")
+loader.check_two_level_string_list(profile.env_set, name..".env_set")
+assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", name..".term_signal value is incorrect or missing")
+assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", name..".attach value is incorrect or missing")
 if type(profile.attach)=="nil" then profile.attach=false end
-assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", "profile.pty value is incorrect or missing")
+assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", name..".pty value is incorrect or missing")
 if type(profile.pty)=="nil" then profile.pty=false end
 
--- start command
+-- start command opcode
 if profile.attach==true and profile.pty==false then
  profile.start_opcode=100
 elseif profile.attach==false and profile.pty==false then
@@ -127,4 +137,10 @@ elseif profile.attach==true and profile.pty==true then
 elseif profile.attach==false and profile.pty==true then
  profile.start_opcode=201
 end
+
+end
+
+loader.check_profile(profile,config.profile)
+loader.check_profile(dbus,config.profile)
+loader.check_profile(pulse,config.profile)
 
