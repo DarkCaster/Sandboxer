@@ -243,19 +243,21 @@ defaults.bwrap.xdg_runtime = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/r
 
 dbus =
 {
-	exec="/bin/false", -- TODO
-	path="/",
-	term_signal=defaults.signals.SIGTERM,
-	attach=false,
-	pty=false,
+exec="/bin/false", -- TODO
+path="/",
+term_signal=defaults.signals.SIGTERM,
+attach=false,
+pty=false,
+exclusive=true,
 }
 
 pulse =
 {
-	exec="/bin/false", -- TODO
-	path="/",
-	term_signal=defaults.signals.SIGTERM,
-	attach=false,
-	pty=false,
+exec="/bin/false", -- TODO
+path="/",
+term_signal=defaults.signals.SIGTERM,
+attach=false,
+pty=false,
+exclusive=true,
 }
 

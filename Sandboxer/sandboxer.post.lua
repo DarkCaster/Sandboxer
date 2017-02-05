@@ -116,30 +116,29 @@ end
 
 -- check profile
 function loader.check_profile(profile, name)
-
-assert(type(profile)=="table", name.." profile is incorrect")
-assert(type(profile.exec)=="string", name..".exec value is incorrect or missing")
-assert(type(profile.path)=="string" or type(profile.path)=="nil", name..".path value is incorrect or missing")
-loader.check_one_level_string_list(profile.args, name..".args")
-loader.check_one_level_string_list(profile.env_unset, name..".env_unset")
-loader.check_two_level_string_list(profile.env_set, name..".env_set")
-assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", name..".term_signal value is incorrect or missing")
-assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", name..".attach value is incorrect or missing")
-if type(profile.attach)=="nil" then profile.attach=false end
-assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", name..".pty value is incorrect or missing")
-if type(profile.pty)=="nil" then profile.pty=false end
-
--- start command opcode
-if profile.attach==true and profile.pty==false then
- profile.start_opcode=100
-elseif profile.attach==false and profile.pty==false then
- profile.start_opcode=101
-elseif profile.attach==true and profile.pty==true then
- profile.start_opcode=200
-elseif profile.attach==false and profile.pty==true then
- profile.start_opcode=201
-end
-
+ assert(type(profile)=="table", name.." profile is incorrect")
+ assert(type(profile.exec)=="string", name..".exec value is incorrect or missing")
+ assert(type(profile.path)=="string" or type(profile.path)=="nil", name..".path value is incorrect or missing")
+ loader.check_one_level_string_list(profile.args, name..".args")
+ loader.check_one_level_string_list(profile.env_unset, name..".env_unset")
+ loader.check_two_level_string_list(profile.env_set, name..".env_set")
+ assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", name..".term_signal value is incorrect or missing")
+ assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", name..".attach value is incorrect or missing")
+ if type(profile.attach)=="nil" then profile.attach=false end
+ assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", name..".pty value is incorrect or missing")
+ if type(profile.pty)=="nil" then profile.pty=false end
+ assert(type(profile.exclusive)=="boolean" or type(profile.exclusive)=="nil", name..".exclusive value is incorrect or missing")
+ if type(profile.exclusive)=="nil" then profile.exclusive=false end
+ -- start command opcode
+ if profile.attach==true and profile.pty==false then
+  profile.start_opcode=100
+ elseif profile.attach==false and profile.pty==false then
+  profile.start_opcode=101
+ elseif profile.attach==true and profile.pty==true then
+  profile.start_opcode=200
+ elseif profile.attach==false and profile.pty==true then
+  profile.start_opcode=201
+ end
 end
 
 loader.check_profile(profile,config.profile)
