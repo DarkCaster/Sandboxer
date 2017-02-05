@@ -61,6 +61,10 @@ sandbox =
 		-- it will be automatically removed when all processes inside sandbox terminated.
 		basedir=config.ctldir, -- mandatory
 
+		-- security key used in hash calculation process for all communications between sandbox and host
+		-- for now it is just a 32-bit unsigned number, it may change in future
+		security_key=42,  -- optional
+
 		-- use static build of executor binary. may be useful for use in very restrictive, minimalistic or other custom chroots
 		static_executor=false, -- optional, will be set automatically to false if missing.
 

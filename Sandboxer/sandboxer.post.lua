@@ -51,8 +51,13 @@ if type(sandbox.features.dbus)=="nil" then sandbox.features.dbus=true end
 -- setup table
 assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")
 assert(type(sandbox.setup.basedir)=="string", "sandbox.setup.basedir param incorrect")
+
 assert(type(sandbox.setup.static_executor)=="nil" or type(sandbox.setup.static_executor)=="boolean", "sandbox.setup.static_executor param incorrect")
 if type(sandbox.setup.static_executor)=="nil" then sandbox.setup.static_executor=false end
+
+assert(type(sandbox.setup.security_key)=="nil" or type(sandbox.setup.security_key)=="number", "sandbox.setup.security_key param incorrect")
+if type(sandbox.setup.security_key)=="nil" then sandbox.setup.security_key=42 end
+
 assert(type(sandbox.setup.chroot)=="nil" or type(sandbox.setup.chroot)=="table", "sandbox.setup.chroot param incorrect")
 
 function loader.check_one_level_string_list(target, name)
