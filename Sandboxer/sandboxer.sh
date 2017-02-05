@@ -38,6 +38,10 @@ log () {
 
 basedir="${cfg[sandbox.setup.basedir]}"
 
+#construct control directory if not exist, needed for lock
+mkdir -p "$basedir"
+test "$?" != "0" && log "error creating basedir at $basedir" && exit 1
+
 lock_entered="false"
 
 lock_enter() {
@@ -90,10 +94,6 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
 log "creating sandbox"
 
 #if executor is not running
-
-#construct control directory
-mkdir -p "$basedir"
-check_errors
 
 mkdir -p "$basedir/chroot"
 check_errors
