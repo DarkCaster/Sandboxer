@@ -47,6 +47,13 @@ assert(type(sandbox.setup.static_executor)=="nil" or type(sandbox.setup.static_e
 if type(sandbox.setup.static_executor)=="nil" then sandbox.setup.static_executor=false end
 assert(type(sandbox.setup.chroot)=="nil" or type(sandbox.setup.chroot)=="table", "sandbox.setup.chroot param incorrect")
 
+function loader.check_one_level_string_list(target, name)
+ assert(type(target)=="nil" or type(target)=="table", name.." table is incorrect")
+ for index,field in ipairs(target) do
+  assert(type(field)=="string", name.."[".. index .."] value is incorrect")
+ end
+end
+
 function loader.check_two_level_string_list(target, name)
  assert(type(target)=="nil" or type(target)=="table", name.." table is incorrect")
  if type(target)=="table" then
@@ -97,4 +104,16 @@ for index,field in ipairs(sandbox.bwrap) do
  end
 end
 
+-- check profile
+assert(type(profile)=="table", "profile is incorrect")
+assert(type(profile.exec)=="string", "profile.exec value is incorrect or missing")
+assert(type(profile.path)=="string" or type(profile.path)=="nil", "profile.path value is incorrect or missing")
+loader.check_one_level_string_list(profile.args,"profile.args")
+loader.check_one_level_string_list(profile.env_unset,"profile.env_unset")
+loader.check_two_level_string_list(profile.env_set,"profile.env_set")
+assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", "profile.term_signal value is incorrect or missing")
+assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", "profile.attach value is incorrect or missing")
+if type(profile.attach)=="nil" then profile.attach=false end
+assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", "profile.pty value is incorrect or missing")
+if type(profile.pty)=="nil" then profile.pty=false end
 
