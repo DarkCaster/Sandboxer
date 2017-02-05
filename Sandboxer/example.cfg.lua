@@ -7,6 +7,8 @@
 --   config (defined by sandboxer, store some dynamic configuration parameters for current session)
 --   profile (defined by sandboxer at post-script, will overwrite same define made here)
 --   defaults (some sane defaults for current linux distribution to simplify config file creation and improve it's portability across different linux distributions. see sandboxer.pre.lua for more info)
+--   dbus (internal profile for dbus feature support)
+--   pulse (internal profile for pulseaudio feature support)
 -- try not to redefine this identifiers accidentally (TODO add some more checks)
 
 sandbox =
