@@ -247,8 +247,25 @@ fi
 
 #TODO: custom session name
 
-channel=`2>/dev/null "$commander" "$basedir/control" control 42 0`
+#TODO: move channel-open logic to separate include-script, to simplify usage with features that require launching service binaries before launching anything else 
 
+# profile - main selected profile, may be also service profiles - dbus, pulse
+exec_profile="profile"
+# profile name for exclusive mode
+exec_profile_name="$profile"
+# clean internal variables
+req_channel=""
+channel=""
+
+if [ "${cfg[$exec_profile.exclusive]}" = "true" ]; then
+ req_channel="$exec_profile_name"
+ if [ -p "$basedir/control/$req_channel.in" ] || [ -p "$basedir/control/$req_channel.out" ]; then
+  log "exclusive exec-profile $exec_profile_name already running"
+  teardown 1
+ fi
+fi
+
+channel=`2>/dev/null "$commander" "$basedir/control" control 42 0 "$req_channel"`
 test -z "$channel" && log "failed to create new session to run selected exec-profile" && teardown 1
 
 #exit lock
