@@ -133,8 +133,21 @@ sandbox.bwrap =
 }
 
 -- configuration for applications to run inside this sandbox
+-- must be a table with any name that is not already defined for service needs (see this list at the top of this file)
+-- some parameters are mandatory, some is optional
 
 shell =
 {
-
+	exec="/bin/bash", -- mandatory, absolute path to binary inside sandbox
+	path="/", -- optional, chdir to this directory inside sandbox before exec
+	args=loader.args, -- optional, argument-list for launched binary inside sandbox. loader.args table contain extra arguments appended to sandboxer.sh
+	env_unset={"TERM"}, -- optional, variables list to unset
+	env_set= -- optional, variables list to set
+	{
+		{"TERM",os.getenv("TERM")},
+	},
+	term_signal=defaults.signals.SIGHUP, -- optional, number. signal, to gracefully terminate binary. will be sent to binary and all other processes from it's session (childs)
+	attach=true, -- optional, default value is false. if true - start in attached mode, commander module and sandboxer.sh script will not terminate and it will link stdin\stdout from sandboxed process and current terminal, so user can control running application.
+	pty=true, -- optional, default value is false. allocate new pty to executor process in sandbox and target process. useful to run interactive shells inside sandbox. 
 }
+
