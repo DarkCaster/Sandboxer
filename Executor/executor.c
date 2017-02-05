@@ -1242,7 +1242,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
             {
                 CMDHDR cmd;
                 cmd=cmdhdr_read(data_buf,0);
-                if(cmd.cmd_type!=150 && cmd.cmd_type!=253 && cmd.cmd_type!=252)
+                if(cmd.cmd_type!=150 && cmd.cmd_type!=253 && cmd.cmd_type!=252 && cmd.cmd_type!=251)
                 {
                     log_message(logger,LOG_WARNING,"Commander gone offline, disposing all stdout and stderr from child process");
                     comm_alive=0;
@@ -1287,6 +1287,12 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
                                 log_message(logger,LOG_INFO,"Terminal size update requested to %ix%i",LI(term_size.ws_col),LI(term_size.ws_row));
                         }
                         in_len=0;
+                    }
+                    else if(cmd.cmd_type==251)
+                    {
+                        log_message(logger,LOG_INFO,"Commander gone offline");
+                        in_len=0;
+                        comm_alive=0;
                     }
                 }
             }
