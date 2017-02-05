@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#set binary name
+2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 1 "${cfg[$exec_profile.exec]}"
+check_errors
+
+
+

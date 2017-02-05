@@ -243,8 +243,6 @@ fi
 
 #create new executor's sub-session inside sandbox and get new control channel name
 
-#TODO: move channel-open logic to separate include-script, to simplify usage with features that require launching service binaries before launching anything else 
-
 # profile - main selected profile, may be also service profiles - dbus, pulse
 exec_profile="profile"
 . "$script_dir/channel-open.sh.in"
@@ -255,4 +253,5 @@ lock_exit
 log "running exec-profile $profile, using control channel $channel"
 
 #start selected exec profile
+. "$script_dir/run-profile.sh.in"
 
