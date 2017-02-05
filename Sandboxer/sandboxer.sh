@@ -218,10 +218,8 @@ bwrap_add_param "/executor/control"
 
 log "starting new master executor"
 
-#TODO: custom security key (42 for now)
-
 #run bwrap and start executor
-&>"$basedir/control/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" 42 &
+&>"$basedir/control/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}" &
 
 log "waiting for control comm-channels to appear"
 

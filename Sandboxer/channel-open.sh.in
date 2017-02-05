@@ -13,6 +13,6 @@ else
  req_channel=""
 fi
 
-channel=`2>/dev/null "$commander" "$basedir/control" control 42 0 "$req_channel"`
+channel=`2>/dev/null "$commander" "$basedir/control" control "${cfg[sandbox.setup.security_key]}" 0 "$req_channel"`
 test -z "$channel" && log "failed to create new session to run selected exec-profile" && teardown 1
 
