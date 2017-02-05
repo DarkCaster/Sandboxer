@@ -236,8 +236,28 @@ done
 ###############################
 fi
 
-#TODO integration
 #TODO features
+
+if [ "${cfg[sandbox.features.dbus]}" = "true" ] && [ "$basedir/control/dbus.in" ] && [ "$basedir/control/dbus.out" ]; then
+
+ cd "$basedir/chroot"
+ check_errors
+
+ log "copying dbus configuration"
+ dbus_cnt="1"
+ while `check_lua_export "defaults.custom_commands.dbus.$dbus_cnt"`
+ do
+  exec_cmd "defaults.custom_commands.dbus.$dbus_cnt"
+  dbus_cnt=`expr $dbus_cnt + 1`
+ done
+
+ log "starting new dbus session"
+ exec_profile="dbus"
+ . "$script_dir/channel-open.sh.in"
+ . "$script_dir/run-profile.sh.in"
+ #TODO: launch watchdog for dbus
+
+fi
 
 #create new executor's sub-session inside sandbox and get new control channel name
 
