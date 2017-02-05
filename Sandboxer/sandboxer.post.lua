@@ -3,7 +3,8 @@ assert(config.profile~="dbus" and
  config.profile~="profile" and
  config.profile~="loader" and
  config.profile~="config" and
- config.profile~="defaults",
+ config.profile~="defaults" and
+ config.profile~="control",
  "cannot use service table name as profile: "..config.profile)
 
 -- load profile
