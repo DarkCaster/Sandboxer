@@ -103,6 +103,12 @@ defaults.custom_commands.etc=
 '2>/dev/null cp -rf "/etc/less"* "etc"; true',
 }
 
+defaults.custom_commands.dbus=
+{
+'mkdir -p "etc"',
+'cp -rf "/etc/dbus"* "etc"',
+}
+
 defaults.custom_commands.pwd=
 {
 'mkdir -p "etc"',
