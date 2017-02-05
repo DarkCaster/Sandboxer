@@ -39,6 +39,9 @@ static uint8_t data_buf[MSGPLMAXLEN+1];//as precaution
 //terminal size update flag
 static volatile bool term_size_update_needed;
 
+//detach pending flag
+static volatile bool detach_pending;
+
 //proto
 static void teardown(int code);
 static uint8_t arg_is_numeric(const char* arg);
@@ -56,6 +59,9 @@ static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
 static size_t bytes_avail(int fd);
 
+static void sigwinch_signal_handler(int sig, siginfo_t* info, void* context);
+static void sigusr2_signal_handler(int sig, siginfo_t* info, void* context);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
@@ -64,12 +70,18 @@ static void sigwinch_signal_handler(int sig, siginfo_t* info, void* context)
     term_size_update_needed=true;
 }
 
+static void sigusr2_signal_handler(int sig, siginfo_t* info, void* context)
+{
+    detach_pending=true;
+}
+
 #pragma GCC diagnostic pop
 
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
 int main(int argc, char* argv[])
 {
     term_size_update_needed=true;
+    detach_pending=false;
     comm_shutdown(0u);
     //logger
     logger=log_init();
@@ -89,6 +101,14 @@ int main(int argc, char* argv[])
     {
         log_message(logger,LOG_ERROR,"Failed to set SIGWINCH signal handler");
         teardown(9);
+    }
+
+    act[1].sa_sigaction=&sigusr2_signal_handler;
+    act[1].sa_flags=SA_SIGINFO;
+    if( sigaction(SIGUSR2, &act[1], NULL) < 0 )
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGUSR2 signal handler");
+        teardown(8);
     }
 
     if(argc<5)
@@ -302,8 +322,6 @@ int main(int argc, char* argv[])
 
     free(channel_in);
     free(channel_out);
-
-    //TODO: add signal handlers
 
     teardown(child_ec);
 }
@@ -593,9 +611,9 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
                 {
                     if(errno!=EINTR)
                     {
+                        detach_pending=true;
                         restore_terminal;
                         log_message(logger,LOG_ERROR,"Error while reading stdin");
-                        //TODO: send commander disconnect notification
                     }
                 }
                 else
@@ -604,7 +622,13 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         }
 
         //send input
-        if(term_size_updated)
+        if(detach_pending)
+        {
+            CMDHDR dtcmd;
+            dtcmd.cmd_type=251;
+            cmdhdr_write(data_buf,0,dtcmd);
+        }
+        else if(term_size_updated)
         {
             CMDHDR tscmd;
             tscmd.cmd_type=252;
@@ -612,11 +636,19 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         }
         else
             cmdhdr_write(data_buf,0,cmd);
+
         uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
         if(ec!=0)
         {
             restore_terminal;
             return ec;
+        }
+
+        if(detach_pending)
+        {
+            restore_terminal;
+            log_message(logger,LOG_INFO,"Performing commander disconnect");
+            return 0;
         }
 
         int32_t recv_out_data_len=0;
