@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
     case 200:
         if(p_count<1)
             err=operation_100_200(1,&child_ec,0,NULL,NULL);
-        else if(p_count<2)
+        else if(p_count<3)
             err=operation_100_200(1,&child_ec,0,op_param[0],NULL);
         else
             err=59;
@@ -562,18 +562,22 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
     int o_log_fd=-1;
     int e_log_fd=-1;
 
-    if(out_filename!=NULL)
+    if(out_filename!=NULL && strlen(out_filename)>0)
     {
         o_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if(o_log_fd<0)
             log_message(logger,LOG_ERROR,"Failed to open %s file as stdout log, errno=%i",LS(out_filename),LI(errno));
+        else
+            log_message(logger,LOG_INFO,"Created %s file as stdout log",LS(out_filename));
     }
 
-    if(err_filename!=NULL)
+    if(err_filename!=NULL && strlen(err_filename)>0)
     {
         e_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if(e_log_fd<0)
             log_message(logger,LOG_ERROR,"Failed to open %s file as stderr log, errno=%i",LS(err_filename),LI(errno));
+        else
+            log_message(logger,LOG_INFO,"Created %s file as stdout log",LS(err_filename));
     }
 
     CMDHDR cmd;
