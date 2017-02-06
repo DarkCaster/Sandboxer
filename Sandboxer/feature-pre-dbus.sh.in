@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#dbus feature, run commands to copy dbus configuration files and add bwrap definitions to mount dbus system socket
+cd "$basedir/chroot"
+check_errors
+
+#prepare dbus daemon config for chroot
+log "copying dbus configuration"
+dbus_cnt=1
+while `check_lua_export "defaults.features.dbus_conf_copy.$dbus_cnt"`
+do
+ exec_cmd "defaults.features.dbus_conf_copy.$dbus_cnt"
+ dbus_cnt=$((dbus_cnt+1))
+done
+
+cnt=1
+while `check_lua_export "defaults.features.dbus_system_mount.$cnt"`
+do
+ if [ "$cnt" = "1" ]; then
+  bwrap_add_param "--${cfg[defaults.features.dbus_system_mount.$cnt]}"
+ else
+  bwrap_add_param "${cfg[defaults.features.dbus_system_mount.$cnt]}"
+ fi
+ cnt=$((cnt+1))
+done
+
