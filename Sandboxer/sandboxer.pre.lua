@@ -248,9 +248,9 @@ defaults.bwrap.tmp_dir = {"dir","/tmp"}
 
 defaults.bwrap.var_tmp_dir = {"dir","/var/tmp"}
 
-defaults.bwrap.proc = {"proc","/proc"}
+defaults.bwrap.proc_mount = {"proc","/proc"}
 
-defaults.bwrap.dev = {"dev","/dev"}
+defaults.bwrap.dev_mount = {"dev","/dev"}
 
 defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 

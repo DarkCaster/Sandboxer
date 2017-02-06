@@ -116,20 +116,23 @@ sandbox =
 
 -- remaining parameters, applied to bwrap utility in order of appearence.
 -- recommended to add mount commands here to form root directory layout for sandboxed application.
--- thos table presented here as separate definition in order to be able to use all definitions already done in sandbox table earlier.
+-- this table presented here as separate definition in order to be able to use all definitions already done in sandbox table earlier.
 sandbox.bwrap =
 {
-	-- first option will be prepended by "--", all options will be processes as strings
-	defaults.bwrap.proc,
-	defaults.bwrap.dev,
+	-- create some service directories
 	defaults.bwrap.run_dir,
 	defaults.bwrap.xdg_runtime_dir,
 	defaults.bwrap.tmp_dir,
 	defaults.bwrap.var_tmp_dir,
-	defaults.bwrap.dbus_system_mount,
-	defaults.bwrap.x11_mount,
-	defaults.bwrap.home_mount,
-	defaults.bwrap.etc_mount(sandbox.setup.basedir),
+	-- make some mounts essential for normal operation
+	defaults.bwrap.proc_mount, -- /proc
+	defaults.bwrap.dev_mount, -- /dev
+	defaults.bwrap.dbus_system_mount, -- dbus socket for system events (may be required for some applications), may be used with dbus feature
+	defaults.bwrap.x11_mount, -- x11 socket on filesystem. required, when running with net isolation
+	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.custom_commands.home" (recommended)
+	defaults.bwrap.etc_mount(sandbox.setup.basedir), -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
+	-- other dirs, needed for application running, TODO: change theese with defaults	
+	-- first option will be prepended by "--", all options will be processes as strings
 	{"ro-bind","/bin","/bin"},
 	{"ro-bind","/usr","/usr"},
 	{"ro-bind","/lib","/lib"},
