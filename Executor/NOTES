@@ -31,7 +31,13 @@ control mode:
 
 
 
-Global TODO list:
+TODO list:
+
+- executor: in addition to logfile enable\disable startup parameter, add parameter to enable\disable stdout logging (now this behavior controlled by master\slave mode selection paremeter)
+- executor: when stdout logging is disabled - redirect standard fds (0,1,2) to /dev/null, so, they do not expose external bwrap output redirection to logfile 
+- executor: use seccomp to lockdown slave executor after it spawns user binary
+
+Longterm goals:
 
 - more robust communication protocol, add some logic to cleanup "stale" data left inside fifo-buffer when client silently gone offline,
   or some garbage is written (for now - all communication commands signed with hash, all data encoded within "packets" with corresponding headers)
