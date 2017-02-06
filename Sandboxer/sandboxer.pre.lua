@@ -109,6 +109,12 @@ defaults.custom_commands.dbus=
 'cp -rf "/etc/dbus"* "etc"',
 }
 
+defaults.custom_commands.fontconfig=
+{
+'mkdir -p "etc"',
+'cp -rf "/etc/fonts" "etc"',
+}
+
 defaults.custom_commands.pwd=
 {
 'mkdir -p "etc"',

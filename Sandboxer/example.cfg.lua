@@ -84,6 +84,7 @@ sandbox =
 			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
 			defaults.custom_commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.custom_commands.home, -- create userdata directory at this config file directory, if missing
+			defaults.custom_commands.fontconfig, -- /etc/fonts
 		},
 
 		-- blacklist for env variables.
