@@ -120,15 +120,16 @@ sandbox =
 sandbox.bwrap =
 {
 	-- first option will be prepended by "--", all options will be processes as strings
-	defaults.bwrap.home_mount,
-	defaults.bwrap.etc_mount(sandbox.setup.basedir),
+	defaults.bwrap.proc,
+	defaults.bwrap.dev,
 	defaults.bwrap.run_dir,
-	defaults.bwrap.dbus_system_mount,
 	defaults.bwrap.xdg_runtime_dir,
 	defaults.bwrap.tmp_dir,
 	defaults.bwrap.var_tmp_dir,
-	defaults.bwrap.proc,
-	defaults.bwrap.dev,
+	defaults.bwrap.dbus_system_mount,
+	defaults.bwrap.x11_mount,
+	defaults.bwrap.home_mount,
+	defaults.bwrap.etc_mount(sandbox.setup.basedir),
 	{"ro-bind","/bin","/bin"},
 	{"ro-bind","/usr","/usr"},
 	{"ro-bind","/lib","/lib"},

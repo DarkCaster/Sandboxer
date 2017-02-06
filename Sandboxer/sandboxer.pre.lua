@@ -252,6 +252,8 @@ defaults.bwrap.proc = {"proc","/proc"}
 
 defaults.bwrap.dev = {"dev","/dev"}
 
+defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
+
 -- define service profiles
 
 dbus =
