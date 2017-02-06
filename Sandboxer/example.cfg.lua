@@ -52,7 +52,8 @@ sandbox =
 		-- this directory will be automatically created\removed by sandboxer system.
 		-- automatically generated directories and files also stored here.
 		-- this directory should be unique for each sandbox config file, and should be placed on tmpfs.
-		-- it will be automatically removed when all processes inside sandbox terminated.
+		-- TODO: it will be automatically removed when all processes inside sandbox terminated.
+		-- TODO: maybe we should not allow user to select control directory at all
 		basedir=config.ctldir, -- mandatory
 
 		-- security key used in hash calculation process for all communications between sandbox and host
@@ -123,13 +124,15 @@ sandbox.bwrap =
 	defaults.bwrap.dbus_system_mount,
 	defaults.bwrap.xdg_runtime_dir,
 	defaults.bwrap.xdg_runtime_env,
+	defaults.bwrap.tmp_dir,
+	defaults.bwrap.var_tmp_dir,
+	defaults.bwrap.proc,
+	defaults.bwrap.dev,
 	{"ro-bind","/bin","/bin"},
 	{"ro-bind","/usr","/usr"},
 	{"ro-bind","/lib","/lib"},
 	{"ro-bind","/lib64","/lib64"},
-	{"dir","/tmp"},
-	{"proc","/proc"},
-	{"dev","/dev"},
+
 }
 
 -- configuration for applications to run inside this sandbox

@@ -234,6 +234,14 @@ defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",confi
 
 defaults.bwrap.xdg_runtime_env = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)}
 
+defaults.bwrap.tmp_dir = {"dir","/tmp"}
+
+defaults.bwrap.var_tmp_dir = {"dir","/var/tmp"}
+
+defaults.bwrap.proc = {"proc","/proc"}
+
+defaults.bwrap.dev = {"dev","/dev"}
+
 -- define service profiles
 
 dbus =
