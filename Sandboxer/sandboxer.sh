@@ -317,6 +317,8 @@ if [ -z "$dbus_env" ]; then
  teardown 1
 fi
 
+extra_env_set_add "DBUS_SESSION_BUS_ADDRESS" "$dbus_env"
+
 fi
 ################################
 # dbus feature
