@@ -95,8 +95,8 @@ exec_cmd() {
 #enter lock
 lock_enter
 
-###############################
 #check that executor is running
+###############################
 if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]; then
 
 log "creating sandbox"
@@ -232,17 +232,25 @@ do
  comm_wait=`expr $comm_wait - 1`
 done
 
-#check that executor is running
-###############################
 fi
+###############################
+#check that executor is running
+
 
 #TODO features
 
-if [ "${cfg[sandbox.features.dbus]}" = "true" ] && [ "$basedir/control/dbus.in" ] && [ "$basedir/control/dbus.out" ]; then
 
+# dbus feature
+################################
+if [ "${cfg[sandbox.features.dbus]}" = "true" ]; then
+
+if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; then
  cd "$basedir/chroot"
  check_errors
-
+ #remove old dbus-daemon.out
+ rm -f "$basedir/dbus-daemon.out"
+ check_errors
+ #prepare dbus daemon config for chroot
  log "copying dbus configuration"
  dbus_cnt="1"
  while `check_lua_export "defaults.custom_commands.dbus.$dbus_cnt"`
@@ -250,18 +258,50 @@ if [ "${cfg[sandbox.features.dbus]}" = "true" ] && [ "$basedir/control/dbus.in" 
   exec_cmd "defaults.custom_commands.dbus.$dbus_cnt"
   dbus_cnt=`expr $dbus_cnt + 1`
  done
-
  log "starting new dbus session"
-
+ #execute dbus daemon in background
  exec_profile="dbus"
  . "$script_dir/channel-open.sh.in"
-
  exec_bg="true"
+ exec_bg_pid=""
  exec_log_out="$basedir/dbus-daemon.out"
  exec_log_err="$basedir/dbus-daemon.err"
  . "$script_dir/run-profile.sh.in"
+ #wait for output
+ dbus_wait="200"
+ while [ $dbus_wait -ge 1 ]
+ do
+  if [ -f "$basedir/dbus-daemon.out" ] && [ `wc -l <"$basedir/dbus-daemon.out"` = 2 ]; then
+   mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.out"
+   if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
+    dbus_env="${dbus_env_a[0]}"
+    break
+   fi
+  fi
+  sleep 0.05
+  dbus_wait=`expr $dbus_wait - 1`
+ done
+ #detach commander for dbus session if it is running
+ kill -SIGUSR2 $exec_bg_pid
+ check_errors
+ #TODO: start dbus watchdog script or utility
+elif [ -p "$basedir/control/dbus.in" ] && [ -p "$basedir/control/dbus.out" ]; then
+ # just read already created dbus-daemon.out
+ mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.out"
+ if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
+  dbus_env="${dbus_env_a[0]}"
+ fi
+fi
+
+# check, do we succeed with dbus startup, and do not procced if we are not
+if [ -z "$dbus_env" ]; then
+ log "failed to get valid dbus-daemon env parameters"
+ teardown 1
+fi
 
 fi
+################################
+# dbus feature
 
 #create new executor's sub-session inside sandbox and get new control channel name
 
