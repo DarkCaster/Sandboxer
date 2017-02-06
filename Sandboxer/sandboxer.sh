@@ -92,6 +92,24 @@ exec_cmd() {
  check_errors "chroot setup command $cmd_path was failed!"
 }
 
+extra_env_set_name=()
+extra_env_set_value=()
+extra_env_set_cnt=0
+
+extra_env_set_add() {
+ extra_env_set_name[$extra_env_set_cnt]="$1"
+ extra_env_set_value[$extra_env_set_cnt]="$2"
+ extra_env_set_cnt=$((extra_env_set_cnt+1))
+}
+
+extra_env_unset=()
+extra_env_unset_cnt=0
+
+extra_env_unset_add() {
+ extra_env_unset[$extra_env_unset_cnt]="$1"
+ extra_env_unset_cnt=$((extra_env_unset_cnt+1))
+}
+
 #enter lock
 lock_enter
 
