@@ -127,19 +127,6 @@ defaults.custom_commands.home=
  true',
 }
 
--- /run directory. TODO: populate it with some things if needed
-defaults.custom_commands.run=
-{
-'mkdir -p "run"'
-}
-
--- create xdg runtime directory, inside custom /run dir
-defaults.custom_commands.xdg_runtime=
-{
-'mkdir -p "'..loader.path.combine("run","user",config.uid)..'"',
-'chmod 700 "'..loader.path.combine("run","user",config.uid)..'"',
-}
-
 defaults.env={}
 
 defaults.env.blacklist_main=
@@ -239,11 +226,13 @@ function defaults.bwrap.etc_mount(basedir)
  return {"ro-bind",loader.path.combine(basedir,"chroot","etc"),"/etc"}
 end
 
-function defaults.bwrap.run_mount(basedir)
- return {"bind",loader.path.combine(basedir,"chroot","run"),"/run"}
-end
+defaults.bwrap.run_dir = {"dir","/run"}
 
-defaults.bwrap.xdg_runtime = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)}
+defaults.bwrap.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
+
+defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",config.uid)}
+
+defaults.bwrap.xdg_runtime_env = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)}
 
 -- define service profiles
 

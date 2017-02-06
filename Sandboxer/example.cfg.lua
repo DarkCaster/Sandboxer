@@ -83,8 +83,6 @@ sandbox =
 			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
 			defaults.custom_commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.custom_commands.home, -- create userdata directory at this config file directory, if missing
-			defaults.custom_commands.run, -- create run directory inside sandbox
-			defaults.custom_commands.xdg_runtime, -- create xdg_runtime directory inside sandbox
 		},
 
 		-- blacklist for env variables.
@@ -121,8 +119,10 @@ sandbox.bwrap =
 	-- first option will be prepended by "--", all options will be processes as strings
 	defaults.bwrap.home_mount,
 	defaults.bwrap.etc_mount(sandbox.setup.basedir),
-	defaults.bwrap.run_mount(sandbox.setup.basedir),
-	defaults.bwrap.xdg_runtime,
+	defaults.bwrap.run_dir,
+	defaults.bwrap.dbus_system_mount,
+	defaults.bwrap.xdg_runtime_dir,
+	defaults.bwrap.xdg_runtime_env,
 	{"ro-bind","/bin","/bin"},
 	{"ro-bind","/usr","/usr"},
 	{"ro-bind","/lib","/lib"},
