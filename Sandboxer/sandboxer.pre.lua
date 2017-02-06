@@ -249,10 +249,11 @@ defaults.bwrap.xdg_runtime = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/r
 
 dbus =
 {
-exec="/bin/false", -- TODO
+exec="/bin/dbus-daemon",
 path="/",
+args={ "--session", "--print-pid", "--print-address" },
 term_signal=defaults.signals.SIGTERM,
-attach=false,
+attach=true,
 pty=false,
 exclusive=true,
 }
