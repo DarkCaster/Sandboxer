@@ -7,6 +7,8 @@ assert(config.profile~="dbus" and
  config.profile~="control",
  "cannot use service table name as profile: "..config.profile)
 
+assert(type(defaults.basedir)=="string" and defaults.basedir~="", "defaults.basedir param incorrect")
+
 -- load profile
 profile=loadstring("return " .. config.profile)()
 
@@ -50,7 +52,6 @@ if type(sandbox.features.x11)=="nil" then sandbox.features.x11=false end
 
 -- setup table
 assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")
-assert(type(sandbox.setup.basedir)=="string", "sandbox.setup.basedir param incorrect")
 
 assert(type(sandbox.setup.static_executor)=="nil" or type(sandbox.setup.static_executor)=="boolean", "sandbox.setup.static_executor param incorrect")
 if type(sandbox.setup.static_executor)=="nil" then sandbox.setup.static_executor=false end

@@ -14,6 +14,9 @@ config.gid = loader.extra[9]
 
 defaults={}
 
+-- base directory
+defaults.basedir=config.ctldir
+
 -- signals list
 defaults.signals=
 {
@@ -240,8 +243,8 @@ defaults.bwrap.home_dir = {"dir","/home/sandbox"}
 
 defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid),"/home"}
 
-function defaults.bwrap.etc_mount(basedir)
- return {"ro-bind",loader.path.combine(basedir,"chroot","etc"),"/etc"}
+function defaults.bwrap.etc_mount()
+ return {"ro-bind",loader.path.combine(defaults.basedir,"chroot","etc"),"/etc"}
 end
 
 defaults.bwrap.run_dir = {"dir","/run"}

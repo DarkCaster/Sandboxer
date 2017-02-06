@@ -11,6 +11,18 @@
 --   pulse (internal profile for pulseaudio feature support)
 -- try not to redefine this identifiers accidentally (TODO add some more checks)
 
+
+
+-- you may change this in case of debug.
+-- default value is config.ctldir - automatically generated sandbox directory unique to config file, located in /tmp.
+-- base directory for all internal sandbox control stuff, used by sandboxer system,
+-- this directory will be automatically created\removed by sandboxer system.
+-- automatically generated directories and files also stored here.
+-- this directory should be unique for each sandbox config file, and should be placed on tmpfs.
+-- TODO: it will be automatically removed when all processes inside sandbox terminated.
+
+-- defaults.basedir=config.ctldir
+
 sandbox =
 {
 	-- lockdown settings.
@@ -48,14 +60,6 @@ sandbox =
 	-- this table and most of it's parameters are mandatory
 	setup =
 	{
-		-- base directory for all internal sandbox control stuff, used by sandboxer system,
-		-- this directory will be automatically created\removed by sandboxer system.
-		-- automatically generated directories and files also stored here.
-		-- this directory should be unique for each sandbox config file, and should be placed on tmpfs.
-		-- TODO: it will be automatically removed when all processes inside sandbox terminated.
-		-- TODO: maybe we should not allow user to select control directory at all
-		basedir=config.ctldir, -- mandatory
-
 		-- security key used in hash calculation process for all communications between sandbox and host
 		-- for now it is just a 32-bit unsigned number, it may change in future
 		security_key=42,  -- optional
@@ -131,7 +135,7 @@ sandbox.bwrap =
 	defaults.bwrap.dbus_system_mount, -- dbus socket for system events (may be required for some applications), may be used with dbus feature
 	defaults.bwrap.x11_mount, -- x11 socket on filesystem. required, when running with net isolation
 	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.custom_commands.home" (recommended)
-	defaults.bwrap.etc_mount(sandbox.setup.basedir), -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
+	defaults.bwrap.etc_mount(), -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
 	-- other dirs, needed for application running, TODO: change theese with defaults	
 	-- first option will be prepended by "--", all options will be processes as strings
 	{"ro-bind","/bin","/bin"},
