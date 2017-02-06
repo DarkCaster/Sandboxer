@@ -36,7 +36,7 @@ log () {
  echo "[ $@ ]"
 }
 
-basedir="${cfg[sandbox.setup.basedir]}"
+basedir="${cfg[defaults.basedir]}"
 
 #construct control directory if not exist, needed for lock
 mkdir -p "$basedir"
