@@ -11,18 +11,6 @@
 --   pulse (internal profile for pulseaudio feature support)
 -- try not to redefine this identifiers accidentally (TODO add some more checks)
 
-
-
--- you may change this in case of debug.
--- default value is config.ctldir - automatically generated sandbox directory unique to config file, located in /tmp.
--- base directory for all internal sandbox control stuff, used by sandboxer system,
--- this directory will be automatically created\removed by sandboxer system.
--- automatically generated directories and files also stored here.
--- this directory should be unique for each sandbox config file, and should be placed on tmpfs.
--- TODO: it will be automatically removed when all processes inside sandbox terminated.
-
--- defaults.basedir=config.ctldir
-
 sandbox =
 {
 	-- lockdown settings.
