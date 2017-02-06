@@ -53,7 +53,7 @@ static uint8_t operation_3(char* name, char* value);
 static uint8_t operation_4(char* name);
 static uint8_t operation_5(char* s_signal);
 static uint8_t operation_6(char* dir);
-static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect);
+static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect, const char *out_filename, const char *err_filename);
 static uint8_t operation_101_201(uint8_t use_pty);
 static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
@@ -266,22 +266,46 @@ int main(int argc, char* argv[])
             err=operation_6(op_param[0]);
         break;
     case 100:
-        err=operation_100_200(0,&child_ec,0);
+        if(p_count<1)
+            err=operation_100_200(0,&child_ec,0,NULL,NULL);
+        else if(p_count<2)
+            err=operation_100_200(0,&child_ec,0,op_param[0],NULL);
+        else if(p_count<3)
+            err=operation_100_200(0,&child_ec,0,op_param[0],op_param[1]);
+        else
+            err=57;
         break;
     case 101:
         err=operation_101_201(0);
         break;
     case 102:
-        err=operation_100_200(0,&child_ec,1);
+        if(p_count<1)
+            err=operation_100_200(0,&child_ec,1,NULL,NULL);
+        else if(p_count<2)
+            err=operation_100_200(0,&child_ec,1,op_param[0],NULL);
+        else if(p_count<3)
+            err=operation_100_200(0,&child_ec,1,op_param[0],op_param[1]);
+        else
+            err=58;
         break;
     case 200:
-        err=operation_100_200(1,&child_ec,0);
+        if(p_count<1)
+            err=operation_100_200(1,&child_ec,0,NULL,NULL);
+        else if(p_count<2)
+            err=operation_100_200(1,&child_ec,0,op_param[0],NULL);
+        else
+            err=59;
         break;
     case 201:
         err=operation_101_201(1);
         break;
     case 202:
-        err=operation_100_200(1,&child_ec,1);
+        if(p_count<1)
+            err=operation_100_200(1,&child_ec,1,NULL,NULL);
+        else if(p_count<2)
+            err=operation_100_200(1,&child_ec,1,op_param[0],NULL);
+        else
+            err=59;
         break;
     case 250:
         err=operation_250();
@@ -533,8 +557,25 @@ static uint8_t operation_253(bool grace_shutdown)
 }
 
 //launch configured binary
-static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect)
+static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect, const char* out_filename, const char* err_filename)
 {
+    int o_log_fd=-1;
+    int e_log_fd=-1;
+
+    if(out_filename!=NULL)
+    {
+        o_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC);
+        if(o_log_fd<0)
+            log_message(logger,LOG_ERROR,"Failed to open %s file as stdout log, errno=%i",LS(out_filename),LI(errno));
+    }
+
+    if(err_filename!=NULL)
+    {
+        e_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC);
+        if(e_log_fd<0)
+            log_message(logger,LOG_ERROR,"Failed to open %s file as stderr log, errno=%i",LS(err_filename),LI(errno));
+    }
+
     CMDHDR cmd;
     cmd.cmd_type=reconnect?(use_pty?255:254):(use_pty?200:100);
     cmdhdr_write(data_buf,0,cmd);
@@ -565,8 +606,16 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
                 ts_is_set=1;
         }
     }
-    #define restore_terminal if(ts_is_set)tcsetattr(STDOUT_FILENO,TCSANOW,&term_settings_backup)
-    #define receive_data(data_len,out_fd) \
+
+    #define restore_terminal \
+        { if(ts_is_set) \
+              tcsetattr(STDOUT_FILENO,TCSANOW,&term_settings_backup); \
+          if(o_log_fd>=0) \
+              close(o_log_fd); \
+          if(e_log_fd>=0) \
+              close(e_log_fd); }
+
+    #define receive_data(data_len,out_fd,log_fd) \
         { data_len=0; \
         uint8_t ecx=message_read(fdi,tmp_buf,data_buf,0,&data_len,key,REQ_TIMEOUT_MS); \
         if(ecx!=0){ restore_terminal; return ecx; } \
@@ -578,7 +627,9 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         else if(cmdhdr_read(data_buf,0).cmd_type!=150) \
             { restore_terminal; log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(cmdhdr_read(data_buf,0).cmd_type)); return 1; } \
         if(data_len>0) \
-            write(out_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); }
+            { write(out_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); \
+              if(log_fd>=0) \
+                  { write(log_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); fdatasync(log_fd); } } }
 
     int data_wait_time=DATA_WAIT_TIME_MS_MIN;
 
@@ -652,13 +703,13 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         }
 
         int32_t recv_out_data_len=0;
-        receive_data(recv_out_data_len,STDOUT_FILENO); //read stdout, captured by executor module
+        receive_data(recv_out_data_len,STDOUT_FILENO,o_log_fd); //read stdout, captured by executor module
 
         int32_t recv_err_data_len=0;
         if(use_pty)
             recv_err_data_len=recv_out_data_len;
         else
-            receive_data(recv_err_data_len,STDERR_FILENO); //read stderr, captured by executor module
+            receive_data(recv_err_data_len,STDERR_FILENO,e_log_fd); //read stderr, captured by executor module
 
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
         {
