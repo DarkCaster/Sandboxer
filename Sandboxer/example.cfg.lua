@@ -120,10 +120,9 @@ sandbox.bwrap =
 	-- make some mounts essential for normal operation
 	defaults.bwrap.proc_mount, -- /proc
 	defaults.bwrap.dev_mount, -- /dev
-	defaults.bwrap.dbus_system_mount, -- dbus socket for system events (may be required for some applications), may be used with dbus feature
 	defaults.bwrap.x11_mount, -- x11 socket on filesystem. required, when running with net isolation
 	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.custom_commands.home" (recommended)
-	defaults.bwrap.etc_mount(), -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
+	defaults.bwrap.etc_mount, -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
 	-- other dirs, needed for application running, TODO: change theese with defaults	
 	-- first option will be prepended by "--", all options will be processes as strings
 	{"ro-bind","/bin","/bin"},

@@ -115,12 +115,6 @@ defaults.custom_commands.etc=
 '2>/dev/null cp -rf "/etc/less"* "etc"; true',
 }
 
-defaults.custom_commands.dbus=
-{
-'mkdir -p "etc"',
-'cp -rf "/etc/dbus"* "etc"',
-}
-
 defaults.custom_commands.fontconfig=
 {
 'mkdir -p "etc"',
@@ -252,13 +246,9 @@ defaults.bwrap.home_dir = {"dir","/home/sandbox"}
 
 defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid),"/home"}
 
-function defaults.bwrap.etc_mount()
- return {"ro-bind",loader.path.combine(defaults.basedir,"chroot","etc"),"/etc"}
-end
+defaults.bwrap.etc_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","etc"),"/etc"}
 
 defaults.bwrap.run_dir = {"dir","/run"}
-
-defaults.bwrap.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 
 defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",config.uid)}
 
@@ -271,6 +261,16 @@ defaults.bwrap.proc_mount = {"proc","/proc"}
 defaults.bwrap.dev_mount = {"dev","/dev"}
 
 defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
+
+defaults.features={}
+
+defaults.features.dbus_conf_copy=
+{
+'mkdir -p "etc"',
+'cp -rf "/etc/dbus"* "etc"',
+}
+
+defaults.features.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 
 -- define service profiles
 
