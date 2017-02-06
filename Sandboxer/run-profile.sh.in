@@ -11,32 +11,32 @@ if check_lua_export $exec_profile.path ; then
 fi
 
 #set args
-cnt="1"
+cnt=1
 while `check_lua_export "$exec_profile.args.$cnt"`
 do
  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 2 "${cfg[$exec_profile.args.$cnt]}"
  check_errors
- cnt=`expr $cnt + 1`
+ cnt=$((cnt+1))
 done
 
 #set env_unset list
-cnt="1"
+cnt=1
 while `check_lua_export "$exec_profile.env_unset.$cnt"`
 do
  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 4 "${cfg[$exec_profile.env_unset.$cnt]}"
  check_errors
- cnt=`expr $cnt + 1`
+ cnt=$((cnt+1))
 done
 
 #set env_set list
-cnt="1"
+cnt=1
 while `check_lua_export "$exec_profile.env_set.$cnt"`
 do
  if check_lua_export $exec_profile.env_set.$cnt.1 && check_lua_export $exec_profile.env_set.$cnt.2 ; then
   2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 3 "${cfg[$exec_profile.env_set.$cnt.1]}" "${cfg[$exec_profile.env_set.$cnt.2]}"
   check_errors
  fi
- cnt=`expr $cnt + 1`
+ cnt=$((cnt+1))
 done
 
 #set signal

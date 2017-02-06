@@ -135,16 +135,16 @@ test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "
 cd "$basedir/chroot"
 check_errors
 
-setup_cmdgrp_cnt="1"
+setup_cmdgrp_cnt=1
 while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt"`
 do
- setup_cmd_cnt="1"
+ setup_cmd_cnt=1
  while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt"`
  do
   exec_cmd "sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt"
-  setup_cmd_cnt=`expr $setup_cmd_cnt + 1`
+  setup_cmd_cnt=$((setup_cmd_cnt+1))
  done
- setup_cmdgrp_cnt=`expr $setup_cmdgrp_cnt + 1`
+ setup_cmdgrp_cnt=$((setup_cmdgrp_cnt+1))
 done
 
 #fillup main bwrap command line parameters
@@ -174,10 +174,10 @@ check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bw
 bwrap_env_set_unset() {
  local env_op="$1"
  local env_table="$2"
- local env_blk_cnt="1"
+ local env_blk_cnt=1
  while `check_lua_export "$env_table.$env_blk_cnt"`
  do
-  local env_cmd_cnt="1"
+  local env_cmd_cnt=1
   while `check_lua_export "$env_table.$env_blk_cnt.$env_cmd_cnt"`
   do
    if [ "$env_op" = "unset" ]; then
@@ -191,9 +191,9 @@ bwrap_env_set_unset() {
 	log "internal error: unsupported env operation"
     teardown 1
    fi
-   env_cmd_cnt=`expr $env_cmd_cnt + 1`
+   env_cmd_cnt=$((env_cmd_cnt+1))
   done
-  env_blk_cnt=`expr $env_blk_cnt + 1`
+  env_blk_cnt=$((env_blk_cnt+1))
  done
 }
 
@@ -206,10 +206,10 @@ bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
 bwrap_env_set_unset "set" "sandbox.setup.env_set"
 
 #append remaining parameters from sandbox.bwrap table
-bwrap_cmdblk_cnt="1"
+bwrap_cmdblk_cnt=1
 while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt"`
 do
- bwrap_cmd_cnt="1"
+ bwrap_cmd_cnt=1
  while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt"`
  do
   if [ "$bwrap_cmd_cnt" = "1" ]; then
@@ -217,9 +217,9 @@ do
   else
    bwrap_add_param "${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}"
   fi
-  bwrap_cmd_cnt=`expr $bwrap_cmd_cnt + 1`
+  bwrap_cmd_cnt=$((bwrap_cmd_cnt+1))
  done
- bwrap_cmdblk_cnt=`expr $bwrap_cmdblk_cnt + 1`
+ bwrap_cmdblk_cnt=$((bwrap_cmdblk_cnt+1))
 done
 
 #append parameters to mount executor binary and control directory
@@ -239,7 +239,7 @@ log "starting new master executor"
 
 log "waiting for control comm-channels to appear"
 
-comm_wait="200"
+comm_wait=200
 while [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]
 do
  if [ $comm_wait -lt 1 ]; then
@@ -247,7 +247,7 @@ do
   teardown 1
  fi
  sleep 0.05
- comm_wait=`expr $comm_wait - 1`
+ comm_wait=$((comm_wait-1))
 done
 
 fi
@@ -270,11 +270,11 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
  check_errors
  #prepare dbus daemon config for chroot
  log "copying dbus configuration"
- dbus_cnt="1"
+ dbus_cnt=1
  while `check_lua_export "defaults.custom_commands.dbus.$dbus_cnt"`
  do
   exec_cmd "defaults.custom_commands.dbus.$dbus_cnt"
-  dbus_cnt=`expr $dbus_cnt + 1`
+  dbus_cnt=$((dbus_cnt+1))
  done
  log "starting new dbus session"
  #execute dbus daemon in background
@@ -286,7 +286,7 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
  exec_log_err="$basedir/dbus-daemon.err"
  . "$script_dir/run-profile.sh.in"
  #wait for output
- dbus_wait="200"
+ dbus_wait=200
  while [ $dbus_wait -ge 1 ]
  do
   if [ -f "$basedir/dbus-daemon.out" ] && [ `wc -l <"$basedir/dbus-daemon.out"` = 2 ]; then
@@ -297,7 +297,7 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
    fi
   fi
   sleep 0.05
-  dbus_wait=`expr $dbus_wait - 1`
+  dbus_wait=$((dbus_wait-1))
  done
  #detach commander for dbus session if it is running
  kill -SIGUSR2 $exec_bg_pid
