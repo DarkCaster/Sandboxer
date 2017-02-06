@@ -48,3 +48,7 @@ fi
 #run
 "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}"
 
+#TODO: output to file
+exec_log_out=""
+exec_log_err=""
+

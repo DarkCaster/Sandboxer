@@ -252,11 +252,13 @@ if [ "${cfg[sandbox.features.dbus]}" = "true" ] && [ "$basedir/control/dbus.in" 
  done
 
  log "starting new dbus session"
+
  exec_profile="dbus"
  . "$script_dir/channel-open.sh.in"
- . "$script_dir/run-profile.sh.in"
- #TODO: launch watchdog for dbus
 
+ exec_log_out="$basedir/dbus-daemon.out"
+ exec_log_err="$basedir/dbus-daemon.err"
+ . "$script_dir/run-profile.sh.in"
 fi
 
 #create new executor's sub-session inside sandbox and get new control channel name
