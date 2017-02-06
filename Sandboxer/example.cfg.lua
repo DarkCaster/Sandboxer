@@ -108,6 +108,8 @@ sandbox =
 		env_set =
 		{
 			defaults.env.set_home,
+			defaults.env.set_xdg_runtime,
+			defaults.env.set_x11,
 		}
 	},
 }
@@ -123,7 +125,6 @@ sandbox.bwrap =
 	defaults.bwrap.run_dir,
 	defaults.bwrap.dbus_system_mount,
 	defaults.bwrap.xdg_runtime_dir,
-	defaults.bwrap.xdg_runtime_env,
 	defaults.bwrap.tmp_dir,
 	defaults.bwrap.var_tmp_dir,
 	defaults.bwrap.proc,
@@ -132,7 +133,6 @@ sandbox.bwrap =
 	{"ro-bind","/usr","/usr"},
 	{"ro-bind","/lib","/lib"},
 	{"ro-bind","/lib64","/lib64"},
-
 }
 
 -- configuration for applications to run inside this sandbox

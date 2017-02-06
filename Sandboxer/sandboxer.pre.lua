@@ -218,7 +218,19 @@ defaults.env.set_home=
  {"LOGNAME","sandbox"}
 }
 
+defaults.env.set_xdg_runtime=
+{
+ {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)},
+}
+
+defaults.env.set_x11=
+{
+ {"DISPLAY",os.getenv("DISPLAY")}
+}
+
 defaults.bwrap={}
+
+defaults.bwrap.home_dir = {"dir","/home/sandbox"}
 
 defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid),"/home"}
 
@@ -231,8 +243,6 @@ defaults.bwrap.run_dir = {"dir","/run"}
 defaults.bwrap.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 
 defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",config.uid)}
-
-defaults.bwrap.xdg_runtime_env = {"setenv","XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)}
 
 defaults.bwrap.tmp_dir = {"dir","/tmp"}
 
