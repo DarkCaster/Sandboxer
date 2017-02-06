@@ -564,14 +564,14 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
 
     if(out_filename!=NULL)
     {
-        o_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC, 640);
+        o_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if(o_log_fd<0)
             log_message(logger,LOG_ERROR,"Failed to open %s file as stdout log, errno=%i",LS(out_filename),LI(errno));
     }
 
     if(err_filename!=NULL)
     {
-        e_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC, 640);
+        e_log_fd=open(out_filename,O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if(e_log_fd<0)
             log_message(logger,LOG_ERROR,"Failed to open %s file as stderr log, errno=%i",LS(err_filename),LI(errno));
     }
