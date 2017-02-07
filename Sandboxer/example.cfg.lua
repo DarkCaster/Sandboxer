@@ -76,7 +76,6 @@ sandbox =
 			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
 			defaults.custom_commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.custom_commands.home, -- create userdata directory at this config file directory, if missing
-			defaults.custom_commands.fontconfig, -- /etc/fonts
 		},
 
 		-- blacklist for env variables.
@@ -102,7 +101,6 @@ sandbox =
 		{
 			defaults.env.set_home,
 			defaults.env.set_xdg_runtime,
-			defaults.env.set_x11,
 		}
 	},
 }
@@ -120,7 +118,6 @@ sandbox.bwrap =
 	-- make some mounts essential for normal operation
 	defaults.bwrap.proc_mount, -- /proc
 	defaults.bwrap.dev_mount, -- /dev
-	defaults.bwrap.x11_mount, -- x11 socket on filesystem. required, when running with net isolation
 	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.custom_commands.home" (recommended)
 	defaults.bwrap.etc_mount, -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
 	-- other dirs, needed for application running, TODO: change theese with defaults	

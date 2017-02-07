@@ -115,12 +115,6 @@ defaults.custom_commands.etc=
 '2>/dev/null cp -rf "/etc/less"* "etc"; true',
 }
 
-defaults.custom_commands.fontconfig=
-{
-'mkdir -p "etc"',
-'cp -rf "/etc/fonts" "etc"',
-}
-
 defaults.custom_commands.pwd=
 {
 'mkdir -p "etc"',
@@ -235,11 +229,6 @@ defaults.env.set_xdg_runtime=
  {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)},
 }
 
-defaults.env.set_x11=
-{
- {"DISPLAY",os.getenv("DISPLAY")}
-}
-
 defaults.bwrap={}
 
 defaults.bwrap.home_dir = {"dir","/home/sandbox"}
@@ -260,9 +249,6 @@ defaults.bwrap.proc_mount = {"proc","/proc"}
 
 defaults.bwrap.dev_mount = {"dev","/dev"}
 
-defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
-
-
 -- defines for features, fore use in main script
 
 defaults.features={}
@@ -274,6 +260,19 @@ defaults.features.dbus_conf_copy=
 }
 
 defaults.features.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
+
+defaults.features.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
+
+defaults.features.x11_env_set=
+{
+ {"DISPLAY",os.getenv("DISPLAY")}
+}
+
+defaults.features.x11_fontconfig_conf_copy=
+{
+'mkdir -p "etc"',
+'cp -rf "/etc/fonts" "etc"',
+}
 
 -- define service profiles
 
