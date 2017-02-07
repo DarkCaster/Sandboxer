@@ -84,6 +84,8 @@ check_errors () {
  fi
 }
 
+#extra env used by executor module
+
 extra_env_set_name=()
 extra_env_set_value=()
 extra_env_set_cnt=0
@@ -108,20 +110,6 @@ lock_enter
 #check that executor is running
 ###############################
 if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]; then
-
-log "creating sandbox"
-
-#if executor is not running
-mkdir -p "$basedir/chroot"
-check_errors
-
-mkdir -p "$basedir/control"
-check_errors
-
-#copy executor binary
-test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "$basedir/executor" || cp "$executor" "$basedir/executor"
-
-#TODO default chroot construction
 
 exec_cmd() {
  local cmd_path="$1"
@@ -151,14 +139,6 @@ exec_process_two_level_cmd_list() {
  done
 }
 
-#execute custom chroot construction commands
-cd "$basedir/chroot"
-check_errors
-
-exec_process_two_level_cmd_list "sandbox.setup.custom_commands"
-
-#fillup main bwrap command line parameters
-
 bwrap_params=()
 bwrap_param_cnt=0
 
@@ -168,18 +148,6 @@ bwrap_add_param() {
  #echo "added: $@"
  bwrap_param_cnt=$((bwrap_param_cnt+1))
 }
-
-#main parameters
-bwrap_add_param "--new-session"
-test "${cfg[sandbox.lockdown.user]}" = "true" && bwrap_add_param "--unshare-user"
-test "${cfg[sandbox.lockdown.ipc]}" = "true" && bwrap_add_param "--unshare-ipc"
-test "${cfg[sandbox.lockdown.pid]}" = "true" && bwrap_add_param "--unshare-pid"
-test "${cfg[sandbox.lockdown.net]}" = "true" && bwrap_add_param "--unshare-net"
-test "${cfg[sandbox.lockdown.uts]}" = "true" && bwrap_add_param "--unshare-uts"
-test "${cfg[sandbox.lockdown.cgroup]}" = "true" && bwrap_add_param "--unshare-cgroup"
-check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_param "${cfg[sandbox.lockdown.uid]}"
-check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
-check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
 
 bwrap_env_set_unset() {
  local env_op="$1"
@@ -207,14 +175,6 @@ bwrap_env_set_unset() {
  done
 }
 
-#TODO env white list
-
-#unset default env by bwrap
-bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
-
-#set default env by bwrap
-bwrap_env_set_unset "set" "sandbox.setup.env_set"
-
 bwrap_process_params_list() {
  local list="$1"
  local cnt=1
@@ -238,6 +198,44 @@ bwrap_process_two_level_params_list() {
   cnt=$((cnt+1))
  done
 }
+
+log "creating sandbox"
+
+#chroot dir
+mkdir -p "$basedir/chroot"
+check_errors
+
+mkdir -p "$basedir/control"
+check_errors
+
+#copy executor binary
+test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "$basedir/executor" || cp "$executor" "$basedir/executor"
+
+#execute custom chroot construction commands
+cd "$basedir/chroot"
+check_errors
+
+exec_process_two_level_cmd_list "sandbox.setup.custom_commands"
+
+#fillup main bwrap command line parameters
+bwrap_add_param "--new-session"
+test "${cfg[sandbox.lockdown.user]}" = "true" && bwrap_add_param "--unshare-user"
+test "${cfg[sandbox.lockdown.ipc]}" = "true" && bwrap_add_param "--unshare-ipc"
+test "${cfg[sandbox.lockdown.pid]}" = "true" && bwrap_add_param "--unshare-pid"
+test "${cfg[sandbox.lockdown.net]}" = "true" && bwrap_add_param "--unshare-net"
+test "${cfg[sandbox.lockdown.uts]}" = "true" && bwrap_add_param "--unshare-uts"
+test "${cfg[sandbox.lockdown.cgroup]}" = "true" && bwrap_add_param "--unshare-cgroup"
+check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_param "${cfg[sandbox.lockdown.uid]}"
+check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
+check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
+
+#TODO env white list
+
+#unset default env by bwrap
+bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
+
+#set default env by bwrap
+bwrap_env_set_unset "set" "sandbox.setup.env_set"
 
 #append remaining parameters from sandbox.bwrap table
 bwrap_process_two_level_params_list "sandbox.bwrap"
