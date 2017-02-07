@@ -89,6 +89,7 @@ defaults.custom_commands.etc=
 '2>/dev/null cp "/etc/mime.types" "etc"; true',
 'cp "/etc/localtime" "etc"',
 'cp -rf "/etc/ld.so"* "etc"',
+'cp "/etc/manpath.config" "etc"',
 '2>/dev/null cp "/etc/libao.conf" "etc"; true',
 '2>/dev/null cp "/etc/ksh.kshrc" "etc"; true',
 '2>/dev/null cp "/etc/krb5.conf" "etc"; true',
