@@ -244,24 +244,24 @@ defaults.env.set_xdg_runtime=
 
 defaults.bwrap={}
 
-defaults.bwrap.home_dir = {"dir","/home/sandbox"}
-
-defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home"),"/home"}
-
-defaults.bwrap.var_cache_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"cache"),"/var/cache"}
-
-defaults.bwrap.var_tmp_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"tmp"),"/var/tmp"}
-
-defaults.bwrap.etc_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","etc"),"/etc"}
-
+-- main bwrap command line options
+defaults.bwrap.unshare_user = { "unshare-user" }
+defaults.bwrap.unshare_ipc = { "unshare-ipc" }
+defaults.bwrap.unshare_pid = { "unshare-pid" }
+defaults.bwrap.unshare_net = { "unshare-net" }
+defaults.bwrap.unshare_uts = { "unshare-uts" }
+defaults.bwrap.unshare_cgroup = { "unshare-cgroup" }
+defaults.bwrap.unshare_all = { "unshare-all" }
+-- directories
 defaults.bwrap.run_dir = {"dir","/run"}
-
-defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",config.uid)}
-
 defaults.bwrap.tmp_dir = {"dir","/tmp"}
-
+defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",config.uid)}
+-- host mounts
+defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home"),"/home"}
+defaults.bwrap.var_cache_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"cache"),"/var/cache"}
+defaults.bwrap.var_tmp_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"tmp"),"/var/tmp"}
+defaults.bwrap.etc_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","etc"),"/etc"}
 defaults.bwrap.proc_mount = {"proc","/proc"}
-
 defaults.bwrap.dev_mount = {"dev","/dev"}
 
 -- defines for features, fore use in main script

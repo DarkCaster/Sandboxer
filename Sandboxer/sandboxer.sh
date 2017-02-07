@@ -214,22 +214,10 @@ test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "
 #execute custom chroot construction commands
 cd "$basedir/chroot"
 check_errors
-
 exec_process_two_level_cmd_list "sandbox.setup.commands"
 
-#fillup main bwrap command line parameters
+# for now enforce --new-session parameter
 bwrap_add_param "--new-session"
-test "${cfg[sandbox.lockdown.user]}" = "true" && bwrap_add_param "--unshare-user"
-test "${cfg[sandbox.lockdown.ipc]}" = "true" && bwrap_add_param "--unshare-ipc"
-test "${cfg[sandbox.lockdown.pid]}" = "true" && bwrap_add_param "--unshare-pid"
-test "${cfg[sandbox.lockdown.net]}" = "true" && bwrap_add_param "--unshare-net"
-test "${cfg[sandbox.lockdown.uts]}" = "true" && bwrap_add_param "--unshare-uts"
-test "${cfg[sandbox.lockdown.cgroup]}" = "true" && bwrap_add_param "--unshare-cgroup"
-check_lua_export sandbox.lockdown.uid && bwrap_add_param "--uid" && bwrap_add_param "${cfg[sandbox.lockdown.uid]}"
-check_lua_export sandbox.lockdown.gid && bwrap_add_param "--gid" && bwrap_add_param "${cfg[sandbox.lockdown.gid]}"
-check_lua_export sandbox.lockdown.hostname && bwrap_add_param "--hostname" && bwrap_add_param "${cfg[sandbox.lockdown.hostname]}"
-
-#TODO env white list
 
 #unset default env by bwrap
 bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"

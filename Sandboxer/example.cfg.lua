@@ -13,21 +13,6 @@
 
 sandbox =
 {
-	-- lockdown settings.
-	-- missing options will be set to default values listed below
-	lockdown =
-	{
-		user=true,
-		ipc=true,
-		pid=true,
-		net=false,
-		uts=true,
-		cgroup=false,
-		-- uid=1000, -- variable not defined by default, will not be set at all if missing
-		-- gid=1000, -- variable not defined set by default, will not be set at all if missing
-		-- hostname=sandbox, -- not set by default, will not be set at all if missing
-	},
-
 	-- sandbox features and integration options.
 	-- allow applications from sandbox to use some features from host env. some features (x11, system dbus, or hardware opengl support) may possess a potential security threat.
 	-- features are enabled in order of appearance, feature name may contain only lowercase letters, numbers and underscores.
@@ -104,6 +89,13 @@ sandbox =
 -- this table presented here as separate definition in order to be able to use all definitions already done in sandbox table earlier.
 sandbox.bwrap =
 {
+	-- main parameters
+	defaults.bwrap.unshare_user,
+	defaults.bwrap.unshare_ipc,
+	defaults.bwrap.unshare_pid,
+	defaults.bwrap.unshare_net,
+	defaults.bwrap.unshare_uts,
+	-- defaults.bwrap.unshare_cgroup,
 	-- create some service directories
 	defaults.bwrap.run_dir,
 	defaults.bwrap.xdg_runtime_dir,
