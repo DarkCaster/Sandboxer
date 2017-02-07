@@ -262,6 +262,10 @@ if [ "${cfg[sandbox.features.dbus]}" = "true" ]; then
 . "$script_dir/feature-pre-dbus.sh.in"
 fi
 
+if [ "${cfg[sandbox.features.gvfs_fix]}" = "true" ]; then
+. "$script_dir/feature-pre-gvfs_fix.sh.in"
+fi
+
 log "starting new master executor"
 
 #run bwrap and start executor

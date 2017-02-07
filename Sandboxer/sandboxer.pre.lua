@@ -271,6 +271,13 @@ defaults.features.x11_conf_copy=
 'cp -rf "/etc/fonts" "etc"',
 }
 
+defaults.features.gvfs_fix_conf=
+{
+'mkdir -p "gvfs_fix"',
+}
+
+defaults.features.gvfs_fix_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","gvfs_fix"),"/usr/share/gvfs/remote-volume-monitors"}
+
 -- define service profiles
 
 dbus =

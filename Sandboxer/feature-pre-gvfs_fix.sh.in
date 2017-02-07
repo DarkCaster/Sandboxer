@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd "$basedir/chroot"
+check_errors
+log "preparing gvfx_fix feature"
+exec_process_cmd_list "defaults.features.gvfs_fix_conf"
+bwrap_process_params_list "defaults.features.gvfs_fix_mount"
+
