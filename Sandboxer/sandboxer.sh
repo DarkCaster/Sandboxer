@@ -205,22 +205,32 @@ bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
 #set default env by bwrap
 bwrap_env_set_unset "set" "sandbox.setup.env_set"
 
-#append remaining parameters from sandbox.bwrap table
-bwrap_cmdblk_cnt=1
-while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt"`
-do
- bwrap_cmd_cnt=1
- while `check_lua_export "sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt"`
+bwrap_process_params_list() {
+ local list="$1"
+ local cnt=1
+ while `check_lua_export "$list.$cnt"`
  do
-  if [ "$bwrap_cmd_cnt" = "1" ]; then
-   bwrap_add_param "--${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}"
+  if [ "$cnt" = "1" ]; then
+   bwrap_add_param "--${cfg[$list.$cnt]}"
   else
-   bwrap_add_param "${cfg[sandbox.bwrap.$bwrap_cmdblk_cnt.$bwrap_cmd_cnt]}"
+   bwrap_add_param "${cfg[$list.$cnt]}"
   fi
-  bwrap_cmd_cnt=$((bwrap_cmd_cnt+1))
+  cnt=$((cnt+1))
  done
- bwrap_cmdblk_cnt=$((bwrap_cmdblk_cnt+1))
-done
+}
+
+bwrap_process_two_level_params_list() {
+ local list="$1"
+ local cnt=1
+ while `check_lua_export "$list.$cnt"`
+ do
+  bwrap_process_params_list "$list.$cnt"
+  cnt=$((cnt+1))
+ done
+}
+
+#append remaining parameters from sandbox.bwrap table
+bwrap_process_two_level_params_list "sandbox.bwrap"
 
 #append parameters to mount executor binary and control directory
 bwrap_add_param "--dir"

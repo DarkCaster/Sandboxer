@@ -13,14 +13,5 @@ do
  dbus_cnt=$((dbus_cnt+1))
 done
 
-cnt=1
-while `check_lua_export "defaults.features.dbus_system_mount.$cnt"`
-do
- if [ "$cnt" = "1" ]; then
-  bwrap_add_param "--${cfg[defaults.features.dbus_system_mount.$cnt]}"
- else
-  bwrap_add_param "${cfg[defaults.features.dbus_system_mount.$cnt]}"
- fi
- cnt=$((cnt+1))
-done
+bwrap_process_params_list "defaults.features.dbus_system_mount"
 
