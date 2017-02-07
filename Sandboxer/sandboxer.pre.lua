@@ -132,7 +132,18 @@ defaults.custom_commands.home=
  2>/dev/null cp -rf /etc/skel "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox")..'" || \
  true',
  -- TODO: move to X11 feature
- 'cp "$HOME/.Xauthority" "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox",".Xauthority")..'"',
+ 'cp "$HOME/.Xauthority" "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox",".Xauthority")..'"',
+}
+
+
+defaults.custom_commands.var_cache=
+{
+'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"cache")..'"',
+}
+
+defaults.custom_commands.var_tmp=
+{
+'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"tmp")..'"',
 }
 
 defaults.env={}
