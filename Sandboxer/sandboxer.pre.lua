@@ -262,6 +262,9 @@ defaults.bwrap.dev_mount = {"dev","/dev"}
 
 defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 
+
+-- defines for features, fore use in main script
+
 defaults.features={}
 
 defaults.features.dbus_conf_copy=
