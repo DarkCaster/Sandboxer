@@ -250,19 +250,17 @@ bwrap_add_param "--bind"
 bwrap_add_param "$basedir/control"
 bwrap_add_param "/executor/control"
 
-#pre launch features
+#pre-launch features
 
-if [ "${cfg[sandbox.features.x11]}" = "true" ]; then
-. "$script_dir/feature-pre-x11.sh.in"
-fi
-
-if [ "${cfg[sandbox.features.dbus]}" = "true" ]; then
-. "$script_dir/feature-pre-dbus.sh.in"
-fi
-
-if [ "${cfg[sandbox.features.gvfs_fix]}" = "true" ]; then
-. "$script_dir/feature-pre-gvfs_fix.sh.in"
-fi
+feature_cnt=1
+while `check_lua_export "sandbox.features.$feature_cnt"`
+do
+ if [ -f "$script_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
+  log "preparing ${cfg[sandbox.features.$feature_cnt]} feature"
+  . "$script_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in"
+ fi
+ feature_cnt=$((feature_cnt+1))
+done
 
 log "starting new master executor"
 
@@ -286,15 +284,17 @@ fi
 ###############################
 #check that executor is running
 
-#post launch features
+#post-launch features
 
-if [ "${cfg[sandbox.features.x11]}" = "true" ]; then
-. "$script_dir/feature-post-x11.sh.in"
-fi
-
-if [ "${cfg[sandbox.features.dbus]}" = "true" ]; then
-. "$script_dir/feature-post-dbus.sh.in"
-fi
+feature_cnt=1
+while `check_lua_export "sandbox.features.$feature_cnt"`
+do
+ if [ -f "$script_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
+  log "activating ${cfg[sandbox.features.$feature_cnt]} feature"
+  . "$script_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in"
+ fi
+ feature_cnt=$((feature_cnt+1))
+done
 
 #create new executor's sub-session inside sandbox and get new control channel name
 
