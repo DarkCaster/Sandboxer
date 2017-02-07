@@ -5,13 +5,7 @@ cd "$basedir/chroot"
 check_errors
 
 #prepare dbus daemon config for chroot
-log "copying dbus configuration"
-dbus_cnt=1
-while `check_lua_export "defaults.features.dbus_conf_copy.$dbus_cnt"`
-do
- exec_cmd "defaults.features.dbus_conf_copy.$dbus_cnt"
- dbus_cnt=$((dbus_cnt+1))
-done
-
+log "preparing dbus feature"
+exec_process_cmd_list "defaults.features.dbus_conf_copy"
 bwrap_process_params_list "defaults.features.dbus_system_mount"
 

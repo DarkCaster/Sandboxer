@@ -84,14 +84,6 @@ check_errors () {
  fi
 }
 
-exec_cmd() {
- local cmd_path="$1"
- #debug
- #echo "exec: ${cfg[$cmd_path]}"
- eval "${cfg[$cmd_path]}"
- check_errors "chroot setup command $cmd_path was failed!"
-}
-
 extra_env_set_name=()
 extra_env_set_value=()
 extra_env_set_cnt=0
@@ -131,21 +123,39 @@ test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "
 
 #TODO default chroot construction
 
+exec_cmd() {
+ local cmd_path="$1"
+ #debug
+ #echo "exec: ${cfg[$cmd_path]}"
+ eval "${cfg[$cmd_path]}"
+ check_errors "chroot setup command $cmd_path was failed!"
+}
+
+exec_process_cmd_list() {
+ local list="$1"
+ local cnt=1
+ while `check_lua_export "$list.$cnt"`
+ do
+  exec_cmd "$list.$cnt"
+  cnt=$((cnt+1))
+ done
+}
+
+exec_process_two_level_cmd_list() {
+ local list="$1"
+ local cnt=1
+ while `check_lua_export "$list.$cnt"`
+ do
+  exec_process_cmd_list "$list.$cnt"
+  cnt=$((cnt+1))
+ done
+}
+
 #execute custom chroot construction commands
 cd "$basedir/chroot"
 check_errors
 
-setup_cmdgrp_cnt=1
-while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt"`
-do
- setup_cmd_cnt=1
- while `check_lua_export "sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt"`
- do
-  exec_cmd "sandbox.setup.custom_commands.$setup_cmdgrp_cnt.$setup_cmd_cnt"
-  setup_cmd_cnt=$((setup_cmd_cnt+1))
- done
- setup_cmdgrp_cnt=$((setup_cmdgrp_cnt+1))
-done
+exec_process_two_level_cmd_list "sandbox.setup.custom_commands"
 
 #fillup main bwrap command line parameters
 
