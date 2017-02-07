@@ -44,11 +44,17 @@ if type(sandbox.features)=="nil" then sandbox.features={} end
 assert(type(sandbox.features.dbus)=="nil" or type(sandbox.features.dbus)=="boolean", "sandbox.features.dbus param incorrect")
 if type(sandbox.features.dbus)=="nil" then sandbox.features.dbus=true end
 
+assert(type(sandbox.features.gvfs_fix)=="nil" or type(sandbox.features.gvfs_fix)=="boolean", "sandbox.features.dbus param incorrect")
+if type(sandbox.features.gvfs_fix)=="nil" then sandbox.features.gvfs_fix=true end
+
 assert(type(sandbox.features.pulse)=="nil" or type(sandbox.features.pulse)=="boolean", "sandbox.features.pulse param incorrect")
 if type(sandbox.features.pulse)=="nil" then sandbox.features.pulse=false end
 
 assert(type(sandbox.features.x11)=="nil" or type(sandbox.features.x11)=="boolean", "sandbox.features.x11 param incorrect")
 if type(sandbox.features.x11)=="nil" then sandbox.features.x11=false end
+
+assert(type(sandbox.features.dri)=="nil" or type(sandbox.features.dri)=="boolean", "sandbox.features.dbus param incorrect")
+if type(sandbox.features.dri)=="nil" then sandbox.features.dri=false end
 
 -- setup table
 assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")

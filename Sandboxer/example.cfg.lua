@@ -35,8 +35,10 @@ sandbox =
 	features =
 	{
 		pulse=false, -- TODO
-		x11=false, -- TODO
+		x11=false, -- allow to use x11 from host env, mount x11 socket.
+		dri=false, -- TODO
 		dbus=true, -- TODO
+		gvfs_fix=true, -- TODO
 	},
 
 	-- main sandbox setup parameters such as:
