@@ -130,6 +130,7 @@ defaults.custom_commands.home=
 'test ! -d "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox")..'" && \
  2>/dev/null cp -rf /etc/skel "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox")..'" || \
  true',
+ 'cp "$HOME/.Xauthority" "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox",".Xauthority")..'"',
 }
 
 defaults.env={}
