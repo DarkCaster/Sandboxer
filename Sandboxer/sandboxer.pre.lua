@@ -71,7 +71,6 @@ defaults.custom_commands.etc=
 'mkdir -p "etc"',
 '2>/dev/null cp -rf "/etc/zsh"* "etc"; true',
 '2>/dev/null cp "/etc/yp.conf" "etc"; true',
-'2>/dev/null cp -rf "/etc/X11" "etc"; true',
 '2>/dev/null cp "/etc/wgetrc" "etc"; true',
 '2>/dev/null cp "/etc/vimrc" "etc"; true',
 '2>/dev/null cp "/etc/vdpau_wrapper.cfg" "etc"; true',
@@ -271,6 +270,7 @@ defaults.features.x11_env_set=
 defaults.features.x11_fontconfig_conf_copy=
 {
 'mkdir -p "etc"',
+'cp -rf "/etc/X11" "etc"',
 'cp -rf "/etc/fonts" "etc"',
 }
 
