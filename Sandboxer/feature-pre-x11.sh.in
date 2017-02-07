@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#dbus feature, run commands to copy dbus configuration files and add bwrap definitions to mount dbus system socket
+cd "$basedir/chroot"
+check_errors
+
+#prepare dbus daemon config for chroot
+log "preparing x11 feature"
+exec_process_cmd_list "defaults.features.x11_conf_copy"
+bwrap_process_params_list "defaults.features.x11_mount"
+

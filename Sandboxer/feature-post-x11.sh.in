@@ -1,0 +1,4 @@
+#!/bin/bash
+
+extra_env_set_add "DISPLAY" "$DISPLAY"
+

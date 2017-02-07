@@ -254,6 +254,10 @@ bwrap_add_param "/executor/control"
 
 #pre launch features
 
+if [ "${cfg[sandbox.features.x11]}" = "true" ]; then
+. "$script_dir/feature-pre-x11.sh.in"
+fi
+
 if [ "${cfg[sandbox.features.dbus]}" = "true" ]; then
 . "$script_dir/feature-pre-dbus.sh.in"
 fi
@@ -281,6 +285,10 @@ fi
 #check that executor is running
 
 #post launch features
+
+if [ "${cfg[sandbox.features.x11]}" = "true" ]; then
+. "$script_dir/feature-post-x11.sh.in"
+fi
 
 if [ "${cfg[sandbox.features.dbus]}" = "true" ]; then
 . "$script_dir/feature-post-dbus.sh.in"
