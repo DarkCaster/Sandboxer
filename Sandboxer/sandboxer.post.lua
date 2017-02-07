@@ -117,7 +117,7 @@ function loader.check_one_level_env_set_list(target, name)
 end
 
 -- custom command table
-loader.check_two_level_string_list(sandbox.setup.custom_commands,"sandbox.setup.custom_commands")
+loader.check_two_level_string_list(sandbox.setup.commands,"sandbox.setup.commands")
 
 -- env tables
 loader.check_two_level_string_list(sandbox.setup.env_blacklist,"sandbox.setup.env_blacklist")

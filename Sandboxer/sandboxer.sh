@@ -215,7 +215,7 @@ test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "
 cd "$basedir/chroot"
 check_errors
 
-exec_process_two_level_cmd_list "sandbox.setup.custom_commands"
+exec_process_two_level_cmd_list "sandbox.setup.commands"
 
 #fillup main bwrap command line parameters
 bwrap_add_param "--new-session"

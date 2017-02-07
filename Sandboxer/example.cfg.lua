@@ -57,29 +57,19 @@ sandbox =
 		-- use static build of executor binary. may be useful for use in very restrictive, minimalistic or other custom chroots
 		static_executor=false, -- optional, will be set automatically to false if missing.
 
-		-- TODO: table with definitions to create and populate chroot directories to mount it later inside sandbox
-		-- there will be various commands to help with creating your stuff:
-		--   directory creation,
-		--   files create\copy with optional inplace sed\grep process,
-		--   directory tree copy, with various search patterns\glob\etc ...
-		--   ...
-		chroot = -- optional
-		{
-		},
-
 		-- table with custom user commands, that will be run when creating chroot after tasks from chroot table (see above) is complete.
 		-- current dir will be set to chroot directory, that is located at sandbox.setup.basedir/chroot
 		-- custom command-groups executed in order of appearence.
 		-- this can be used to dynamically create configuration files and other things to mount inside sandbox later.
 		-- command-groups are executed by using eval in context of main sandboxer.sh launcher script. so, be careful!
 		-- exit code from command group ($?) is examined, sandboxer.sh will automatically terminate is case of errors ($?!=0)
-		custom_commands = -- optional
+		commands = -- optional
 		{
-			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
-			defaults.custom_commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
-			defaults.custom_commands.home, -- create userdata/home at this config file directory, if missing
-			defaults.custom_commands.var_cache, -- create userdata/cache at this config file directory, if missing
-			defaults.custom_commands.var_tmp, -- create userdata/tmp at this config file directory, if missing
+			defaults.commands.etc, -- move /etc directory population to chroot table (above)
+			defaults.commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
+			defaults.commands.home, -- create userdata/home at this config file directory, if missing
+			defaults.commands.var_cache, -- create userdata/cache at this config file directory, if missing
+			defaults.commands.var_tmp, -- create userdata/tmp at this config file directory, if missing
 		},
 
 		-- blacklist for env variables.
@@ -121,10 +111,10 @@ sandbox.bwrap =
 	-- make some mounts essential for normal operation
 	defaults.bwrap.proc_mount, -- /proc
 	defaults.bwrap.dev_mount, -- /dev
-	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.custom_commands.home" (recommended)
-	defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.custom_commands.var_cache" (recommended)
-	defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.custom_commands.var_tmp" (recommended)
-	defaults.bwrap.etc_mount, -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
+	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
+	defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
+	defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
+	defaults.bwrap.etc_mount, -- mount etc directory, constructed with "defaults.commands.etc" (highly recommended)
 	-- other dirs, needed for application running, TODO: change theese with defaults	
 	-- first option will be prepended by "--", all options will be processes as strings
 	{"ro-bind","/bin","/bin"},

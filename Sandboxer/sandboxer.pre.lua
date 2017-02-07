@@ -63,10 +63,10 @@ SIGPWR=30,
 SIGSYS=31,
 }
 
-defaults.custom_commands={}
+defaults.commands={}
 -- TODO: move this to chroot table (not complete yet)
 
-defaults.custom_commands.etc=
+defaults.commands.etc=
 {
 'mkdir -p "etc"',
 '2>/dev/null cp -rf "/etc/zsh"* "etc"; true',
@@ -115,7 +115,7 @@ defaults.custom_commands.etc=
 '2>/dev/null cp -rf "/etc/less"* "etc"; true',
 }
 
-defaults.custom_commands.pwd=
+defaults.commands.pwd=
 {
 'mkdir -p "etc"',
 -- passwd and group files generation
@@ -125,7 +125,7 @@ defaults.custom_commands.pwd=
 'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
 }
 
-defaults.custom_commands.home=
+defaults.commands.home=
 {
 'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home")..'"',
 'test ! -d "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox")..'" && \
@@ -136,12 +136,12 @@ defaults.custom_commands.home=
 }
 
 
-defaults.custom_commands.var_cache=
+defaults.commands.var_cache=
 {
 'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"cache")..'"',
 }
 
-defaults.custom_commands.var_tmp=
+defaults.commands.var_tmp=
 {
 'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"tmp")..'"',
 }
@@ -227,7 +227,7 @@ defaults.env.blacklist_xdg=
 defaults.env.set_home=
 {
 -- setup user env, essential for normal operation (especially, for shells and scripts)
--- use this when "defaults.custom_commands.pwd" used when constructing sandbox (recommended)
+-- use this when "defaults.commands.pwd" used when constructing sandbox (recommended)
 -- also define some env variables normally only defined when launching "login" shell
 -- (it is usually overkill for sandbox and it may also expose some unneded env variables unset earlier by blacklist feature)
  {"HOME","/home/sandbox"},
