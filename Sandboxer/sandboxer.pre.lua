@@ -262,12 +262,7 @@ defaults.features.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 
 defaults.features.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 
-defaults.features.x11_env_set=
-{
- {"DISPLAY",os.getenv("DISPLAY")}
-}
-
-defaults.features.x11_fontconfig_conf_copy=
+defaults.features.x11_conf_copy=
 {
 'mkdir -p "etc"',
 'cp -rf "/etc/X11" "etc"',
