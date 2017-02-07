@@ -273,10 +273,17 @@ defaults.features.x11_conf_copy=
 
 defaults.features.gvfs_fix_conf=
 {
-'mkdir -p "gvfs_fix"',
+'mkdir -p "gvfs_fix/remote-volume-monitors"',
+'mkdir -p "gvfs_fix/mounts"',
+'cp "/usr/share/gvfs/mounts/archive.mount" "gvfs_fix/mounts"',
+'cp "/usr/share/gvfs/mounts/cdda.mount" "gvfs_fix/mounts"',
+'cp "/usr/share/gvfs/mounts/computer.mount" "gvfs_fix/mounts"',
+'cp "/usr/share/gvfs/mounts/localtest.mount" "gvfs_fix/mounts"',
+'cp "/usr/share/gvfs/mounts/recent.mount" "gvfs_fix/mounts"',
+'cp "/usr/share/gvfs/mounts/trash.mount" "gvfs_fix/mounts"',
 }
 
-defaults.features.gvfs_fix_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","gvfs_fix"),"/usr/share/gvfs/remote-volume-monitors"}
+defaults.features.gvfs_fix_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","gvfs_fix"),"/usr/share/gvfs"}
 
 -- define service profiles
 
