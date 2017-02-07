@@ -29,16 +29,16 @@ sandbox =
 	},
 
 	-- sandbox features and integration options.
-	-- enable\disable some service features or subsystems that applications may use inside sandbox.
-	-- some features enables communication with non-sandboxed host components.
-	-- missing options will be set to default values listed below.
+	-- allow applications from sandbox to use some features from host env. some features (x11, system dbus, or hardware opengl support) may possess a potential security threat.
+	-- features are enabled in order of appearance, feature name may contain only lowercase letters, numbers and underscores.
 	features =
 	{
-		pulse=false, -- TODO
-		x11=false, -- allow to use x11 from host env, mount x11 socket.
-		dri=false, -- TODO
-		dbus=true, -- TODO
-		gvfs_fix=true, -- TODO
+		-- "pulse", -- TODO, allow to connect pulseaudio instance running on host (and produce audio output)
+		"x11", -- allow to use x11 from host env, mount x11 socket. this will expose currently running xserver on host env to sandbox 
+		-- "dri", -- TODO, allow to use dri interface to perform opengl hardware acceleration
+		"dbus", -- run dbus-session instance inside sandbox, and allow other sandbox sessions to use it
+		"dbus_system", -- mount dbus-system socket from host, not always required for all applications
+		"gvfs_fix", -- fix gvfs setup inside sandbox, and strip down it's features to bare minimum. TODO: find out what removed gvfs features works inside sandbox and reenable it
 	},
 
 	-- main sandbox setup parameters such as:
