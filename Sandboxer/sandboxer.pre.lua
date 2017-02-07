@@ -127,10 +127,11 @@ defaults.custom_commands.pwd=
 
 defaults.custom_commands.home=
 {
-'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)..'"',
-'test ! -d "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox")..'" && \
- 2>/dev/null cp -rf /etc/skel "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox")..'" || \
+'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home")..'"',
+'test ! -d "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox")..'" && \
+ 2>/dev/null cp -rf /etc/skel "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox")..'" || \
  true',
+ -- TODO: move to X11 feature
  'cp "$HOME/.Xauthority" "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"sandbox",".Xauthority")..'"',
 }
 
@@ -234,7 +235,11 @@ defaults.bwrap={}
 
 defaults.bwrap.home_dir = {"dir","/home/sandbox"}
 
-defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid),"/home"}
+defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home"),"/home"}
+
+defaults.bwrap.var_cache_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"cache"),"/var/cache"}
+
+defaults.bwrap.var_tmp_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"tmp"),"/var/tmp"}
 
 defaults.bwrap.etc_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","etc"),"/etc"}
 
@@ -243,8 +248,6 @@ defaults.bwrap.run_dir = {"dir","/run"}
 defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",config.uid)}
 
 defaults.bwrap.tmp_dir = {"dir","/tmp"}
-
-defaults.bwrap.var_tmp_dir = {"dir","/var/tmp"}
 
 defaults.bwrap.proc_mount = {"proc","/proc"}
 

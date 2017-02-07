@@ -77,7 +77,9 @@ sandbox =
 		{
 			defaults.custom_commands.etc, -- TODO: move /etc directory population to chroot table (above)
 			defaults.custom_commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
-			defaults.custom_commands.home, -- create userdata directory at this config file directory, if missing
+			defaults.custom_commands.home, -- create userdata/home at this config file directory, if missing
+			defaults.custom_commands.var_cache, -- create userdata/cache at this config file directory, if missing
+			defaults.custom_commands.var_tmp, -- create userdata/tmp at this config file directory, if missing
 		},
 
 		-- blacklist for env variables.
@@ -116,11 +118,12 @@ sandbox.bwrap =
 	defaults.bwrap.run_dir,
 	defaults.bwrap.xdg_runtime_dir,
 	defaults.bwrap.tmp_dir,
-	defaults.bwrap.var_tmp_dir,
 	-- make some mounts essential for normal operation
 	defaults.bwrap.proc_mount, -- /proc
 	defaults.bwrap.dev_mount, -- /dev
 	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.custom_commands.home" (recommended)
+	defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.custom_commands.var_cache" (recommended)
+	defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.custom_commands.var_tmp" (recommended)
 	defaults.bwrap.etc_mount, -- mount etc directory, constructed with "defaults.custom_commands.etc" (highly recommended)
 	-- other dirs, needed for application running, TODO: change theese with defaults	
 	-- first option will be prepended by "--", all options will be processes as strings
