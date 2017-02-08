@@ -50,7 +50,10 @@ sandbox =
 		-- exit code from command group ($?) is examined, sandboxer.sh will automatically terminate is case of errors ($?!=0)
 		commands = -- optional
 		{
-			defaults.commands.etc, -- move /etc directory population to chroot table (above)
+			defaults.commands.etc_min, -- copy minimal config to defaults.chrootdir
+			defaults.commands.etc_dbus, -- copy dbus config to defaults.chrootdir
+			defaults.commands.etc_x11, -- copy x11 config to defaults.chrootdir
+			-- defaults.commands.etc_full, -- copy full /etc to to defaults.chrootdir
 			defaults.commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.commands.home, -- create userdata/home at this config file directory, if missing
 			defaults.commands.var_cache, -- create userdata/cache at this config file directory, if missing
@@ -106,7 +109,9 @@ sandbox.bwrap =
 	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
 	defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
 	defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
-	defaults.bwrap.etc_mount, -- mount etc directory, constructed with "defaults.commands.etc" (highly recommended)
+	defaults.bwrap.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+	defaults.bwrap.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+	defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
 	-- other dirs, needed for application running, TODO: change theese with defaults	
 	-- first option will be prepended by "--", all options will be processes as strings
 	{"ro-bind","/bin","/bin"},

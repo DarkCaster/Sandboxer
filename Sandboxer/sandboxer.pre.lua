@@ -45,7 +45,7 @@ defaults.signals=
 
 defaults.commands={}
 
-defaults.commands.etc=
+defaults.commands.etc_min=
 {
  'mkdir -p "etc"',
  '2>/dev/null cp -rf "/etc/zsh"* "etc"; true',
@@ -93,6 +93,12 @@ defaults.commands.etc=
  '2>/dev/null cp "/etc/adjtime" "etc"; true',
  '2>/dev/null cp -rf "/etc/less"* "etc"; true',
 }
+
+defaults.commands.etc_full = {'mkdir -p "etc"','2>/dev/null cp -rf "/etc/"* "etc"; true'}
+
+defaults.commands.etc_dbus = {'mkdir -p "etc"','cp -rf "/etc/dbus"* "etc"'}
+
+defaults.commands.etc_x11 = {'mkdir -p "etc"','cp -rf "/etc/X11" "etc"','cp -rf "/etc/fonts" "etc"'}
 
 -- etc/passwd and etc/group files generation
 defaults.commands.pwd=
@@ -223,18 +229,17 @@ defaults.bwrap.xdg_runtime_dir = {"dir",nil}
 defaults.bwrap.home_mount = {"bind",nil,"/home"}
 defaults.bwrap.var_cache_mount = {"bind",nil,"/var/cache"}
 defaults.bwrap.var_tmp_mount = {"bind",nil,"/var/tmp"}
-defaults.bwrap.etc_mount = {"ro-bind",nil,"/etc"}
+defaults.bwrap.etc_ro_mount = {"ro-bind",nil,"/etc"}
+defaults.bwrap.etc_rw_mount = {"bind",nil,"/etc"}
+defaults.bwrap.host_etc_mount = {"ro-bind","/etc","/etc"}
 defaults.bwrap.proc_mount = {"proc","/proc"}
 defaults.bwrap.dev_mount = {"dev","/dev"}
 
 
 -- defines for features, fore use in main script
-
 defaults.features={}
-defaults.features.dbus_conf_copy = {'mkdir -p "etc"','cp -rf "/etc/dbus"* "etc"'}
 defaults.features.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 defaults.features.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
-defaults.features.x11_conf_copy = {'mkdir -p "etc"','cp -rf "/etc/X11" "etc"','cp -rf "/etc/fonts" "etc"'}
 defaults.features.gvfs_fix_conf =
 {
  'mkdir -p "gvfs_fix/remote-volume-monitors"',
@@ -251,7 +256,8 @@ defaults.features.gvfs_fix_mount = {"ro-bind",nil,"/usr/share/gvfs"}
 
 function defaults.recalculate()
  defaults.features.gvfs_fix_mount[2]=loader.path.combine(defaults.chrootdir,"gvfs_fix")
- defaults.bwrap.etc_mount[2]=loader.path.combine(defaults.chrootdir,"etc")
+ defaults.bwrap.etc_ro_mount[2]=loader.path.combine(defaults.chrootdir,"etc")
+ defaults.bwrap.etc_rw_mount[2]=defaults.bwrap.etc_ro_mount[2]
  defaults.bwrap.var_tmp_mount[2]=loader.path.combine(defaults.datadir,"tmp")
  defaults.bwrap.var_cache_mount[2]=loader.path.combine(defaults.datadir,"cache")
  defaults.bwrap.home_mount[2]=loader.path.combine(defaults.datadir,"home")
