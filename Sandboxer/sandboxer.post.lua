@@ -66,7 +66,7 @@ function loader.check_two_level_env_set_list(target, name)
    assert(type(field)=="table", name.."["..index.."] subtable is incorrect")
    for mi,mf in ipairs(field) do
     assert(type(mf)=="table", name.."["..index.."]["..mi.."] value is incorrect (it should be a table)")
-    env_idx=0
+    local env_idx=0
     for vi,vf in ipairs(mf) do
      assert(vi<3, name.."["..index.."]["..mi.."] has incorrect strings count")
      assert(type(vf)=="string", name.."["..index.."]["..mi.."]["..vi.."] value is incorrect")
@@ -83,7 +83,7 @@ function loader.check_one_level_env_set_list(target, name)
  if type(target)=="table" then
   for index,field in ipairs(target) do
    assert(type(field)=="table", name.."["..index.."] subtable is incorrect")
-   env_idx=0
+   local env_idx=0
    for mi,mf in ipairs(field) do
     assert(mi<3, name.."["..index.."] has incorrect strings count")
     assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
