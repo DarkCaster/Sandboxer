@@ -26,125 +26,91 @@ defaults={}
 
 defaults.basedir=config.ctldir
 
+defaults.chrootdir=loader.path.combine(defaults.basedir,"chroot")
+
+defaults.uid=config.uid
+
+defaults.gid=config.gid
+
+defaults.user="sandboxer"
+
+defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
+
 -- signals list
 defaults.signals=
 {
-SIGHUP=1,
-SIGINT=2,
-SIGQUIT=3,
-SIGILL=4,
-SIGTRAP=5,
-SIGABRT=6,
-SIGIOT=6,
-SIGBUS=7,
-SIGFPE=8,
-SIGKILL=9,
-SIGUSR1=10,
-SIGSEGV=11,
-SIGUSR2=12,
-SIGPIPE=13,
-SIGALRM=14,
-SIGTERM=15,
-SIGSTKFLT=16,
-SIGCHLD=17,
-SIGCONT=18,
-SIGSTOP=19,
-SIGTSTP=20,
-SIGTTIN=21,
-SIGTTOU=22,
-SIGURG=23,
-SIGXCPU=24,
-SIGXFSZ=25,
-SIGVTALRM=26,
-SIGPROF=27,
-SIGWINCH=28,
-SIGIO=29,
-SIGPWR=30,
-SIGSYS=31,
+ SIGHUP=1,SIGINT=2,SIGQUIT=3,SIGILL=4,SIGTRAP=5,SIGABRT=6,SIGIOT=6,SIGBUS=7,SIGFPE=8,SIGKILL=9,SIGUSR1=10,SIGSEGV=11,SIGUSR2=12,SIGPIPE=13,SIGALRM=14,SIGTERM=15,SIGSTKFLT=16,
+ SIGCHLD=17,SIGCONT=18,SIGSTOP=19,SIGTSTP=20,SIGTTIN=21,SIGTTOU=22,SIGURG=23,SIGXCPU=24,SIGXFSZ=25,SIGVTALRM=26,SIGPROF=27,SIGWINCH=28,SIGIO=29,SIGPWR=30,SIGSYS=31,
 }
 
 defaults.commands={}
--- TODO: move this to chroot table (not complete yet)
 
 defaults.commands.etc=
 {
-'mkdir -p "etc"',
-'2>/dev/null cp -rf "/etc/zsh"* "etc"; true',
-'2>/dev/null cp "/etc/yp.conf" "etc"; true',
-'2>/dev/null cp "/etc/wgetrc" "etc"; true',
-'2>/dev/null cp "/etc/vimrc" "etc"; true',
-'2>/dev/null cp "/etc/vdpau_wrapper.cfg" "etc"; true',
-'cp "/etc/termcap" "etc"',
-'2>/dev/null cp -rf "/etc/security" "etc"; true',
-'cp "/etc/resolv.conf" "etc"',
-'2>/dev/null cp -r "/etc/pulse" "etc"; true',
-'cp "/etc/profile" "etc"',
-'cp -rf "/etc/profile.d" "etc"',
-'cp "/etc/protocols" "etc"',
-'2>/dev/null cp "/etc/os-release" "etc"; true',
-'cp "/etc/nsswitch.conf" "etc"',
-'cp "/etc/nscd.conf" "etc"',
-'2>/dev/null cp "/etc/networks" "etc"; true',
-'rm -f "etc/mtab"; ln -s "/proc/self/mounts" "etc/mtab"',
-'2>/dev/null cp "/etc/mime.types" "etc"; true',
-'cp "/etc/localtime" "etc"',
-'cp -rf "/etc/ld.so"* "etc"',
-'cp "/etc/manpath.config" "etc"',
-'2>/dev/null cp "/etc/libao.conf" "etc"; true',
-'2>/dev/null cp "/etc/ksh.kshrc" "etc"; true',
-'2>/dev/null cp "/etc/krb5.conf" "etc"; true',
-'2>/dev/null cp -rf "/etc/kde4" "etc"; true',
-'2>/dev/null cp -rf "/etc/java" "etc"; true',
-'2>/dev/null cp "/etc/inputrc" "etc"; true',
-'cp "/etc/host"* "etc"',
-'cp "/etc/HOSTNAME" "etc"',
-'2>/dev/null cp "/etc/freshwrapper.conf" "etc"; true',
-'2>/dev/null cp "/etc/ethers" "etc"; true',
-'2>/dev/null cp "/etc/drirc" "etc"; true',
-'2>/dev/null cp "/etc/DIR_COLORS" "etc"; true',
-'2>/dev/null cp "/etc/dialogrc" "etc"; true',
-'2>/dev/null cp "/etc/csh"* "etc"; true',
-'2>/dev/null cp -rf "/etc/ca-certificates" "etc"; true',
-'2>/dev/null cp -rf "/etc/bash"* "etc"; true',
-'2>/dev/null cp -rf "/etc/mc" "etc"; true',
-'2>/dev/null cp "/etc/asound-pulse.conf" "etc"; true',
-'2>/dev/null cp "/etc/alsa-pulse.conf" "etc"; true',
-'2>/dev/null cp -rf "/etc/alternatives" "etc"; true',
-'2>/dev/null cp -rf "/etc/alias"* "etc"; true',
-'2>/dev/null cp "/etc/adjtime" "etc"; true',
-'2>/dev/null cp -rf "/etc/less"* "etc"; true',
+ 'mkdir -p "etc"',
+ '2>/dev/null cp -rf "/etc/zsh"* "etc"; true',
+ '2>/dev/null cp "/etc/yp.conf" "etc"; true',
+ '2>/dev/null cp "/etc/wgetrc" "etc"; true',
+ '2>/dev/null cp "/etc/vimrc" "etc"; true',
+ '2>/dev/null cp "/etc/vdpau_wrapper.cfg" "etc"; true',
+ 'cp "/etc/termcap" "etc"',
+ '2>/dev/null cp -rf "/etc/security" "etc"; true',
+ 'cp "/etc/resolv.conf" "etc"',
+ '2>/dev/null cp -r "/etc/pulse" "etc"; true',
+ 'cp "/etc/profile" "etc"',
+ 'cp -rf "/etc/profile.d" "etc"',
+ 'cp "/etc/protocols" "etc"',
+ '2>/dev/null cp "/etc/os-release" "etc"; true',
+ 'cp "/etc/nsswitch.conf" "etc"',
+ 'cp "/etc/nscd.conf" "etc"',
+ '2>/dev/null cp "/etc/networks" "etc"; true',
+ 'rm -f "etc/mtab"; ln -s "/proc/self/mounts" "etc/mtab"',
+ '2>/dev/null cp "/etc/mime.types" "etc"; true',
+ 'cp "/etc/localtime" "etc"',
+ 'cp -rf "/etc/ld.so"* "etc"',
+ 'cp "/etc/manpath.config" "etc"',
+ '2>/dev/null cp "/etc/libao.conf" "etc"; true',
+ '2>/dev/null cp "/etc/ksh.kshrc" "etc"; true',
+ '2>/dev/null cp "/etc/krb5.conf" "etc"; true',
+ '2>/dev/null cp -rf "/etc/kde4" "etc"; true',
+ '2>/dev/null cp -rf "/etc/java" "etc"; true',
+ '2>/dev/null cp "/etc/inputrc" "etc"; true',
+ 'cp "/etc/host"* "etc"',
+ 'cp "/etc/HOSTNAME" "etc"',
+ '2>/dev/null cp "/etc/freshwrapper.conf" "etc"; true',
+ '2>/dev/null cp "/etc/ethers" "etc"; true',
+ '2>/dev/null cp "/etc/drirc" "etc"; true',
+ '2>/dev/null cp "/etc/DIR_COLORS" "etc"; true',
+ '2>/dev/null cp "/etc/dialogrc" "etc"; true',
+ '2>/dev/null cp "/etc/csh"* "etc"; true',
+ '2>/dev/null cp -rf "/etc/ca-certificates" "etc"; true',
+ '2>/dev/null cp -rf "/etc/bash"* "etc"; true',
+ '2>/dev/null cp -rf "/etc/mc" "etc"; true',
+ '2>/dev/null cp "/etc/asound-pulse.conf" "etc"; true',
+ '2>/dev/null cp "/etc/alsa-pulse.conf" "etc"; true',
+ '2>/dev/null cp -rf "/etc/alternatives" "etc"; true',
+ '2>/dev/null cp -rf "/etc/alias"* "etc"; true',
+ '2>/dev/null cp "/etc/adjtime" "etc"; true',
+ '2>/dev/null cp -rf "/etc/less"* "etc"; true',
 }
 
+-- etc/passwd and etc/group files generation
 defaults.commands.pwd=
 {
-'mkdir -p "etc"',
--- passwd and group files generation
-'getent passwd root nobody > "etc/passwd"',
-'echo "sandbox:x:'..config.uid..':'..config.gid..':sandbox:/home/sandbox:/bin/bash" >> "etc/passwd"',
-'getent group root nobody nogroup > "etc/group"',
-'echo "sandbox:x:'..config.gid..':" >> "etc/group"',
+ 'mkdir -p "etc"',
+ 'getent passwd root nobody > "etc/passwd"',
+ nil,
+ 'getent group root nobody nogroup > "etc/group"',
+ nil,
 }
 
-defaults.commands.home=
-{
-'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home")..'"',
-'test ! -d "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox")..'" && \
- 2>/dev/null cp -rf /etc/skel "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox")..'" || \
- true',
- -- TODO: move to X11 feature
- 'cp "$HOME/.Xauthority" "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox",".Xauthority")..'"',
-}
+defaults.commands.home = {nil,nil}
 
+-- TODO: move to X11 feature
+-- 'cp "$HOME/.Xauthority" "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox",".Xauthority")..'"',
 
-defaults.commands.var_cache=
-{
-'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"cache")..'"',
-}
-
-defaults.commands.var_tmp=
-{
-'mkdir -p "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"tmp")..'"',
-}
+defaults.commands.var_cache = {nil}
+defaults.commands.var_tmp = {nil}
 
 defaults.env={}
 
@@ -237,10 +203,7 @@ defaults.env.set_home=
  {"LOGNAME","sandbox"}
 }
 
-defaults.env.set_xdg_runtime=
-{
- {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",config.uid)},
-}
+defaults.env.set_xdg_runtime = {{"XDG_RUNTIME_DIR",nil}}
 
 defaults.bwrap={}
 
@@ -255,49 +218,56 @@ defaults.bwrap.unshare_all = { "unshare-all" }
 -- directories
 defaults.bwrap.run_dir = {"dir","/run"}
 defaults.bwrap.tmp_dir = {"dir","/tmp"}
-defaults.bwrap.xdg_runtime_dir = {"dir", loader.path.combine("/run","user",config.uid)}
+defaults.bwrap.xdg_runtime_dir = {"dir",nil}
 -- host mounts
-defaults.bwrap.home_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home"),"/home"}
-defaults.bwrap.var_cache_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"cache"),"/var/cache"}
-defaults.bwrap.var_tmp_mount = {"bind",loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"tmp"),"/var/tmp"}
-defaults.bwrap.etc_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","etc"),"/etc"}
+defaults.bwrap.home_mount = {"bind",nil,"/home"}
+defaults.bwrap.var_cache_mount = {"bind",nil,"/var/cache"}
+defaults.bwrap.var_tmp_mount = {"bind",nil,"/var/tmp"}
+defaults.bwrap.etc_mount = {"ro-bind",nil,"/etc"}
 defaults.bwrap.proc_mount = {"proc","/proc"}
 defaults.bwrap.dev_mount = {"dev","/dev"}
+
 
 -- defines for features, fore use in main script
 
 defaults.features={}
-
-defaults.features.dbus_conf_copy=
-{
-'mkdir -p "etc"',
-'cp -rf "/etc/dbus"* "etc"',
-}
-
+defaults.features.dbus_conf_copy = {'mkdir -p "etc"','cp -rf "/etc/dbus"* "etc"'}
 defaults.features.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
-
 defaults.features.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
-
-defaults.features.x11_conf_copy=
+defaults.features.x11_conf_copy = {'mkdir -p "etc"','cp -rf "/etc/X11" "etc"','cp -rf "/etc/fonts" "etc"'}
+defaults.features.gvfs_fix_conf =
 {
-'mkdir -p "etc"',
-'cp -rf "/etc/X11" "etc"',
-'cp -rf "/etc/fonts" "etc"',
+ 'mkdir -p "gvfs_fix/remote-volume-monitors"',
+ 'mkdir -p "gvfs_fix/mounts"',
+ 'cp "/usr/share/gvfs/mounts/archive.mount" "gvfs_fix/mounts"',
+ 'cp "/usr/share/gvfs/mounts/cdda.mount" "gvfs_fix/mounts"',
+ 'cp "/usr/share/gvfs/mounts/computer.mount" "gvfs_fix/mounts"',
+ 'cp "/usr/share/gvfs/mounts/localtest.mount" "gvfs_fix/mounts"',
+ 'cp "/usr/share/gvfs/mounts/recent.mount" "gvfs_fix/mounts"',
+ 'cp "/usr/share/gvfs/mounts/trash.mount" "gvfs_fix/mounts"',
 }
 
-defaults.features.gvfs_fix_conf=
-{
-'mkdir -p "gvfs_fix/remote-volume-monitors"',
-'mkdir -p "gvfs_fix/mounts"',
-'cp "/usr/share/gvfs/mounts/archive.mount" "gvfs_fix/mounts"',
-'cp "/usr/share/gvfs/mounts/cdda.mount" "gvfs_fix/mounts"',
-'cp "/usr/share/gvfs/mounts/computer.mount" "gvfs_fix/mounts"',
-'cp "/usr/share/gvfs/mounts/localtest.mount" "gvfs_fix/mounts"',
-'cp "/usr/share/gvfs/mounts/recent.mount" "gvfs_fix/mounts"',
-'cp "/usr/share/gvfs/mounts/trash.mount" "gvfs_fix/mounts"',
-}
+defaults.features.gvfs_fix_mount = {"ro-bind",nil,"/usr/share/gvfs"}
 
-defaults.features.gvfs_fix_mount = {"ro-bind",loader.path.combine(defaults.basedir,"chroot","gvfs_fix"),"/usr/share/gvfs"}
+function defaults.recalculate()
+ defaults.features.gvfs_fix_mount[2]=loader.path.combine(defaults.chrootdir,"gvfs_fix")
+ defaults.bwrap.etc_mount[2]=loader.path.combine(defaults.chrootdir,"etc")
+ defaults.bwrap.var_tmp_mount[2]=loader.path.combine(defaults.datadir,"tmp")
+ defaults.bwrap.var_cache_mount[2]=loader.path.combine(defaults.datadir,"cache")
+ defaults.bwrap.home_mount[2]=loader.path.combine(defaults.datadir,"home")
+ defaults.bwrap.xdg_runtime_dir[2]=loader.path.combine("/run","user",defaults.uid)
+ defaults.env.set_xdg_runtime[1][2]=loader.path.combine("/run","user",defaults.uid)
+ defaults.commands.var_tmp[1]='mkdir -p "'..loader.path.combine(defaults.datadir,"tmp")..'"'
+ defaults.commands.var_cache[1]='mkdir -p "'..loader.path.combine(defaults.datadir,"cache")..'"'
+ local home=loader.path.combine(defaults.datadir,"home")
+ local user=loader.path.combine(home,defaults.user)
+ defaults.commands.home[1]='mkdir -p "'..home..'"'
+ defaults.commands.home[2]='test ! -d "'..user..'" && 2>/dev/null cp -rf /etc/skel "'..user..'" || true'
+ defaults.commands.pwd[3]='echo "sandbox:x:'..defaults.uid..':'..defaults.gid..':sandbox:/home/sandbox:/bin/bash" >> "etc/passwd"'
+ defaults.commands.pwd[5]='echo "sandbox:x:'..defaults.gid..':" >> "etc/group"'
+end
+
+defaults.recalculate()
 
 -- define service profiles
 
