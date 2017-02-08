@@ -187,12 +187,12 @@ defaults.env.set_home=
 -- setup user env, essential for normal operation (especially, for shells and scripts)
 -- use this when "defaults.commands.pwd" used when constructing sandbox (recommended)
 -- also define some env variables normally only defined when launching "login" shell
--- (it is usually overkill for sandbox and it may also expose some unneded env variables unset earlier by blacklist feature)
- {"HOME","/home/sandbox"},
+-- (launching login shell is usually overkill for sandbox and it may also expose some unneded env variables unset earlier by blacklist feature)
+ {"HOME",nil},
  {"PATH","/usr/bin:/bin:/usr/bin/X11"},
- {"USER","sandbox"},
- {"INPUTRC","/home/sandbox/.inputrc"},
- {"LOGNAME","sandbox"}
+ {"USER",nil},
+ {"INPUTRC",nil},
+ {"LOGNAME",nil}
 }
 
 defaults.env.set_xdg_runtime = {{"XDG_RUNTIME_DIR",nil}}
@@ -280,8 +280,12 @@ function defaults.recalculate()
  local user=loader.path.combine(home,defaults.user)
  defaults.commands.home[1]='mkdir -p "'..home..'"'
  defaults.commands.home[2]='test ! -d "'..user..'" && 2>/dev/null cp -rf /etc/skel "'..user..'" || true'
- defaults.commands.pwd[3]='echo "sandbox:x:'..defaults.uid..':'..defaults.gid..':sandbox:/home/sandbox:/bin/bash" >> "etc/passwd"'
- defaults.commands.pwd[5]='echo "sandbox:x:'..defaults.gid..':" >> "etc/group"'
+ defaults.env.set_home[1][2]=loader.path.combine("/home",defaults.user);
+ defaults.env.set_home[3][2]=defaults.user
+ defaults.env.set_home[4][2]=loader.path.combine(defaults.env.set_home[1][2],".inputrc");
+ defaults.env.set_home[5][2]=defaults.user
+ defaults.commands.pwd[3]='echo "'..defaults.user..':x:'..defaults.uid..':'..defaults.gid..':'..defaults.user..':'..defaults.env.set_home[1][2]..':/bin/bash" >> "etc/passwd"'
+ defaults.commands.pwd[5]='echo "'..defaults.user..':x:'..defaults.gid..':" >> "etc/group"'
 end
 
 defaults.recalculate()

@@ -146,7 +146,7 @@ sandbox.bwrap =
 	defaults.bwrap.unshare_user,
 	defaults.bwrap.unshare_ipc,
 	defaults.bwrap.unshare_pid,
-	defaults.bwrap.unshare_net,
+	-- defaults.bwrap.unshare_net,
 	defaults.bwrap.unshare_uts,
 	-- defaults.bwrap.unshare_cgroup,
 	-- create some service directories
