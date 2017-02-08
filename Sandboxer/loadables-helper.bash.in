@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# simple dumb script to probe and enable selected set of bash loadables
+# TODO: create proper and portable script
+# TODO: maybe, remove this script at all - main goal was just to use sleep that allows fractions of seconds and invoked much in sandboxer.sh script while checking state of some launched processes
+
+bash_version=`echo "$BASH_VERSION" | cut -f1-2 -d"."`
+loadables_dir=""
+
+function probe_loadable() {
+ 2>/dev/null enable -f "$loadables_dir/$1.so" "$1"
+}
+
+if [ "z$bash_version" != "z" ]; then
+ if [ -d "/lib64/bash/$bash_version" ]; then
+  loadables_dir="/lib64/bash/$bash_version"
+ elif [ -d "/lib/bash/$bash_version" ]; then
+  loadables_dir="/lib/bash/$bash_version"
+ fi
+ if [ ! -z "$loadables_dir" ]; then
+  probe_loadable cut
+  probe_loadable sleep
+  probe_loadable mkdir
+  probe_loadable rmdir
+  probe_loadable ln
+  probe_loadable id
+ fi
+fi
+
+unset -f probe_loadable
+unset loadables_dir
+unset bash_version
+

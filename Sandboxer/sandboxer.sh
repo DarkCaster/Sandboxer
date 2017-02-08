@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#detection of actual script location
 curdir="$PWD"
 script_dir="$( cd "$( dirname "$0" )" && pwd )"
 self=`basename "$0"`
@@ -7,13 +8,16 @@ test ! -e "$script_dir/$self" && echo "script_dir detection failed. cannot proce
 script_file=`readlink "$script_dir/$self"`
 test ! -z "$script_file" && script_dir=`realpath \`dirname "$script_file"\``
 
+#load parameters
 config="$1"
 test -z "$config" && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
 shift 1
-
 profile="$1"
 test -z "$profile" && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
 shift 1
+
+#activate some loadables
+. "$script_dir/loadables-helper.bash.in"
 
 #generate uid for given config file
 test ! -e "$config" && echo "config file not found: $config" && exit 1
