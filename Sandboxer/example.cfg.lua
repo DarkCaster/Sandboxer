@@ -11,6 +11,59 @@
 --   pulse (internal profile for pulseaudio feature support)
 -- try not to redefine this identifiers accidentally (TODO add some more checks)
 
+-- some tunable defaults:
+
+-- base directory: defaults.basedir
+-- you may change this in case of debug.
+-- default value is config.ctldir - automatically generated sandbox directory unique to config file, located in /tmp.
+-- base directory for all internal sandbox control stuff, used by sandboxer system,
+-- this directory will be automatically created\removed by sandboxer system.
+-- automatically generated directories and files also stored here.
+-- this directory should be unique for each sandbox config file, and should be placed on tmpfs.
+-- example:
+-- defaults.basedir=config.ctldir -- default
+-- defaults.basedir=loader.path.combine(loader.workdir,"basedir-"..config.sandbox_uid)
+
+-- chroot construction dir: defaults.chrootdir
+-- used by defaults.commands\default.bwrap defines
+-- this directory is set (chdir) before running sandbox.setup.commands blocks, and when applying some features
+-- example:
+-- defaults.chrootdir=loader.path.combine(defaults.basedir,"chroot") -- default
+-- defaults.chrootdir=loader.path.combine(loader.workdir,"chroot-"..config.sandbox_uid)
+
+-- user id: defaults.uid
+-- numeric user id, used in various sandbox.setup.commands and when applying some features
+-- may be used when launching bwrap with custom uid\gid option
+-- default value - user id of user launched sandboxer.sh script
+-- example:
+-- defaults.uid=config.uid -- default
+
+-- group id id: defaults.gid
+-- similiar to user id (above)
+-- default value - effective gid of user launched sandboxer.sh script
+-- example:
+-- defaults.gid=config.gid -- default
+
+-- username, used inside sandbox: defaults.user
+-- username, string, used by some sandbox.setup.commands blocks (for example defaults.commands.pwd command)
+-- default value - sandboxer
+-- example:
+-- defaults.user="sandboxer" -- default
+
+-- persistent directory for userdata: defaults.datadir
+-- used by some sandbox.setup.commands and sandbox.bwrap blocks.
+-- stores user's home and configs, persistent cache, persistent tmp (/var/tmp)
+-- default value - unique directory based on config file name + it's fs location.
+-- this directory created by default in the same directory as current config file. 
+-- example:
+-- defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid) -- default
+-- defaults.datadir=loader.path.combine(os.getenv("HOME"),"sandboxer-"..config.sandbox_uid)
+
+-- if you changed ANY of tunable defaults (above), you MUST run defaults.recalculate() function here,
+-- this will update and recalculate all deps used by other defaults definitions and setup commands.
+-- uncomment this if you changed anything above:
+-- defaults.recalculate()
+
 sandbox =
 {
 	-- sandbox features and integration options.
