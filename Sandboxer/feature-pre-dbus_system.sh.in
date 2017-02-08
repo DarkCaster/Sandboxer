@@ -1,7 +1,0 @@
-#!/bin/bash
-
-cd "$basedir/chroot"
-check_errors
-exec_process_cmd_list "defaults.features.dbus_conf_copy"
-bwrap_process_params_list "defaults.features.dbus_system_mount"
-
