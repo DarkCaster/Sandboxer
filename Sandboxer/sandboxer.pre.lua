@@ -197,6 +197,12 @@ defaults.env.set_home=
 
 defaults.env.set_xdg_runtime = {{"XDG_RUNTIME_DIR",nil}}
 
+defaults.env.set_x11 = {{"DISPLAY",os.getenv("DISPLAY")}}
+
+if os.getenv("XCURSOR_THEME")~=nil then
+ table.insert(defaults.env.set_x11,{"XCURSOR_THEME",os.getenv("XCURSOR_THEME")})
+end
+
 defaults.bwrap={}
 
 -- main bwrap command line options
@@ -233,10 +239,10 @@ defaults.bwrap.usr_rw_mount = {"bind",nil,"/usr"}
 defaults.bwrap.lib_rw_mount = {"bind",nil,"/lib"}
 defaults.bwrap.lib64_rw_mount = {"bind",nil,"/lib64"}
 defaults.bwrap.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
+defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 
 -- defines for features, fore use in main script
 defaults.features={}
-defaults.features.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 defaults.features.gvfs_fix_conf =
 {
  'mkdir -p "gvfs_fix/remote-volume-monitors"',

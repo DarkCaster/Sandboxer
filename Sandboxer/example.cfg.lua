@@ -106,6 +106,7 @@ sandbox =
 			-- defaults.commands.etc_full, -- copy full /etc to to defaults.chrootdir
 			defaults.commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.commands.home, -- create userdata/home at this config file directory, if missing
+			-- defaults.commands.x11, -- TODO: copy .Xauthority, or use xhost utility to allow x11 use inside sandbox. should be run after defaults.commands.home
 			defaults.commands.var_cache, -- create userdata/cache at this config file directory, if missing
 			defaults.commands.var_tmp, -- create userdata/tmp at this config file directory, if missing
 		},
@@ -133,6 +134,7 @@ sandbox =
 		{
 			defaults.env.set_home,
 			defaults.env.set_xdg_runtime,
+			defaults.env.set_x11, -- export display value from host (and maybe some other values needed for x11)
 		}
 	},
 }
@@ -164,6 +166,7 @@ sandbox.bwrap =
 	-- defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
 	-- other mounts, also essential for normal operation
 	-- defaults.bwrap.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
+	-- defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net 
 	defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
 	defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
 	defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
