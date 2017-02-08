@@ -1,6 +1,0 @@
-#!/bin/bash
-
-cd "${cfg[defaults.chrootdir]}"
-check_errors
-bwrap_process_params_list "defaults.features.x11_mount"
-
