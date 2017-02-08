@@ -113,6 +113,7 @@ sandbox.bwrap =
 	-- defaults.bwrap.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
 	-- defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
 	-- other mounts, also essential for normal operation
+	-- defaults.bwrap.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
 	defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
 	defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
 	defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
