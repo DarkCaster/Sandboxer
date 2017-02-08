@@ -1,6 +1,5 @@
 TODO list:
 
-- setup available bash-loadables at start to improve overall performance of sandboxer.sh script (and lua-helper too, but it is already fast enough in comparison to main script)
 - more secure execution of commands from config file, maybe, only for non-defaults commands blocks - main goal is to remove ability to access and modify internal env of sandboxer.sh script
 - dbus watchdog
 - pulse audio integration
