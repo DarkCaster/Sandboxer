@@ -66,12 +66,10 @@
 
 sandbox =
 {
-	-- sandbox features and integration options.
-	-- allow applications from sandbox to use some features from host env. some features (x11, system dbus, or hardware opengl support) may possess a potential security threat.
+	-- sandbox features and host-integration stuff that require some complex or dynamic preparations.
 	-- features are enabled in order of appearance, feature name may contain only lowercase letters, numbers and underscores.
 	features =
 	{
-		"x11", -- allow to use x11 from host env, mount x11 socket, prepare host x11 to allow connections from sandbox. this will expose currently running xserver on host env to sandbox 
 		"dbus", -- run dbus-session instance inside sandbox, and allow other sandbox sessions to use it
 		"gvfs_fix", -- fix gvfs setup inside sandbox, and strip down it's features to bare minimum. TODO: find out what removed gvfs features works inside sandbox and reenable it
 	},
