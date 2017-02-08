@@ -18,11 +18,8 @@ sandbox =
 	-- features are enabled in order of appearance, feature name may contain only lowercase letters, numbers and underscores.
 	features =
 	{
-		-- "pulse", -- TODO, allow to connect pulseaudio instance running on host (and produce audio output)
-		"x11", -- allow to use x11 from host env, mount x11 socket. this will expose currently running xserver on host env to sandbox 
-		-- "dri", -- TODO, allow to use dri interface to perform opengl hardware acceleration
+		"x11", -- allow to use x11 from host env, mount x11 socket, prepare host x11 to allow connections from sandbox. this will expose currently running xserver on host env to sandbox 
 		"dbus", -- run dbus-session instance inside sandbox, and allow other sandbox sessions to use it
-		"dbus_system", -- mount dbus-system socket from host, not always required for all applications
 		"gvfs_fix", -- fix gvfs setup inside sandbox, and strip down it's features to bare minimum. TODO: find out what removed gvfs features works inside sandbox and reenable it
 	},
 
