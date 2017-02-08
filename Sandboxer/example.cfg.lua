@@ -103,21 +103,28 @@ sandbox.bwrap =
 	defaults.bwrap.run_dir,
 	defaults.bwrap.xdg_runtime_dir,
 	defaults.bwrap.tmp_dir,
-	-- make some mounts essential for normal operation
-	defaults.bwrap.proc_mount, -- /proc
-	defaults.bwrap.dev_mount, -- /dev
+	-- make some essential mounts
+	defaults.bwrap.proc_mount, -- /proc, prepared by bwrap (according by unshare_* options)
+	defaults.bwrap.dev_mount, -- /dev, prepared and filtered by bwrap
 	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
 	defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
 	defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
 	defaults.bwrap.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-	defaults.bwrap.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-	defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
-	-- other dirs, needed for application running, TODO: change theese with defaults	
-	-- first option will be prepended by "--", all options will be processes as strings
-	{"ro-bind","/bin","/bin"},
-	{"ro-bind","/usr","/usr"},
-	{"ro-bind","/lib","/lib"},
-	{"ro-bind","/lib64","/lib64"},
+	-- defaults.bwrap.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+	-- defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
+	-- other mounts, also essential for normal operation
+	defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
+	defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
+	defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
+	defaults.bwrap.host_lib64_mount, -- readonly mount host /lib64 directory
+	-- defaults.bwrap.bin_ro_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
+	-- defaults.bwrap.usr_ro_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
+	-- defaults.bwrap.lib_ro_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
+	-- defaults.bwrap.lib64_ro_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
+	-- defaults.bwrap.bin_rw_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
+	-- defaults.bwrap.usr_rw_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
+	-- defaults.bwrap.lib_rw_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
+	-- defaults.bwrap.lib64_rw_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
 }
 
 -- configuration for applications to run inside this sandbox

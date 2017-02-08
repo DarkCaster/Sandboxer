@@ -234,7 +234,18 @@ defaults.bwrap.etc_rw_mount = {"bind",nil,"/etc"}
 defaults.bwrap.host_etc_mount = {"ro-bind","/etc","/etc"}
 defaults.bwrap.proc_mount = {"proc","/proc"}
 defaults.bwrap.dev_mount = {"dev","/dev"}
-
+defaults.bwrap.host_bin_mount = {"ro-bind","/bin","/bin"}
+defaults.bwrap.host_usr_mount = {"ro-bind","/usr","/usr"}
+defaults.bwrap.host_lib_mount = {"ro-bind","/lib","/lib"}
+defaults.bwrap.host_lib64_mount = {"ro-bind","/lib64","/lib64"}
+defaults.bwrap.bin_ro_mount = {"ro-bind",nil,"/bin"}
+defaults.bwrap.usr_ro_mount = {"ro-bind",nil,"/usr"}
+defaults.bwrap.lib_ro_mount = {"ro-bind",nil,"/lib"}
+defaults.bwrap.lib64_ro_mount = {"ro-bind",nil,"/lib64"}
+defaults.bwrap.bin_rw_mount = {"bind",nil,"/bin"}
+defaults.bwrap.usr_rw_mount = {"bind",nil,"/usr"}
+defaults.bwrap.lib_rw_mount = {"bind",nil,"/lib"}
+defaults.bwrap.lib64_rw_mount = {"bind",nil,"/lib64"}
 
 -- defines for features, fore use in main script
 defaults.features={}
@@ -256,6 +267,14 @@ defaults.features.gvfs_fix_mount = {"ro-bind",nil,"/usr/share/gvfs"}
 
 function defaults.recalculate()
  defaults.features.gvfs_fix_mount[2]=loader.path.combine(defaults.chrootdir,"gvfs_fix")
+ defaults.bwrap.bin_ro_mount[2] = loader.path.combine(defaults.chrootdir,"/bin")
+ defaults.bwrap.usr_ro_mount[2] = loader.path.combine(defaults.chrootdir,"/usr")
+ defaults.bwrap.lib_ro_mount[2] = loader.path.combine(defaults.chrootdir,"/lib")
+ defaults.bwrap.lib64_ro_mount[2] = loader.path.combine(defaults.chrootdir,"/lib64")
+ defaults.bwrap.bin_rw_mount[2] = defaults.bwrap.bin_ro_mount[2]
+ defaults.bwrap.usr_rw_mount[2] = defaults.bwrap.usr_ro_mount[2]
+ defaults.bwrap.lib_rw_mount[2] = defaults.bwrap.lib_ro_mount[2]
+ defaults.bwrap.lib64_rw_mount[2] = defaults.bwrap.lib64_ro_mount[2]
  defaults.bwrap.etc_ro_mount[2]=loader.path.combine(defaults.chrootdir,"etc")
  defaults.bwrap.etc_rw_mount[2]=defaults.bwrap.etc_ro_mount[2]
  defaults.bwrap.var_tmp_mount[2]=loader.path.combine(defaults.datadir,"tmp")
