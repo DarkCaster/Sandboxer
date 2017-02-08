@@ -246,10 +246,10 @@ defaults.bwrap.bin_rw_mount = {"bind",nil,"/bin"}
 defaults.bwrap.usr_rw_mount = {"bind",nil,"/usr"}
 defaults.bwrap.lib_rw_mount = {"bind",nil,"/lib"}
 defaults.bwrap.lib64_rw_mount = {"bind",nil,"/lib64"}
+defaults.bwrap.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 
 -- defines for features, fore use in main script
 defaults.features={}
-defaults.features.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 defaults.features.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 defaults.features.gvfs_fix_conf =
 {
