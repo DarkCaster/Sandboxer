@@ -24,7 +24,7 @@ uid=`id -u`
 gid=`id -g`
 
 . "$script_dir/find-lua-helper.bash.in"
-. "$bash_lua_helper" "$config" -e defaults.basedir -e defaults.features -e sandbox -e profile -e dbus -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
+. "$bash_lua_helper" "$config" -e defaults.basedir -e defaults.chrootdir -e defaults.features -e sandbox -e profile -e dbus -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
 
@@ -202,7 +202,7 @@ bwrap_process_two_level_params_list() {
 log "creating sandbox"
 
 #chroot dir
-mkdir -p "$basedir/chroot"
+mkdir -p "${cfg[defaults.chrootdir]}"
 check_errors
 
 mkdir -p "$basedir/control"
@@ -212,7 +212,7 @@ check_errors
 test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "$basedir/executor" || cp "$executor" "$basedir/executor"
 
 #execute custom chroot construction commands
-cd "$basedir/chroot"
+cd "${cfg[defaults.chrootdir]}"
 check_errors
 exec_process_two_level_cmd_list "sandbox.setup.commands"
 
