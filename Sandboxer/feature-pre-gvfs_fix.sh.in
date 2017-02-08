@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "$basedir/chroot"
+cd "${cfg[defaults.chrootdir]}"
 check_errors
 exec_process_cmd_list "defaults.features.gvfs_fix_conf"
 bwrap_process_params_list "defaults.features.gvfs_fix_mount"

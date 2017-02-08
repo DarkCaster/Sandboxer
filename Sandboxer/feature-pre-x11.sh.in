@@ -1,7 +1,6 @@
 #!/bin/bash
 
-cd "$basedir/chroot"
+cd "${cfg[defaults.chrootdir]}"
 check_errors
-exec_process_cmd_list "defaults.features.x11_conf_copy"
 bwrap_process_params_list "defaults.features.x11_mount"
 
