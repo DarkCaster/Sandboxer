@@ -57,6 +57,9 @@ if check_lua_export $exec_profile.term_signal ; then
  check_errors
 fi
 
+#wait for any running background command-list exec task to complete
+wait_for_bg_exec
+
 #run
 if [ "$exec_bg" != "true" ]; then
  "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}" "$exec_log_out" "$exec_log_err"

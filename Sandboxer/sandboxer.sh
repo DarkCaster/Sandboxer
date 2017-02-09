@@ -292,7 +292,7 @@ wait_for_bg_exec
 log "starting new master executor"
 
 #run bwrap and start executor
-&>"$basedir/control/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}" &
+&>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}" &
 
 log "waiting for control comm-channels to appear"
 
