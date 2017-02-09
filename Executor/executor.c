@@ -149,7 +149,6 @@ static PidListDef _create_orphans_list(void)
     pid_list_validate_slave_executors(_slave_list,getpid());
     PidListDef ignore_list=pid_list_init();
     pid_list_add(ignore_list,getpid());
-    pid_list_add(ignore_list,getppid());
     PidListDef orphans_list=pid_list_init();
     if(!populate_list_with_orphans(orphans_list,_slave_list,ignore_list))
         log_message(logger,LOG_ERROR,"_create_orphans_list:populate_list_with_orphans failed! errno=",LI(errno));

@@ -287,6 +287,8 @@ bool populate_list_with_orphans(PidListDef result, PidListDef ignored_sessions, 
             }
             else
             {
+                if(pid==1||pid_list_check(ignored_pids,pid))
+                    continue;
                 int check=check_target_is_child(i_list,pid);
                 if(check==1)
                    pid_list_add(ignored_pids,pid);
