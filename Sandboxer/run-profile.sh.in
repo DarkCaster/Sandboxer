@@ -58,7 +58,7 @@ if check_lua_export $exec_profile.term_signal ; then
 fi
 
 #wait for any running background command-list exec task to complete
-wait_for_bg_exec
+wait_for_cmd_list
 
 #run
 if [ "$exec_bg" != "true" ]; then

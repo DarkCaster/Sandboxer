@@ -108,6 +108,9 @@ extra_env_unset_add() {
  extra_env_unset_cnt=$((extra_env_unset_cnt+1))
 }
 
+#placeholder for run-profile.sh.in
+wait_for_cmd_list() { true; }
+
 #enter lock
 lock_enter
 
@@ -115,7 +118,7 @@ lock_enter
 ###############################
 if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]; then
 
-exec_bg_pid=0
+cmd_list_bg_pid=0
 
 exec_cmd() {
  local cmd_path="$1"
@@ -163,14 +166,14 @@ exec_cmd_list_in_bg() {
    exit 0
   fi
  ) &
- exec_bg_pid=$!
+ cmd_list_bg_pid=$!
 }
 
-wait_for_bg_exec() {
- if [ "$exec_bg_pid" != "0" ]; then
-  wait $exec_bg_pid
+wait_for_cmd_list() {
+ if [ "$cmd_list_bg_pid" != "0" ]; then
+  wait $cmd_list_bg_pid
   check_errors "command list execute failed!"
-  exec_bg_pid=0
+  cmd_list_bg_pid=0
  fi
 }
 
@@ -287,7 +290,7 @@ do
 done
 
 #we must wait here for completion of background command list procssing if any
-wait_for_bg_exec
+wait_for_cmd_list
 
 log "starting new master executor"
 
