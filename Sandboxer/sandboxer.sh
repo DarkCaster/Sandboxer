@@ -137,6 +137,12 @@ exec_cmd_list_in_bg() {
  #debug
  #log "executing commands from $list list"
  (
+  #cleanup current env to enhance secutity when running custom commands
+  unset -f exec_cmd_list_in_bg wait_for_cmd_list extra_env_unset_add extra_env_set_add check_errors teardown lock_exit lock_enter \
+  bwrap_add_param bwrap_env_set_unset bwrap_process_params_list bwrap_process_two_level_params_list
+  unset extra_env_unset extra_env_unset_cnt extra_env_set_name extra_env_set_value extra_env_set_cnt lock_entered \
+  basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid \
+  bwrap_params bwrap_param_cnt feature_cnt
   local top_cnt=1
   local err_code=0
   local exec_bg_pid_error=""
