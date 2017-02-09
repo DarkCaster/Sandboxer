@@ -30,8 +30,8 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
   dbus_wait=$((dbus_wait-1))
  done
  #detach commander for dbus session if it is running
- kill -SIGUSR2 $exec_bg_pid
- check_errors
+ 2>/dev/null kill -SIGUSR2 $exec_bg_pid
+ check_errors "failed to send detach command to dbus-session commander"
  #TODO: start dbus watchdog script or utility
 elif [ -p "$basedir/control/dbus.in" ] && [ -p "$basedir/control/dbus.out" ]; then
  # just read already created dbus-daemon.out
