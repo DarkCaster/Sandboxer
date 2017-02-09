@@ -16,7 +16,7 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
  exec_log_err="$basedir/dbus-daemon.err"
  . "$script_dir/run-profile.sh.in"
  #wait for output
- dbus_wait=200
+ dbus_wait=400
  while [ $dbus_wait -ge 1 ]
  do
   if [ -f "$basedir/dbus-daemon.out" ] && [ `wc -l <"$basedir/dbus-daemon.out"` = 2 ]; then
@@ -26,7 +26,7 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
     break
    fi
   fi
-  sleep 0.05
+  sleep 0.025
   dbus_wait=$((dbus_wait-1))
  done
  #detach commander for dbus session if it is running
