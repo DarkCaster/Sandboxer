@@ -1,6 +1,5 @@
 TODO list:
 
-- more secure execution of commands from config file, maybe, only for non-defaults commands blocks - main goal is to remove ability to access and modify internal env of sandboxer.sh script
 - dbus watchdog
 - pulse audio integration
 - dri integration
