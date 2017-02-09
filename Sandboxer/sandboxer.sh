@@ -115,32 +115,63 @@ lock_enter
 ###############################
 if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]; then
 
+exec_bg_pid=0
+
 exec_cmd() {
  local cmd_path="$1"
+ #protect caller's variables
+ local list
+ local top_cnt
+ local err_code
+ local fold_cnt
  #debug
- #echo "exec: ${cfg[$cmd_path]}"
+ #log "exec: ${cfg[$cmd_path]}"
  eval "${cfg[$cmd_path]}"
- check_errors "chroot setup command $cmd_path was failed!"
 }
 
-exec_process_cmd_list() {
+exec_cmd_list_in_bg() {
  local list="$1"
- local cnt=1
- while `check_lua_export "$list.$cnt"`
- do
-  exec_cmd "$list.$cnt"
-  cnt=$((cnt+1))
- done
+ #debug
+ #log "executing commands from $list list"
+ (
+  local top_cnt=1
+  local err_code=0
+  local exec_bg_pid_error=""
+  while `check_lua_export "$list.$top_cnt"`
+  do
+   if [ -z "${cfg[$list.$top_cnt]}" ]; then
+    local fold_cnt=1
+    while `check_lua_export "$list.$top_cnt.$fold_cnt"`
+    do
+     exec_cmd "$list.$top_cnt.$fold_cnt"
+     err_code="$?"
+     test "$err_code" != "0" && exec_bg_pid_error="$list.$top_cnt.$fold_cnt" && break
+     fold_cnt=$((fold_cnt+1))
+    done
+   else
+    exec_cmd "$list.$top_cnt"
+    err_code="$?"
+    test "$err_code" != "0" && exec_bg_pid_error="$list.$top_cnt"
+   fi
+   test "$err_code" != "0" && break
+   top_cnt=$((top_cnt+1))
+  done
+  if [ "$err_code" != "0" ]; then
+   log "command $exec_bg_pid_error complete with error code $err_code"
+   exit "$err_code"
+  else
+   exit 0
+  fi
+ ) &
+ exec_bg_pid=$!
 }
 
-exec_process_two_level_cmd_list() {
- local list="$1"
- local cnt=1
- while `check_lua_export "$list.$cnt"`
- do
-  exec_process_cmd_list "$list.$cnt"
-  cnt=$((cnt+1))
- done
+wait_for_bg_exec() {
+ if [ "$exec_bg_pid" != "0" ]; then
+  wait $exec_bg_pid
+  check_errors "command list execute failed!"
+  exec_bg_pid=0
+ fi
 }
 
 bwrap_params=()
@@ -218,7 +249,9 @@ test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "
 #execute custom chroot construction commands
 cd "${cfg[defaults.chrootdir]}"
 check_errors
-exec_process_two_level_cmd_list "sandbox.setup.commands"
+
+#this will start commands execution in subshell and in background
+exec_cmd_list_in_bg "sandbox.setup.commands"
 
 # for now enforce --new-session parameter
 bwrap_add_param "--new-session"
@@ -243,7 +276,6 @@ bwrap_add_param "$basedir/control"
 bwrap_add_param "/executor/control"
 
 #pre-launch features
-
 feature_cnt=1
 while `check_lua_export "sandbox.features.$feature_cnt"`
 do
@@ -253,6 +285,9 @@ do
  fi
  feature_cnt=$((feature_cnt+1))
 done
+
+#we must wait here for completion of background command list procssing if any
+wait_for_bg_exec
 
 log "starting new master executor"
 
