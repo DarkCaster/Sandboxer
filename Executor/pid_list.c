@@ -249,29 +249,54 @@ bool populate_list_with_session_members(PidListDef list_instance, pid_t session)
     return true;
 }
 
-bool populate_list_with_orphans(PidListDef list_instance, PidListDef ignored_parents)
+bool populate_list_with_orphans(PidListDef result, PidListDef ignored_sessions, PidListDef ignored_pids)
 {
-    PidList* const i_list=(PidList*)ignored_parents;
+    PidList* const i_list=(PidList*)ignored_pids;
+
+    const int base_proc_stat_len=11; // /proc/<pid>/stat
+    int stat_path_len=base_proc_stat_len+num_t_max_len(pid_t);
+    char stat_path[stat_path_len+1];
+    stat_path[stat_path_len]='\0';
+
     struct dirent* d_entry=NULL;
-    DIR* proc=opendir("/proc");
-    if(proc==NULL)
-        return false;
-    while((d_entry = readdir(proc)) != NULL)
+    FILE* stat_file=NULL;
+    pid_t pid=0;
+    pid_t sid=0;
+
+    for(int i=0; i<2; ++i)
     {
-        if(!arg_is_numeric(d_entry->d_name))
-            continue;
-        pid_t pid=(pid_t)strtol(d_entry->d_name, NULL, 10);
-        if(pid==1)
-            continue;
-        int check=check_target_is_child(i_list,pid);
-        if(check!=0)
-            continue;
-        pid_list_add(list_instance, pid);
+        DIR* proc=opendir("/proc");
+        if(proc==NULL)
+            return false;
+        while((d_entry = readdir(proc)) != NULL)
+        {
+            if(!arg_is_numeric(d_entry->d_name))
+                continue;
+            sprintf(stat_path, "/proc/%s/stat", d_entry->d_name);
+            stat_file = fopen(stat_path,"r");
+            if(stat_file==NULL)
+                continue;
+            int v_read=fscanf(stat_file, "%d %*s %*c %*d %*d %d", &pid, &sid);
+            fclose(stat_file);
+            if(v_read!=2)
+                continue;
+            if(i==0)
+            {
+                if(pid_list_check(ignored_sessions,sid))
+                    pid_list_add(ignored_pids,pid);
+            }
+            else
+            {
+                int check=check_target_is_child(i_list,pid);
+                if(check==1)
+                   pid_list_add(ignored_pids,pid);
+                else if(check==0)
+                   pid_list_add(result,pid);
+            }
+        }
+        if(closedir(proc)!=0)
+            return false;
     }
-    if(closedir(proc)!=0)
-        return false;
-    for(int i=0;i<i_list->count;++i)
-        pid_list_remove(list_instance,i_list->list[i]);
     return true;
 }
 

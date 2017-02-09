@@ -148,10 +148,10 @@ static PidListDef _create_orphans_list(void)
 {
     pid_list_validate_slave_executors(_slave_list,getpid());
     PidListDef ignore_list=pid_list_init();
-    pid_list_copy_2(_slave_list,ignore_list);
     pid_list_add(ignore_list,getpid());
+    pid_list_add(ignore_list,getppid());
     PidListDef orphans_list=pid_list_init();
-    if(!populate_list_with_orphans(orphans_list,ignore_list))
+    if(!populate_list_with_orphans(orphans_list,_slave_list,ignore_list))
         log_message(logger,LOG_ERROR,"_create_orphans_list:populate_list_with_orphans failed! errno=",LI(errno));
     pid_list_deinit(ignore_list);
     return orphans_list;
@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
                 //check for slaves
                 pid_lock();
                 int msc = _master_get_slave_count();
-                int osc = terminate_orphans?_master_get_orphans_count():0;
+                int osc = (terminate_orphans && msc<=0)?_master_get_orphans_count():0;
                 if( msc<=0 && osc<=0 )
                 {
                     log_message(logger,LOG_INFO,"Performing shutdown because of timeout");
