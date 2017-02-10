@@ -57,6 +57,11 @@ if check_lua_export $exec_profile.term_signal ; then
  check_errors
 fi
 
+if [ "${cfg[$exec_profile.term_child_only]}" = "true" ]; then
+ 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 7 1
+ check_errors
+fi
+
 #wait for any running background command-list exec task to complete
 wait_for_cmd_list
 
