@@ -1,0 +1,37 @@
+#!/bin/bash
+
+lock_entered="false"
+
+#initial sleep
+
+while true
+do
+
+#check, that there are slave sessions active other than dbus session
+#sleep and continue, if true
+
+#enter lock
+
+#check, that there are slave sessions active other than dbus session
+#exit lock and continue, if true
+
+#check, that there are any orphans running (services started by dbus should not became orphans)
+#exit lock, sleep and continue if true
+
+#request dbus session to gracefully terminate
+#wait some time while dbus session is terminated
+
+#check, if dbus session still running
+#request dbus session to force quit
+#wait some time while dbus session is force terminating
+
+#check, if there are any orphans left
+#request commander to force terminate if so
+#wait while commander if shuting down
+
+#exit lock
+
+exit 1
+
+done
+
