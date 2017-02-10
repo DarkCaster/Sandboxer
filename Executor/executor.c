@@ -60,6 +60,7 @@ static uint8_t chld_buf[MSGPLMAXLEN+1];
 static volatile uint8_t shutdown;
 static volatile uint8_t command_mode;
 static volatile bool child_is_alive;
+static volatile pid_t child_pid;
 static volatile uint8_t child_ec;
 static volatile int child_signal;
 static bool child_signal_set;
@@ -215,6 +216,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context)
 {
     pid_lock();
+    child_pid=0;
     child_is_alive=false;
     child_ec=(uint8_t)(info->si_status);
     id_t ch_pid=(id_t)(info->si_pid);
@@ -273,6 +275,7 @@ int main(int argc, char* argv[])
     child_ec=0;
     child_signal_set=false;
     child_signal=15;
+    child_pid=0;
 
     workdir=NULL;
 
@@ -1177,6 +1180,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
 
     command_mode=0;
     child_is_alive=true;
+    child_pid=pid;
     pid_unlock();
 
     if(!use_pty)
