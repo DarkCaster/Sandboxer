@@ -53,6 +53,7 @@ static uint8_t operation_3(char* name, char* value);
 static uint8_t operation_4(char* name);
 static uint8_t operation_5(char* s_signal);
 static uint8_t operation_6(char* dir);
+static uint8_t operation_7(char* child_only_terminate);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect, const char *out_filename, const char *err_filename);
 static uint8_t operation_101_201(uint8_t use_pty);
 static uint8_t operation_250(void);
@@ -264,6 +265,12 @@ int main(int argc, char* argv[])
             err=56;
         else
             err=operation_6(op_param[0]);
+        break;
+    case 7:
+        if(p_count<1)
+            err=57;
+        else
+            err=operation_7(op_param[0]);
         break;
     case 100:
         if(p_count<1)
@@ -497,6 +504,24 @@ static uint8_t operation_5(char* s_signal)
     cmdhdr_write(data_buf,0,cmd);
     int32_t cmdlen=(int32_t)CMDHDRSZ;
     *(data_buf+CMDHDRSZ)=signal;
+    ++cmdlen;
+    param_send_macro(cmdlen);
+    return 0;
+}
+
+static uint8_t operation_7(char* child_only_terminate)
+{
+    if(!arg_is_numeric(child_only_terminate))
+    {
+        log_message(logger,LOG_ERROR,"Argument must be numeric - 1 or 0");
+        return 1;
+    }
+    uint8_t par=(uint8_t)strtol(child_only_terminate, NULL, 10);
+    CMDHDR cmd;
+    cmd.cmd_type=7;
+    cmdhdr_write(data_buf,0,cmd);
+    int32_t cmdlen=(int32_t)CMDHDRSZ;
+    *(data_buf+CMDHDRSZ)=par;
     ++cmdlen;
     param_send_macro(cmdlen);
     return 0;

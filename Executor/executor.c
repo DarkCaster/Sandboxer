@@ -99,6 +99,7 @@ static uint8_t operation_3(char* name, size_t n_len, char* value, size_t v_len);
 static uint8_t operation_4(char* name, size_t n_len);
 static uint8_t operation_5(uint8_t signal);
 static uint8_t operation_6(char* dir, size_t len);
+static uint8_t operation_7(uint8_t _child_only_terminate);
 static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
@@ -499,6 +500,12 @@ int main(int argc, char* argv[])
                 break;
             case 6:
                 err=operation_6((char*)(data_buf+CMDHDRSZ),(size_t)pl_len-(size_t)CMDHDRSZ);
+                break;
+            case 7:
+                if((size_t)pl_len-(size_t)CMDHDRSZ==1)
+                    err=operation_7(*(data_buf+(int)CMDHDRSZ));
+                else
+                    err=13;
                 break;
             case 100:
                 err=operation_100_101_200_201(0,0);
@@ -971,6 +978,18 @@ static uint8_t operation_6(char* dir, size_t len)
     }
     else
         return 1;
+}
+
+static uint8_t operation_7(uint8_t _child_only_terminate)
+{
+    if(_child_only_terminate>0)
+        child_only_terminate=true;
+    else
+        child_only_terminate=false;
+    log_message(logger,LOG_INFO,"Terminate child only mode set to %i",LI(child_only_terminate));
+    if(operation_status(0)!=0)
+        return 255;
+    return 0;
 }
 
 static uint8_t operation_250(void)
