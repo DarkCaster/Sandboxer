@@ -34,9 +34,8 @@ control mode:
 TODO list:
 
 - commander: handle ctrl+c, hup and term to perform safe detach from active executor connection (this logic already there, it is now activated by sigusr2 signal).
-- executor: modify orphan enumeration algorithm - exclude processes that have same session as slave executor even if they are disconnected from parent (there is exactly such situation with dbus)
 - executor: check that orphaned processes with valid session id is properly tracked as childs when tracked child process is still running.
-- executor: create termination command that send terminate signal only to tracked child process, not to all childs and session members.
+- executor: create termination command that send terminate signal only to tracked child process, not to all session members and it's childs.
 - executor: in addition to logfile enable\disable startup parameter, add parameter to enable\disable stdout logging (now this behavior controlled by master\slave mode selection paremeter)
 - executor: when stdout logging is disabled - redirect standard fds (0,1,2) to /dev/null, so, they do not expose external bwrap output redirection to logfile 
 - executor: use seccomp to lockdown slave executor after it spawn user binary
