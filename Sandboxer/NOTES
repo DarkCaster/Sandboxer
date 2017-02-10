@@ -1,6 +1,5 @@
 TODO list:
 
-- dbus watchdog
 - pulse audio integration
 - dri integration
 - va-api integration (check, maybe it is already working)
