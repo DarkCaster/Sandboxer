@@ -5,29 +5,68 @@
 #include <string.h>
 #include <ctype.h>
 
+#define MIN_LIST_CAPACITY 64
+
 #define PidList struct strPidList
 
 struct strPidList {
     pid_t* list;
     int count;
+    int capacity;
 };
 
 static int check_target_is_child(PidList* parents, pid_t target);
+always_inline static void _pid_list_append(PidList* const list,const pid_t value);
+always_inline static void _pid_list_remove_at(PidList* const list, const int pos);
 
 PidListDef pid_list_init(void)
 {
     PidList* const result=(PidList*)safe_alloc(1,sizeof(PidList));
     result->count=0;
-    result->list=NULL;
+    result->capacity=MIN_LIST_CAPACITY;
+    result->list=(pid_t*)safe_alloc(MIN_LIST_CAPACITY,sizeof(pid_t));
     return (PidListDef)result;
 }
 
 void pid_list_deinit(PidListDef list_instance)
 {
     PidList* const list=(PidList*)list_instance;
-    if(list->count>0)
-        free(list->list);
+    free(list->list);
     free(list);
+}
+
+always_inline static void _pid_list_append(PidList* const list,const pid_t value)
+{
+    if(list->count==list->capacity)
+    {
+        list->capacity=list->capacity*2;
+        pid_t* tmp=(pid_t*)safe_alloc((size_t)(list->capacity),sizeof(pid_t));
+        for(int i=0;i<list->count;++i)
+            tmp[i]=list->list[i];
+        free(list->list);
+        list->list=tmp;
+    }
+    list->list[list->count]=value;
+    ++(list->count);
+}
+
+always_inline static void _pid_list_remove_at(PidList* const list, const int pos)
+{
+    --(list->count);
+    if(list->count>0)
+        for(int j=pos; j<list->count; ++j)
+            list->list[j]=list->list[j+1];
+    if(list->count>MIN_LIST_CAPACITY && list->count<(list->capacity/4) )
+    {
+        list->capacity=list->capacity/2;
+        if(list->capacity<MIN_LIST_CAPACITY)
+            list->capacity=MIN_LIST_CAPACITY;
+        pid_t* tmp=(pid_t*)safe_alloc((size_t)(list->capacity),sizeof(pid_t));
+        for(int i=0;i<list->count;++i)
+            tmp[i]=list->list[i];
+        free(list->list);
+        list->list=tmp;
+    }
 }
 
 bool pid_list_check(PidListDef list_instance, pid_t value)
@@ -45,51 +84,19 @@ void pid_list_add(PidListDef list_instance, pid_t value)
 {
     if(pid_list_check(list_instance,value))
         return;
-    PidList* const list=(PidList*)list_instance;
-    if(list->list==NULL)
-    {
-        list->list=(pid_t*)safe_alloc(1,sizeof(pid_t));
-        list->count=1;
-    }
-    else
-    {
-        pid_t* tmp=(pid_t*)safe_alloc((size_t)(list->count+1),sizeof(pid_t));
-        for(int i=0;i<list->count;++i)
-            tmp[i]=list->list[i];
-        free(list->list);
-        list->list=tmp;
-        ++(list->count);
-    }
-    list->list[list->count-1]=value;
+    _pid_list_append((PidList* const)list_instance,value);
 }
 
 bool pid_list_remove(PidListDef list_instance, pid_t value)
 {
     PidList* const list=(PidList*)list_instance;
-    if(list->list==NULL)
+    if(list->count==0)
         return false;
     for(int i=0;i<list->count;++i)
         if(list->list[i]==value)
         {
-            --(list->count);
-            if(list->count<1)
-            {
-                free(list->list);
-                list->count=0;
-                list->list=NULL;
-                return true;
-            }
-            else
-            {
-                for(int j=i;j<list->count;++j)
-                    list->list[j]=list->list[j+1];
-                pid_t* tmp=(pid_t*)safe_alloc((size_t)list->count,sizeof(pid_t));
-                for(int j=0;j<list->count;++j)
-                    tmp[j]=list->list[j];
-                free(list->list);
-                list->list=tmp;
-                return true;
-            }
+            _pid_list_remove_at(list,i);
+            return true;
         }
     return false;
 }
