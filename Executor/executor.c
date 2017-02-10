@@ -60,6 +60,7 @@ static uint8_t chld_buf[MSGPLMAXLEN+1];
 static volatile uint8_t shutdown;
 static volatile uint8_t command_mode;
 static volatile bool child_is_alive;
+static volatile bool child_only_terminate;
 static volatile pid_t child_pid;
 static volatile uint8_t child_ec;
 static volatile int child_signal;
@@ -112,20 +113,29 @@ static void show_usage(void)
 static void _slave_terminate_child(int custom_signal)
 {
     int signal=custom_signal>0?custom_signal:child_signal;
-    PidListDef child_list=pid_list_init();
-    if(!populate_list_with_session_members(child_list,getsid(0)))
+    if(child_only_terminate && child_is_alive && signal!=SIGKILL)
     {
-        log_message(logger,LOG_ERROR,"Failed to populate session pid list. errno=%i",LI(errno));
-        pid_list_deinit(child_list);
-        return;
+        log_message(logger,LOG_INFO,"Sending %i signal only to tracked child with pid %i",LI(signal),LI(child_pid));
+        if(kill(child_pid,signal)!=0)
+            log_message(logger,LOG_WARNING,"Failed to send signal %i, errno=",LI(errno));
     }
-    pid_list_remove(child_list,getpid());
-    log_message(logger,LOG_INFO,"Found %i pids for current session",LI(pid_list_count(child_list)));
-    if(!pid_list_signal(child_list,signal))
-        log_message(logger,LOG_WARNING,"Failed to send signal %i to some pids from child list",LI(signal));
     else
-        log_message(logger,LOG_INFO,"Signal %i was sent to all childs from the list",LI(signal));
-    pid_list_deinit(child_list);
+    {
+        PidListDef child_list=pid_list_init();
+        if(!populate_list_with_session_members(child_list,getsid(0)))
+        {
+            log_message(logger,LOG_ERROR,"Failed to populate session pid list. errno=%i",LI(errno));
+            pid_list_deinit(child_list);
+            return;
+        }
+        pid_list_remove(child_list,getpid());
+        log_message(logger,LOG_INFO,"Found %i pids for current session",LI(pid_list_count(child_list)));
+        if(!pid_list_signal(child_list,signal))
+            log_message(logger,LOG_WARNING,"Failed to send signal %i to some pids from child list",LI(signal));
+        else
+            log_message(logger,LOG_INFO,"Signal %i was sent to all childs from the list",LI(signal));
+        pid_list_deinit(child_list);
+    }
     if(command_mode)
         _request_shutdown();
 }
@@ -276,6 +286,7 @@ int main(int argc, char* argv[])
     child_signal_set=false;
     child_signal=15;
     child_pid=0;
+    child_only_terminate=false;
 
     workdir=NULL;
 
