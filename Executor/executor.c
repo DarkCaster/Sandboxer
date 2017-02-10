@@ -59,10 +59,10 @@ static uint8_t chld_buf[MSGPLMAXLEN+1];
 //volatile variables, used for async-signal handling
 static volatile uint8_t shutdown;
 static volatile uint8_t command_mode;
-static volatile uint8_t child_is_alive;
+static volatile bool child_is_alive;
 static volatile uint8_t child_ec;
-static volatile uint8_t child_signal_set;
 static volatile int child_signal;
+static bool child_signal_set;
 
 //pid management stuff
 static pthread_mutex_t pid_mutex;
@@ -215,7 +215,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context)
 {
     pid_lock();
-    child_is_alive=0u;
+    child_is_alive=false;
     child_ec=(uint8_t)(info->si_status);
     id_t ch_pid=(id_t)(info->si_pid);
     siginfo_t siginfo;
@@ -269,9 +269,9 @@ int main(int argc, char* argv[])
     pthread_mutex_init(&pid_mutex,NULL);
     shutdown=0;
     command_mode=1; //until we attempt to launch user binary, this flag is set.
-    child_is_alive=0;
+    child_is_alive=false;
     child_ec=0;
-    child_signal_set=0;
+    child_signal_set=false;
     child_signal=15;
 
     workdir=NULL;
@@ -931,7 +931,7 @@ static uint8_t operation_5(uint8_t signal)
     if(signal<_NSIG)
     {
         child_signal=signal;
-        child_signal_set=1;
+        child_signal_set=true;
         log_message(logger,LOG_INFO,"Signal to stop the process was set to %i",LI(signal));
         if(operation_status(0)!=0)
             return 255;
@@ -1045,7 +1045,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         if(!child_signal_set)
         {
             child_signal=SIGHUP;
-            child_signal_set=1;
+            child_signal_set=true;
             log_message(logger,LOG_INFO,"Using default termination signal for pty-enabled session. signal=%i",LI(child_signal));
         }
 
@@ -1076,7 +1076,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
         if(!child_signal_set)
         {
             child_signal=SIGTERM;
-            child_signal_set=1;
+            child_signal_set=true;
             log_message(logger,LOG_INFO,"Using default termination signal for non-pty-enabled session. signal=%i",LI(child_signal));
         }
     }
@@ -1176,7 +1176,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     }
 
     command_mode=0;
-    child_is_alive=1;
+    child_is_alive=true;
     pid_unlock();
 
     if(!use_pty)
