@@ -109,10 +109,17 @@ defaults.commands.pulse =
 {
  'mkdir -p "pulse"',
  'echo "autospawn=no" > "pulse/client.conf"',
+ 'echo "enable-shm=no" >> "pulse/client.conf"',
  'echo "default-server=unix:/etc/pulse/socket" >> "pulse/client.conf"',
  'cat `test -f "$HOME/.pulse-cookie" && echo "$HOME/.pulse-cookie" || echo "$HOME/.config/pulse/cookie"` > "pulse/cookie"',
  'chmod 600 "pulse/cookie"',
- -- TODO: detect and hardlink pulse socket
+ 'rm -f "pulse/socket"; true',
+ -- TODO: more complex pulseaudio socket detection
+ 'pulse_socket=""',
+ 'pulse_socket=`2>/dev/null cat "$HOME/.config/pulse/default.pa" | grep "module-native-protocol-unix" | grep "socket" | cut -d" " -f3 | cut -d"=" -f2`; true',
+ 'test -z "$pulse_socket" && pulse_socket=/run/user/'..config.uid..'/pulse/native; true', -- TODO: also try use xdg_runtime dir env var
+ 'ln "$pulse_socket" "pulse/socket"',
+ 'unset pulse_socket',
 }
 
 defaults.env={}
