@@ -169,6 +169,7 @@ sandbox.bwrap =
 	-- defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net 
 	defaults.bwrap.pulse_mount, -- mount /etc/pulse that contain generated pulseaudio configuration for sandboxed client
 	defaults.bwrap.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
+	defaults.bwrap.devdri_mount, -- mount /dev/dri to allow hardware acceleration
 	defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
 	defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
 	defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
