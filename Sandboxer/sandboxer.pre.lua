@@ -29,6 +29,7 @@ defaults.signals=
  SIGCHLD=17,SIGCONT=18,SIGSTOP=19,SIGTSTP=20,SIGTTIN=21,SIGTTOU=22,SIGURG=23,SIGXCPU=24,SIGXFSZ=25,SIGVTALRM=26,SIGPROF=27,SIGWINCH=28,SIGIO=29,SIGPWR=30,SIGSYS=31,
 }
 
+-- chroot build commands
 defaults.commands={}
 
 defaults.commands.etc_min=
@@ -103,6 +104,14 @@ defaults.commands.home = {nil,nil}
 defaults.commands.var_cache = {nil}
 
 defaults.commands.var_tmp = {nil}
+
+defaults.commands.pulse =
+{
+ 'mkdir -p "pulse"',
+ 'echo "autospawn=no" > "pulse/client.conf"',
+ 'echo "default-server=unix:/run/pulse/socket" >> "pulse/client.conf"',
+ 'cat `test -f "$HOME/.pulse-cookie" && echo "$HOME/.pulse-cookie" || echo "$HOME/.config/pulse/cookie"` > "pulse/cookie"',
+}
 
 defaults.env={}
 
