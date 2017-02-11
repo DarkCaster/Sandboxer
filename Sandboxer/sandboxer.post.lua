@@ -102,7 +102,14 @@ loader.check_two_level_string_list(sandbox.setup.env_whitelist,"sandbox.setup.en
 loader.check_two_level_env_set_list(sandbox.setup.env_set,"sandbox.setup.env_set")
 
 -- bwrap table
+loader.tags={}
+
 function loader.check_bwrap_entry(entry,name)
+ assert(type(entry.tag)=="nil" or type(entry.tag)=="string", name..".tag value is incorrect")
+ if type(entry.tag)~="nil" then
+  assert(type(loader.tags[entry.tag])=="nil", "sandbox.bwrap entry with tag '"..entry.tag.."' already defined!")
+  loader.tags[entry.tag]=true
+ end
  assert(type(entry.prio)=="number" or type(entry.prio)=="nil", name..".prio value is incorrect")
  if type(entry.prio)=="number" then
   assert(entry.prio>=0 and entry.prio<=100, name.."].prio value is out of range (should be 0 <= prio <= 100)")
