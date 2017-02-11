@@ -109,8 +109,10 @@ defaults.commands.pulse =
 {
  'mkdir -p "pulse"',
  'echo "autospawn=no" > "pulse/client.conf"',
- 'echo "default-server=unix:/run/pulse/socket" >> "pulse/client.conf"',
+ 'echo "default-server=unix:/etc/pulse/socket" >> "pulse/client.conf"',
  'cat `test -f "$HOME/.pulse-cookie" && echo "$HOME/.pulse-cookie" || echo "$HOME/.config/pulse/cookie"` > "pulse/cookie"',
+ 'chmod 600 "pulse/cookie"',
+ -- TODO: detect and hardlink pulse socket
 }
 
 defaults.env={}
@@ -212,6 +214,12 @@ if os.getenv("XCURSOR_THEME")~=nil then
  table.insert(defaults.env.set_x11,{"XCURSOR_THEME",os.getenv("XCURSOR_THEME")})
 end
 
+defaults.env.set_pulse =
+{
+ {"PULSE_SERVER","unix:/etc/pulse/socket"},
+ {"PULSE_COOKIE","/etc/pulse/cookie"},
+}
+
 defaults.bwrap={}
 
 -- main bwrap command line options
@@ -249,6 +257,7 @@ defaults.bwrap.lib_rw_mount = {"bind",nil,"/lib"}
 defaults.bwrap.lib64_rw_mount = {"bind",nil,"/lib64"}
 defaults.bwrap.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
+defaults.bwrap.pulse_mount = {"bind",nil,"/etc/pulse"}
 
 -- defines for features, fore use in main script
 defaults.features={}
@@ -282,6 +291,7 @@ function defaults.recalculate()
  defaults.bwrap.var_cache_mount[2]=loader.path.combine(defaults.datadir,"cache")
  defaults.bwrap.home_mount[2]=loader.path.combine(defaults.datadir,"home")
  defaults.bwrap.xdg_runtime_dir[2]=loader.path.combine("/run","user",defaults.uid)
+ defaults.bwrap.pulse_mount[2]=loader.path.combine(defaults.chrootdir,"pulse")
  defaults.env.set_xdg_runtime[1][2]=loader.path.combine("/run","user",defaults.uid)
  defaults.commands.var_tmp[1]='mkdir -p "'..loader.path.combine(defaults.datadir,"tmp")..'"'
  defaults.commands.var_cache[1]='mkdir -p "'..loader.path.combine(defaults.datadir,"cache")..'"'
