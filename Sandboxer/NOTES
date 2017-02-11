@@ -1,6 +1,6 @@
 TODO list:
 
-- pulse audio integration
+- add alternative generator for /etc/passwd and /etc/group files: add all groups that sandboxed user is member of
 - dri integration
 - va-api integration (check, maybe it is already working)
 - helper script to perform session reconnect (by providing sandbox config file, exec-profile name and session number for non-exclusive sessions)
