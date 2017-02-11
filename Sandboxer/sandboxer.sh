@@ -139,7 +139,7 @@ exec_cmd_list_in_bg() {
  (
   #cleanup current env to enhance secutity when running custom commands
   unset -f exec_cmd_list_in_bg wait_for_cmd_list extra_env_unset_add extra_env_set_add check_errors teardown lock_exit lock_enter \
-  bwrap_add_param bwrap_env_set_unset bwrap_process_params_list bwrap_process_two_level_params_list
+  bwrap_add_param bwrap_env_set_unset bwrap_add_params_from_list
   unset extra_env_unset extra_env_unset_cnt extra_env_set_name extra_env_set_value extra_env_set_cnt lock_entered \
   basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid \
   bwrap_params bwrap_param_cnt feature_cnt
@@ -219,27 +219,30 @@ bwrap_env_set_unset() {
  done
 }
 
-bwrap_process_params_list() {
+bwrap_add_params_from_list() {
  local list="$1"
- local cnt=1
- while `check_lua_export "$list.$cnt"`
+ local top_cnt=1
+ while `check_lua_export "$list.$top_cnt"`
  do
-  if [ "$cnt" = "1" ]; then
-   bwrap_add_param "--${cfg[$list.$cnt]}"
+  if [ -z "${cfg[$list.$top_cnt]}" ]; then
+   local fold_cnt=1
+   while `check_lua_export "$list.$top_cnt.$fold_cnt"`
+   do
+    if [ "$fold_cnt" = "1" ]; then
+     bwrap_add_param "--${cfg[$list.$top_cnt.$fold_cnt]}"
+    else
+     bwrap_add_param "${cfg[$list.$top_cnt.$fold_cnt]}"
+    fi
+    fold_cnt=$((fold_cnt+1))
+   done
   else
-   bwrap_add_param "${cfg[$list.$cnt]}"
+   if [ "$top_cnt" = "1" ]; then
+    bwrap_add_param "--${cfg[$list.$top_cnt]}"
+   else
+    bwrap_add_param "${cfg[$list.$top_cnt]}"
+   fi
   fi
-  cnt=$((cnt+1))
- done
-}
-
-bwrap_process_two_level_params_list() {
- local list="$1"
- local cnt=1
- while `check_lua_export "$list.$cnt"`
- do
-  bwrap_process_params_list "$list.$cnt"
-  cnt=$((cnt+1))
+  top_cnt=$((top_cnt+1))
  done
 }
 
@@ -272,7 +275,7 @@ bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
 bwrap_env_set_unset "set" "sandbox.setup.env_set"
 
 #append remaining parameters from sandbox.bwrap table
-bwrap_process_two_level_params_list "sandbox.bwrap"
+bwrap_add_params_from_list "sandbox.bwrap"
 
 #append parameters to mount executor binary and control directory
 bwrap_add_param "--dir"
