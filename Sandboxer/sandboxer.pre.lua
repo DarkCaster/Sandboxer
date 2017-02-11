@@ -87,6 +87,8 @@ defaults.commands.etc_dbus = {'mkdir -p "etc"','cp -rf "/etc/dbus"* "etc"'}
 
 defaults.commands.etc_x11 = {'mkdir -p "etc"','cp -rf "/etc/X11" "etc"','cp -rf "/etc/fonts" "etc"'}
 
+defaults.commands.etc_udev = {'mkdir -p "etc"','cp -rf "/etc/udev" "etc"'}
+
 -- etc/passwd and etc/group files generation
 defaults.commands.pwd=
 {
@@ -271,6 +273,8 @@ defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 defaults.bwrap.pulse_mount = {"bind",nil,"/etc/pulse"}
 defaults.bwrap.devsnd_mount = {"dev-bind","/dev/snd","/dev/snd"}
 defaults.bwrap.devdri_mount = {"dev-bind","/dev/dri","/dev/dri"}
+defaults.bwrap.devinput_mount = {"dev-bind","/dev/input","/dev/input"}
+defaults.bwrap.sys_mount = {"ro-bind","/sys","/sys"}
 
 -- defines for features, fore use in main script
 defaults.features={}

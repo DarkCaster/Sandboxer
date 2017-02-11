@@ -101,6 +101,7 @@ sandbox =
 			defaults.commands.etc_min, -- copy minimal config to defaults.chrootdir
 			defaults.commands.etc_dbus, -- copy dbus config to defaults.chrootdir
 			defaults.commands.etc_x11, -- copy x11 config to defaults.chrootdir
+			defaults.commands.etc_udev, -- copy /etc/udev config to defaults.chrootdir. may be needed for some apps, may leak some information about current hardware config
 			-- defaults.commands.etc_full, -- copy full /etc to to defaults.chrootdir
 			defaults.commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.commands.home, -- create userdata/home at this config file directory, if missing
@@ -170,6 +171,9 @@ sandbox.bwrap =
 	defaults.bwrap.pulse_mount, -- mount /etc/pulse that contain generated pulseaudio configuration for sandboxed client
 	defaults.bwrap.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
 	defaults.bwrap.devdri_mount, -- mount /dev/dri to allow hardware acceleration
+	defaults.bwrap.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
+    -- TODO: add mounts only to some parts of sys directory only needed for particular apps to work
+	defaults.bwrap.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
 	defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
 	defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
 	defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
