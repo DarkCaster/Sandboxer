@@ -137,7 +137,13 @@ for index,field in ipairs(sandbox.bwrap) do
  end
 end
 
--- TODO: sort bwrap table
+-- sort bwrap table, according to prio parameters
+function loader.bwrap_compare(first,second)
+ if first.prio<second.prio then return true end
+ return false
+end
+
+table.sort(sandbox.bwrap,loader.bwrap_compare)
 
 -- check profile
 function loader.check_profile(profile, name)
