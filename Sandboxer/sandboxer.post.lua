@@ -103,6 +103,10 @@ loader.check_two_level_env_set_list(sandbox.setup.env_set,"sandbox.setup.env_set
 
 -- bwrap table
 function loader.check_bwrap_entry(entry,name)
+ assert(type(entry.prio)=="number" or type(entry.prio)=="nil", name..".prio value is incorrect")
+ if type(entry.prio)=="number" then
+  assert(entry.prio>=0 and entry.prio<=100, name.."].prio value is out of range (should be 0 <= prio <= 100)")
+ end
  for mi,mf in ipairs(entry) do
   if mi==1 then
    assert(type(mf)=="string", name.."["..mi.."] value is incorrect")
@@ -115,6 +119,12 @@ end
 assert(type(sandbox.bwrap)=="table", "sandbox.bwrap param incorrect")
 for index,field in ipairs(sandbox.bwrap) do
  assert(type(field)=="table", "sandbox.bwrap[" .. index .. "] value is incorrect")
+ assert(type(field.prio)=="number" or type(field.prio)=="nil", "sandbox.bwrap[" .. index .. "].prio value is incorrect")
+ if type(field.prio)=="number" then
+  assert(field.prio>=0 and field.prio<=100, "sandbox.bwrap[" .. index .. "].prio value is out of range (should be 0 <= prio <= 100)")
+ elseif type(field.prio)=="nil" then
+  field.prio=100
+ end
  for mi,mf in ipairs(field) do
   assert(type(mf)=="string" or type(mf)=="table", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect")
   if type(mf)=="string" then
