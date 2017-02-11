@@ -102,17 +102,32 @@ loader.check_two_level_string_list(sandbox.setup.env_whitelist,"sandbox.setup.en
 loader.check_two_level_env_set_list(sandbox.setup.env_set,"sandbox.setup.env_set")
 
 -- bwrap table
+function loader.check_bwrap_entry(entry,name)
+ for mi,mf in ipairs(entry) do
+  if mi==1 then
+   assert(type(mf)=="string", name.."["..mi.."] value is incorrect")
+  else
+   assert(type(mf)~="table" and type(mf)~="function" and type(mf)~="nil", name.."["..mi.."] value is incorrect")
+  end
+ end
+end
+
 assert(type(sandbox.bwrap)=="table", "sandbox.bwrap param incorrect")
 for index,field in ipairs(sandbox.bwrap) do
  assert(type(field)=="table", "sandbox.bwrap[" .. index .. "] value is incorrect")
  for mi,mf in ipairs(field) do
-  if mi==1 then
-   assert(type(mf)=="string", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect")
+  assert(type(mf)=="string" or type(mf)=="table", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect")
+  if type(mf)=="string" then
+   assert(mi==1, "sandbox.bwrap["..index.."]["..mi.."] value cannot be string, because previous value is a table!")
+   loader.check_bwrap_entry(field,"sandbox.bwrap["..index.."]")
+   break
   else
-   assert(type(mf)~="table" and type(mf)~="function" and type(mf)~="nil", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect")
+   loader.check_bwrap_entry(mf,"sandbox.bwrap["..index.."]["..mi.."]")
   end
  end
 end
+
+-- TODO: sort bwrap table
 
 -- check profile
 function loader.check_profile(profile, name)
