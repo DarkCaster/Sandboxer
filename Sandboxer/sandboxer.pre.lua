@@ -249,23 +249,62 @@ defaults.bwrap.tmp_dir = {prio=10,"dir","/tmp"}
 defaults.bwrap.var_dir = {prio=10,"dir","/var"}
 defaults.bwrap.proc_mount = {prio=10,"proc","/proc"}
 defaults.bwrap.dev_mount = {prio=10,"dev","/dev"}
+defaults.bwrap.system_group =
+{
+ prio=10,
+ defaults.bwrap.run_dir,
+ defaults.bwrap.tmp_dir,
+ defaults.bwrap.var_dir,
+ defaults.bwrap.proc_mount,
+ defaults.bwrap.dev_mount,
+}
+
 defaults.bwrap.sys_mount = {prio=10,"ro-bind","/sys","/sys"}
+
 defaults.bwrap.host_bin_mount = {prio=10,"ro-bind","/bin","/bin"}
 defaults.bwrap.host_usr_mount = {prio=10,"ro-bind","/usr","/usr"}
 defaults.bwrap.host_lib_mount = {prio=10,"ro-bind","/lib","/lib"}
 defaults.bwrap.host_lib64_mount = {prio=10,"ro-bind","/lib64","/lib64"}
+defaults.bwrap.host_essentials_group =
+{
+ prio=10,
+ defaults.bwrap.host_bin_mount,
+ defaults.bwrap.host_usr_mount,
+ defaults.bwrap.host_lib_mount,
+ defaults.bwrap.host_lib64_mount,
+}
+
 defaults.bwrap.bin_ro_mount = {prio=10,"ro-bind",nil,"/bin"}
 defaults.bwrap.usr_ro_mount = {prio=10,"ro-bind",nil,"/usr"}
 defaults.bwrap.lib_ro_mount = {prio=10,"ro-bind",nil,"/lib"}
 defaults.bwrap.lib64_ro_mount = {prio=10,"ro-bind",nil,"/lib64"}
+defaults.bwrap.chroot_ro_essentials_group =
+{
+ prio=10,
+ defaults.bwrap.bin_ro_mount,
+ defaults.bwrap.usr_ro_mount,
+ defaults.bwrap.lib_ro_mount,
+ defaults.bwrap.lib64_ro_mount,
+}
+
 defaults.bwrap.bin_rw_mount = {prio=10,"bind",nil,"/bin"}
 defaults.bwrap.usr_rw_mount = {prio=10,"bind",nil,"/usr"}
 defaults.bwrap.lib_rw_mount = {prio=10,"bind",nil,"/lib"}
 defaults.bwrap.lib64_rw_mount = {prio=10,"bind",nil,"/lib64"}
+defaults.bwrap.chroot_rw_essentials_group =
+{
+ prio=10,
+ defaults.bwrap.bin_rw_mount,
+ defaults.bwrap.usr_rw_mount,
+ defaults.bwrap.lib_rw_mount,
+ defaults.bwrap.lib64_rw_mount,
+}
+
 -- etc
 defaults.bwrap.etc_ro_mount = {prio=10,"ro-bind",nil,"/etc"}
 defaults.bwrap.etc_rw_mount = {prio=10,"bind",nil,"/etc"}
 defaults.bwrap.host_etc_mount = {prio=10,"ro-bind","/etc","/etc"}
+
 -- service mounts
 defaults.bwrap.xdg_runtime_dir = {prio=20,"dir",nil}
 defaults.bwrap.home_mount = {prio=20,"bind",nil,"/home"}
