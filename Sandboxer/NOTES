@@ -1,6 +1,6 @@
 TODO list:
 
-- add support for subtables in defaults.bwrap to group some related entries together, add prio support for defaults.bwrap tables, add table sorting at post-config
+- add support for subtables in defaults.bwrap to group some related entries together
 - add alternative generator for /etc/passwd and /etc/group files: add all groups that sandboxed user is member of
 - dri integration
 - va-api integration (check, maybe it is already working)
