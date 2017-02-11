@@ -225,6 +225,10 @@ defaults.env.set_pulse =
 {
  {"PULSE_SERVER","unix:/etc/pulse/socket"},
  {"PULSE_COOKIE","/etc/pulse/cookie"},
+ {"ALSA_CONFIG_PATH","/etc/alsa-pulse.conf"},
+ {"AUDIODRIVER","pulseaudio"},
+ {"QEMU_AUDIO_DRV","pa"},
+ {"SDL_AUDIODRIVER","pulse"},
 }
 
 defaults.bwrap={}
