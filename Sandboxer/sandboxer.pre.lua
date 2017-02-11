@@ -96,12 +96,12 @@ defaults.commands.pwd=
  nil,
 }
 
+defaults.commands.x11 = {nil}
+
 defaults.commands.home = {nil,nil}
 
--- TODO: move to X11 feature
--- 'cp "$HOME/.Xauthority" "'..loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid,"home","sandbox",".Xauthority")..'"',
-
 defaults.commands.var_cache = {nil}
+
 defaults.commands.var_tmp = {nil}
 
 defaults.env={}
@@ -286,6 +286,7 @@ function defaults.recalculate()
  defaults.env.set_home[5][2]=defaults.user
  defaults.commands.pwd[3]='echo "'..defaults.user..':x:'..defaults.uid..':'..defaults.gid..':'..defaults.user..':'..defaults.env.set_home[1][2]..':/bin/bash" >> "etc/passwd"'
  defaults.commands.pwd[5]='echo "'..defaults.user..':x:'..defaults.gid..':" >> "etc/group"'
+ defaults.commands.x11[1]='test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true'
 end
 
 defaults.recalculate()
