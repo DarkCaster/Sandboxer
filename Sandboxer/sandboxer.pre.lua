@@ -265,6 +265,7 @@ defaults.bwrap.lib64_rw_mount = {"bind",nil,"/lib64"}
 defaults.bwrap.dbus_system_mount = {"bind","/run/dbus","/run/dbus"}
 defaults.bwrap.x11_mount = {"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 defaults.bwrap.pulse_mount = {"bind",nil,"/etc/pulse"}
+defaults.bwrap.devsnd_mount = {"dev-bind","/dev/snd","/dev/snd"}
 
 -- defines for features, fore use in main script
 defaults.features={}
