@@ -236,19 +236,19 @@ defaults.env.set_pulse =
 defaults.bwrap={}
 
 -- main bwrap command line options
-defaults.bwrap.unshare_user = {prio=0,"unshare-user"}
-defaults.bwrap.unshare_ipc = {prio=0,"unshare-ipc"}
-defaults.bwrap.unshare_pid = {prio=0,"unshare-pid"}
-defaults.bwrap.unshare_net = {prio=0,"unshare-net"}
-defaults.bwrap.unshare_uts = {prio=0,"unshare-uts"}
-defaults.bwrap.unshare_cgroup = {prio=0,"unshare-cgroup"}
-defaults.bwrap.unshare_all = {prio=0,"unshare-all"}
+defaults.bwrap.unshare_user = {prio=0,tag="unshare-user","unshare-user"}
+defaults.bwrap.unshare_ipc = {prio=0,tag="unshare-ipc","unshare-ipc"}
+defaults.bwrap.unshare_pid = {prio=0,tag="unshare-pid","unshare-pid"}
+defaults.bwrap.unshare_net = {prio=0,tag="unshare-net","unshare-net"}
+defaults.bwrap.unshare_uts = {prio=0,tag="unshare-uts","unshare-uts"}
+defaults.bwrap.unshare_cgroup = {prio=0,tag="unshare-cgroup","unshare-cgroup"}
+defaults.bwrap.unshare_all = {prio=0,tag="unshare-all","unshare-all"}
 -- essential directories and mounts
-defaults.bwrap.run_dir = {prio=10,"dir","/run"}
-defaults.bwrap.tmp_dir = {prio=10,"dir","/tmp"}
-defaults.bwrap.var_dir = {prio=10,"dir","/var"}
-defaults.bwrap.proc_mount = {prio=10,"proc","/proc"}
-defaults.bwrap.dev_mount = {prio=10,"dev","/dev"}
+defaults.bwrap.run_dir = {prio=10,tag="run","dir","/run"}
+defaults.bwrap.tmp_dir = {prio=10,tag="tmp","dir","/tmp"}
+defaults.bwrap.var_dir = {prio=10,tag="var","dir","/var"}
+defaults.bwrap.proc_mount = {prio=10,tag="proc","proc","/proc"}
+defaults.bwrap.dev_mount = {prio=10,tag="dev","dev","/dev"}
 defaults.bwrap.system_group =
 {
  prio=10,
@@ -259,12 +259,12 @@ defaults.bwrap.system_group =
  defaults.bwrap.dev_mount,
 }
 
-defaults.bwrap.sys_mount = {prio=10,"ro-bind","/sys","/sys"}
+defaults.bwrap.sys_mount = {prio=10,tag="sys","ro-bind","/sys","/sys"}
 
-defaults.bwrap.host_bin_mount = {prio=10,"ro-bind","/bin","/bin"}
-defaults.bwrap.host_usr_mount = {prio=10,"ro-bind","/usr","/usr"}
-defaults.bwrap.host_lib_mount = {prio=10,"ro-bind","/lib","/lib"}
-defaults.bwrap.host_lib64_mount = {prio=10,"ro-bind","/lib64","/lib64"}
+defaults.bwrap.host_bin_mount = {prio=10,tag="bin","ro-bind","/bin","/bin"}
+defaults.bwrap.host_usr_mount = {prio=10,tag="usr","ro-bind","/usr","/usr"}
+defaults.bwrap.host_lib_mount = {prio=10,tag="lib","ro-bind","/lib","/lib"}
+defaults.bwrap.host_lib64_mount = {prio=10,tag="lib64","ro-bind","/lib64","/lib64"}
 defaults.bwrap.host_essentials_group =
 {
  prio=10,
@@ -274,10 +274,10 @@ defaults.bwrap.host_essentials_group =
  defaults.bwrap.host_lib64_mount,
 }
 
-defaults.bwrap.bin_ro_mount = {prio=10,"ro-bind",nil,"/bin"}
-defaults.bwrap.usr_ro_mount = {prio=10,"ro-bind",nil,"/usr"}
-defaults.bwrap.lib_ro_mount = {prio=10,"ro-bind",nil,"/lib"}
-defaults.bwrap.lib64_ro_mount = {prio=10,"ro-bind",nil,"/lib64"}
+defaults.bwrap.bin_ro_mount = {prio=10,tag="bin","ro-bind",nil,"/bin"}
+defaults.bwrap.usr_ro_mount = {prio=10,tag="usr","ro-bind",nil,"/usr"}
+defaults.bwrap.lib_ro_mount = {prio=10,tag="lib","ro-bind",nil,"/lib"}
+defaults.bwrap.lib64_ro_mount = {prio=10,tag="lib64","ro-bind",nil,"/lib64"}
 defaults.bwrap.chroot_ro_essentials_group =
 {
  prio=10,
@@ -287,10 +287,10 @@ defaults.bwrap.chroot_ro_essentials_group =
  defaults.bwrap.lib64_ro_mount,
 }
 
-defaults.bwrap.bin_rw_mount = {prio=10,"bind",nil,"/bin"}
-defaults.bwrap.usr_rw_mount = {prio=10,"bind",nil,"/usr"}
-defaults.bwrap.lib_rw_mount = {prio=10,"bind",nil,"/lib"}
-defaults.bwrap.lib64_rw_mount = {prio=10,"bind",nil,"/lib64"}
+defaults.bwrap.bin_rw_mount = {prio=10,tag="bin","bind",nil,"/bin"}
+defaults.bwrap.usr_rw_mount = {prio=10,tag="usr","bind",nil,"/usr"}
+defaults.bwrap.lib_rw_mount = {prio=10,tag="lib","bind",nil,"/lib"}
+defaults.bwrap.lib64_rw_mount = {prio=10,tag="lib64","bind",nil,"/lib64"}
 defaults.bwrap.chroot_rw_essentials_group =
 {
  prio=10,
@@ -301,21 +301,21 @@ defaults.bwrap.chroot_rw_essentials_group =
 }
 
 -- etc
-defaults.bwrap.etc_ro_mount = {prio=10,"ro-bind",nil,"/etc"}
-defaults.bwrap.etc_rw_mount = {prio=10,"bind",nil,"/etc"}
-defaults.bwrap.host_etc_mount = {prio=10,"ro-bind","/etc","/etc"}
+defaults.bwrap.etc_ro_mount = {prio=10,tag="etc","ro-bind",nil,"/etc"}
+defaults.bwrap.etc_rw_mount = {prio=10,tag="etc","bind",nil,"/etc"}
+defaults.bwrap.host_etc_mount = {prio=10,tag="etc","ro-bind","/etc","/etc"}
 
 -- service mounts
-defaults.bwrap.xdg_runtime_dir = {prio=20,"dir",nil}
-defaults.bwrap.home_mount = {prio=20,"bind",nil,"/home"}
-defaults.bwrap.var_cache_mount = {prio=20,"bind",nil,"/var/cache"}
-defaults.bwrap.var_tmp_mount = {prio=20,"bind",nil,"/var/tmp"}
-defaults.bwrap.dbus_system_mount = {prio=20,"bind","/run/dbus","/run/dbus"}
-defaults.bwrap.x11_mount = {prio=20,"bind","/tmp/.X11-unix","/tmp/.X11-unix"}
-defaults.bwrap.pulse_mount = {prio=20,"bind",nil,"/etc/pulse"}
-defaults.bwrap.devsnd_mount = {prio=20,"dev-bind","/dev/snd","/dev/snd"}
-defaults.bwrap.devdri_mount = {prio=20,"dev-bind","/dev/dri","/dev/dri"}
-defaults.bwrap.devinput_mount = {prio=20,"dev-bind","/dev/input","/dev/input"}
+defaults.bwrap.xdg_runtime_dir = {prio=20,tag="xdgrun","dir",nil}
+defaults.bwrap.home_mount = {prio=20,tag="home","bind",nil,"/home"}
+defaults.bwrap.var_cache_mount = {prio=20,tag="cache","bind",nil,"/var/cache"}
+defaults.bwrap.var_tmp_mount = {prio=20,tag="vartmp","bind",nil,"/var/tmp"}
+defaults.bwrap.dbus_system_mount = {prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
+defaults.bwrap.x11_mount = {prio=20,tag="x11","bind","/tmp/.X11-unix","/tmp/.X11-unix"}
+defaults.bwrap.pulse_mount = {prio=20,tag="pulse","bind",nil,"/etc/pulse"}
+defaults.bwrap.devsnd_mount = {prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
+defaults.bwrap.devdri_mount = {prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
+defaults.bwrap.devinput_mount = {prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
 
 -- defines for features, fore use in main script
 defaults.features={}
