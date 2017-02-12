@@ -6,8 +6,13 @@ lock_entered="false"
 #initial sleep
 sleep 10
 
-function check_dbus_session() {
+function check_other_sessions() {
  test `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | grep -vE "(^dbus.in\$)|(^dbus.out\$)|(^control.in\$)|(^control.out\$)" | wc -l` != "0" && return 0
+ return 1
+}
+
+function check_dbus_session() {
+ test `ls -1 "$basedir/control" | grep -E "(^dbus.in\$)|(^dbus.out\$)" | wc -l` != "0" && return 0
  return 1
 }
 
@@ -28,7 +33,7 @@ while true
 do
 
 #check, that there are slave sessions active other than dbus session
-if check_dbus_session; then
+if check_other_sessions; then
  #sleep and continue, if true
  sleep 5
  continue
@@ -38,7 +43,7 @@ fi
 lock_enter
 
 #check, that there are slave sessions active other than dbus session
-if check_dbus_session; then
+if check_other_sessions; then
  #exit lock and continue, if true
  lock_exit
  sleep 5
@@ -82,7 +87,7 @@ test -z "$o_count" && log "error getting orphans count!" && teardown 1
 
 #request commander to force terminate if so
 if [ "$o_count" != "0" ]; then
- log "requesting control session to terminate"
+ log "requesting control session to force terminate"
  "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 0
  #wait while commander if shuting down
  comm_wait=400
