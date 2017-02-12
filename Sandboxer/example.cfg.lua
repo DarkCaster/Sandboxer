@@ -145,20 +145,20 @@ sandbox =
 -- this table presented here as separate definition in order to be able to use all definitions already done in sandbox table earlier.
 sandbox.bwrap =
 {
-	-- main parameters
 	defaults.bwrap.unshare_user,
 	defaults.bwrap.unshare_ipc,
 	defaults.bwrap.unshare_pid,
 	-- defaults.bwrap.unshare_net,
 	defaults.bwrap.unshare_uts,
 	-- defaults.bwrap.unshare_cgroup,
-	-- create some service directories
-	defaults.bwrap.run_dir,
+	defaults.bwrap.system_group,
+	-- defaults.bwrap.run_dir, -- included in "system_group"
+	-- defaults.bwrap.tmp_dir, -- included in "system_group"
+	-- defaults.bwrap.proc_mount, -- included in "system_group". mount /proc prepared by bwrap (according by unshare_* options)
+	-- defaults.bwrap.dev_mount, -- included in "system_group". mount /dev, prepared and filtered by bwrap
+	-- defaults.bwrap.var_dir, -- included in "system_group"
 	defaults.bwrap.xdg_runtime_dir,
-	defaults.bwrap.tmp_dir,
 	-- make some essential mounts
-	defaults.bwrap.proc_mount, -- /proc, prepared by bwrap (according by unshare_* options)
-	defaults.bwrap.dev_mount, -- /dev, prepared and filtered by bwrap
 	defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
 	defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
 	defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
