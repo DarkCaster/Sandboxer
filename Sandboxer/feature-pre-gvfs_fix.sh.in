@@ -4,5 +4,5 @@ cd "${cfg[defaults.chrootdir]}"
 check_errors
 wait_for_cmd_list
 exec_cmd_list_in_bg "defaults.features.gvfs_fix_conf"
-bwrap_process_list "defaults.features.gvfs_fix_mount"
+bwrap_process_list_contents "defaults.features.gvfs_fix_mount"
 
