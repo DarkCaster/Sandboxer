@@ -139,7 +139,7 @@ exec_cmd_list_in_bg() {
  (
   #cleanup current env to enhance secutity when running custom commands
   unset -f exec_cmd_list_in_bg wait_for_cmd_list extra_env_unset_add extra_env_set_add check_errors teardown lock_exit lock_enter \
-  bwrap_add_param bwrap_env_set_unset bwrap_add_params_from_list
+  bwrap_add_param bwrap_env_set_unset bwrap_process_list_contents bwrap_process_list
   unset extra_env_unset extra_env_unset_cnt extra_env_set_name extra_env_set_value extra_env_set_cnt lock_entered \
   basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid \
   bwrap_params bwrap_param_cnt feature_cnt
@@ -219,7 +219,7 @@ bwrap_env_set_unset() {
  done
 }
 
-bwrap_add_params_from_list() {
+bwrap_process_list_contents() {
  local list="$1"
  local top_cnt=1
  while `check_lua_export "$list.$top_cnt"`
@@ -243,6 +243,16 @@ bwrap_add_params_from_list() {
    fi
   fi
   top_cnt=$((top_cnt+1))
+ done
+}
+
+bwrap_process_list() {
+ local list="$1"
+ local cnt=1
+ while `check_lua_export "$list.$cnt"`
+ do
+  bwrap_process_list_contents "$list.$cnt"
+  cnt=$((cnt+1))
  done
 }
 
@@ -275,7 +285,7 @@ bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
 bwrap_env_set_unset "set" "sandbox.setup.env_set"
 
 #append remaining parameters from sandbox.bwrap table
-bwrap_add_params_from_list "sandbox.bwrap"
+bwrap_process_list "sandbox.bwrap"
 
 #append parameters to mount executor binary and control directory
 bwrap_add_param "--dir"
