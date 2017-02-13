@@ -644,7 +644,7 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
           if(e_log_fd>=0) \
               close(e_log_fd); }
 
-    #define receive_data(data_len,out_fd,log_fd) \
+    #define receive_data(data_len,out_fd,log_fd,sout_failed,fout_failed) \
         { data_len=0; \
         uint8_t ecx=message_read(fdi,tmp_buf,data_buf,0,&data_len,key,REQ_TIMEOUT_MS); \
         if(ecx!=0){ restore_terminal; return ecx; } \
@@ -656,12 +656,16 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         else if(cmdhdr_read(data_buf,0).cmd_type!=150) \
             { restore_terminal; log_message(logger,LOG_ERROR,"Wrong response code received. code=%i",LI(cmdhdr_read(data_buf,0).cmd_type)); return 1; } \
         if(data_len>0) \
-            { write(out_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); \
-              if(log_fd>=0) \
-                  { write(log_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len); fdatasync(log_fd); } } }
+            { if(!sout_failed && write(out_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len)!=(ssize_t)data_len) \
+                  sout_failed=true; \
+              if(log_fd>=0 && !fout_failed) \
+                  { if(write(log_fd,(void*)(data_buf+CMDHDRSZ),(size_t)data_len)!=(ssize_t)data_len) fout_failed=true; else fdatasync(log_fd); } } }
 
     int data_wait_time=DATA_WAIT_TIME_MS_MIN;
-
+    bool stdout_failed=false;
+    bool stderr_failed=false;
+    bool fileout_failed=false;
+    bool fileerr_failed=false;
     while(1)
     {
         //read input
@@ -732,13 +736,13 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         }
 
         int32_t recv_out_data_len=0;
-        receive_data(recv_out_data_len,STDOUT_FILENO,o_log_fd); //read stdout, captured by executor module
+        receive_data(recv_out_data_len,STDOUT_FILENO,o_log_fd,stdout_failed,fileout_failed); //read stdout, captured by executor module
 
         int32_t recv_err_data_len=0;
         if(use_pty)
             recv_err_data_len=recv_out_data_len;
         else
-            receive_data(recv_err_data_len,STDERR_FILENO,e_log_fd); //read stderr, captured by executor module
+            receive_data(recv_err_data_len,STDERR_FILENO,e_log_fd,stderr_failed,fileerr_failed); //read stderr, captured by executor module
 
         if(send_data_len<=(int32_t)CMDHDRSZ && recv_out_data_len<=0 && recv_err_data_len<=0)
         {
