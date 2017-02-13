@@ -186,7 +186,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
                     snprintf(buffer+bpos,LOG_OUTBUFSZ-bpos,"%c",*(format));
                 }
                 if (log->stdout_active)
-                    fprintf(log->stdstream,buffer);
+                    fputs(buffer,log->stdstream);
                 if (log->logfile!=NULL)
                 {
                     if(fwrite((void*)buffer,strnlen(buffer,LOG_OUTBUFSZ),1,log->logfile)!=1)
@@ -203,7 +203,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
         {
             *(buffer+bpos)='\0';
             if (log->stdout_active)
-                fprintf(log->stdstream,buffer);
+                fputs(buffer,log->stdstream);
             if (log->logfile!=NULL)
             {
                 if(fwrite((void*)buffer,strnlen(buffer,LOG_OUTBUFSZ),1,log->logfile)!=1)
@@ -215,7 +215,7 @@ void log_message(const LogDef log_instance, uint8_t msg_type, const char * const
 
    if (log->stdout_active)
    {
-       fprintf(log->stdstream,"\n");
+       fputs("\n",log->stdstream);
        fflush(log->stdstream);
    }
    if (log->logfile!=NULL)
@@ -234,8 +234,8 @@ void log_headline (const LogDef log_instance, const char * const text)
     //Print header
     if(log->stdout_active)
     {
-        fprintf(log->stdstream,text);
-        fprintf(log->stdstream,"\n");
+        fputs(text,log->stdstream);
+        fputs("\n",log->stdstream);
         fflush(log->stdstream);
     }
     if(log->logfile!=NULL)
