@@ -93,9 +93,9 @@ defaults.commands.etc_udev = {'mkdir -p "etc"','cp -rf "/etc/udev" "etc"'}
 defaults.commands.pwd=
 {
  'mkdir -p "etc"',
- 'getent passwd root nobody > "etc/passwd"',
+ 'getent passwd root nobody > "etc/passwd"; true',
  nil,
- 'getent group root nobody nogroup > "etc/group"',
+ 'getent group root nobody nogroup > "etc/group"; true',
  nil,
 }
 
