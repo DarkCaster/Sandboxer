@@ -10,7 +10,11 @@ assert(config.profile~="dbus" and
 assert(type(defaults.basedir)=="string" and defaults.basedir~="", "defaults.basedir param incorrect")
 
 -- load profile
-profile=loadstring("return " .. config.profile)()
+if loader.lua_version.num>=5002000 then
+ profile=load("return " .. config.profile)()
+else
+ profile=loadstring("return " .. config.profile)()
+end
 
 -- sandbox table verification
 assert(type(sandbox)=="table", "sandbox param incorrect")
