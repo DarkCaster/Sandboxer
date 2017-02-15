@@ -1,13 +1,14 @@
 config={}
-config.profile = loader.extra[1]
-config.home_dir = loader.extra[2]
-config.sandboxer_dir = loader.extra[3]
-config.pwd = loader.extra[4]
-config.sandbox_uid = loader.extra[5]
-config.tmpdir = loader.extra[6]
-config.ctldir = loader.extra[7]
-config.uid = loader.extra[8]
-config.gid = loader.extra[9]
+config.profile = loader.extra[1] -- profile name
+config.home_dir = loader.extra[2] -- current $HOME value
+config.sandboxer_dir = loader.extra[3] -- directory, where sandboxer.sh script (or binary, maybe, in future) located
+config.pwd = loader.extra[4] -- current directory, at the moment when sandboxer was launched
+config.sandbox_uid = loader.extra[5] -- unique value generated from sandbox filename and location
+config.tmpdir = loader.extra[6] -- temp directory
+config.ctldir = loader.extra[7] -- default control directory, where stuff for current sandbox will be created if not overriden
+config.uid = loader.extra[8] -- uid of user that started sandboxer.sh
+config.gid = loader.extra[9] -- effective gid of user that started sandboxer.sh
+config.tools_dir = loader.path.combine(config.sandboxer_dir,"tools") -- tools directory, service scripts and utilities used in sandbox construction located there
 
 -- define some defaults to use inside user-sandbox config files, to make them more portable and simple
 -- TODO: make different defaults-sets optimized for different linux-distributions (maintain it in different config files, included there)
