@@ -103,7 +103,7 @@ sandbox =
 			defaults.commands.etc_x11, -- copy x11 config to defaults.chrootdir
 			defaults.commands.etc_udev, -- copy /etc/udev config to defaults.chrootdir. may be needed for some apps, may leak some information about current hardware config
 			-- defaults.commands.etc_full, -- copy full /etc to to defaults.chrootdir
-			defaults.commands.pwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
+			defaults.commands.passwd, -- generate defaule /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.commands.home, -- create userdata/home at this config file directory, if missing
 			defaults.commands.x11, -- copy .Xauthority, or use xhost utility to allow x11 use inside sandbox. should be run after defaults.commands.home
 			defaults.commands.pulse, -- generate pulse audio client configs

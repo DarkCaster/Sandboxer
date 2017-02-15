@@ -91,12 +91,9 @@ defaults.commands.etc_x11 = {'mkdir -p "etc"','cp -rf "/etc/X11" "etc"','cp -rf 
 defaults.commands.etc_udev = {'mkdir -p "etc"','cp -rf "/etc/udev" "etc"'}
 
 -- etc/passwd and etc/group files generation
-defaults.commands.pwd=
+defaults.commands.passwd=
 {
  'mkdir -p "etc"',
- 'getent passwd root nobody > "etc/passwd"; true',
- nil,
- 'getent group root nobody nogroup > "etc/group"; true',
  nil,
 }
 
@@ -362,8 +359,7 @@ function defaults.recalculate()
  defaults.env.set_home[3][2]=defaults.user
  defaults.env.set_home[4][2]=loader.path.combine(defaults.env.set_home[1][2],".inputrc");
  defaults.env.set_home[5][2]=defaults.user
- defaults.commands.pwd[3]='echo "'..defaults.user..':x:'..defaults.uid..':'..defaults.gid..':'..defaults.user..':'..defaults.env.set_home[1][2]..':/bin/bash" >> "etc/passwd"'
- defaults.commands.pwd[5]='echo "'..defaults.user..':x:'..defaults.gid..':" >> "etc/group"'
+ defaults.commands.passwd[2]=loader.path.combine(config.sandboxer_dir,"tools","pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..defaults.env.set_home[1][2]..'" "etc/passwd" "etc/group"'
  defaults.commands.x11[1]='test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true'
 end
 
