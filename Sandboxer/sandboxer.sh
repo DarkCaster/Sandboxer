@@ -37,7 +37,7 @@ shift $#
 
 test "${#cfg[@]}" = "0" && echo "can't find config storage variable populated by bash_lua_helper. bash_lua_helper failed!" && exit 1
 
-. "$script_dir/find-executor-binaries.bash.in"
+. "$includes_dir/find-executor-binaries.bash.in" "$script_dir/executor" "$script_dir/../Build/Executor/build"
 
 log () {
  echo "[ $@ ]"
