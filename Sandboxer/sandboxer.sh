@@ -352,7 +352,7 @@ done
 
 # profile - main selected profile, may be also service profiles - dbus, pulse
 exec_profile="profile"
-. "$script_dir/channel-open.sh.in"
+. "$includes_dir/channel-open.sh.in"
 
 #exit lock
 lock_exit
@@ -360,5 +360,5 @@ lock_exit
 log "running exec-profile $profile, using control channel $channel"
 
 #start selected exec profile
-. "$script_dir/run-profile.sh.in"
+. "$includes_dir/run-profile.sh.in"
 
