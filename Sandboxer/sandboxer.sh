@@ -304,9 +304,9 @@ bwrap_add_param "/executor/control"
 feature_cnt=1
 while `check_lua_export "sandbox.features.$feature_cnt"`
 do
- if [ -f "$script_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
+ if [ -f "$includes_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
   log "preparing ${cfg[sandbox.features.$feature_cnt]} feature"
-  . "$script_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in"
+  . "$includes_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in"
  fi
  feature_cnt=$((feature_cnt+1))
 done
@@ -341,9 +341,9 @@ fi
 feature_cnt=1
 while `check_lua_export "sandbox.features.$feature_cnt"`
 do
- if [ -f "$script_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
+ if [ -f "$includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
   log "activating ${cfg[sandbox.features.$feature_cnt]} feature"
-  . "$script_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in"
+  . "$includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in"
  fi
  feature_cnt=$((feature_cnt+1))
 done
