@@ -142,6 +142,10 @@ defaults.env.blacklist_main=
 "SSH_AUTH_SOCK",
 "WINDOWID",
 "TERM",
+"PAM_KWALLET5_LOGIN",
+"PAM_KWALLET_LOGIN",
+"PROFILEHOME",
+"SHELL_SESSION_ID",
 }
 
 defaults.env.blacklist_audio=
@@ -173,6 +177,17 @@ defaults.env.blacklist_desktop=
 "XMODIFIERS",
 "XNLSPATH",
 "XSESSION_IS_UP",
+"GS_LIB",
+"GTK2_RC_FILES",
+"GTK_RC_FILES",
+"KDE_FULL_SESSION",
+"KDE_MULTIHEAD",
+"KDE_SESSION_UID",
+"KDE_SESSION_VERSION",
+"KONSOLE_DBUS_SERVICE",
+"KONSOLE_DBUS_SESSION",
+"KONSOLE_DBUS_WINDOW",
+"KONSOLE_PROFILE_NAME",
 }
 
 defaults.env.blacklist_home=
