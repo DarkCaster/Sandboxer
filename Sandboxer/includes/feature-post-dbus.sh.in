@@ -9,12 +9,16 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
  log "starting new dbus session"
  #execute dbus daemon in background
  exec_profile="dbus"
- . "$script_dir/channel-open.sh.in"
+ if [ "${cfg[$exec_profile.exec]}" == "placeholder" ]; then
+  cfg[$exec_profile.exec]=`2>/dev/null which "dbus-daemon"`
+  test -z "${cfg[$exec_profile.exec]}" && log "dbus-daemon binary is not found!" && teardown 1
+ fi
+ . "$includes_dir/channel-open.sh.in"
  exec_bg="true"
  exec_bg_pid=""
  exec_log_out="$basedir/dbus-daemon.out"
  exec_log_err="$basedir/dbus-daemon.err"
- . "$script_dir/run-profile.sh.in"
+ . "$includes_dir/run-profile.sh.in"
  #wait for output
  dbus_wait=400
  while [ $dbus_wait -ge 1 ]
@@ -32,7 +36,7 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
  #detach commander for dbus session if it is running
  2>/dev/null kill -SIGUSR2 $exec_bg_pid
  check_errors "failed to send detach command to dbus-session commander"
- (. "$script_dir/dbus-watchdog.sh.in" ) &>"$basedir/dbus-watchdog.log" &
+ (. "$includes_dir/dbus-watchdog.sh.in" ) &>"$basedir/dbus-watchdog.log" &
 elif [ -p "$basedir/control/dbus.in" ] && [ -p "$basedir/control/dbus.out" ]; then
  # just read already created dbus-daemon.out
  mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.out"
