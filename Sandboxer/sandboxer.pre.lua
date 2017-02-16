@@ -369,7 +369,7 @@ defaults.recalculate()
 
 dbus =
 {
-exec="/bin/dbus-daemon",
+exec="placeholder",
 path="/",
 args={ "--session", "--print-pid", "--print-address" },
 term_signal=defaults.signals.SIGTERM,
