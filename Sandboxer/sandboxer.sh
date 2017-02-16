@@ -20,7 +20,7 @@ shift 1
 includes_dir="$script_dir/includes"
 
 #activate some loadables
-. "$script_dir/loadables-helper.bash.in"
+. "$includes_dir/loadables-helper.bash.in"
 
 #generate uid for given config file
 test ! -e "$config" && echo "config file not found: $config" && exit 1
