@@ -30,7 +30,7 @@ config_uid=`realpath -s "$config" | md5sum -t | cut -f1 -d" "`
 uid=`id -u`
 gid=`id -g`
 
-. "$script_dir/find-lua-helper.bash.in"
+. "$includes_dir/find-lua-helper.bash.in" "$includes_dir" "$script_dir/../BashLuaHelper"
 . "$bash_lua_helper" "$config" -e defaults.basedir -e defaults.chrootdir -e defaults.features -e sandbox -e profile -e dbus -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "/tmp" -o "/tmp/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
