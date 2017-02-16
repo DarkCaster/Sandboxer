@@ -16,6 +16,9 @@ profile="$1"
 test -z "$profile" && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
 shift 1
 
+#includes dir
+includes_dir="$script_dir/includes"
+
 #activate some loadables
 . "$script_dir/loadables-helper.bash.in"
 
