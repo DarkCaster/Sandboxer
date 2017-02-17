@@ -234,15 +234,8 @@ static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context
         log_message(logger,LOG_ERROR,"waitid failed! errno=%i",LI(errno));
     else
         log_message(logger,LOG_INFO,"Child process was exit with code %i",LI(exit_code));
-    //set service stuff atomically
-    pid_lock();
-    //should not happen
-    if(child_pid!=(pid_t)ch_pid)
-        log_message(logger,LOG_WARNING,"PID of completed process does not match with registered child pid! expected pid = %i, actual pid = %i",LI(child_pid),LI(ch_pid));
-    child_pid=0;
-    child_is_alive=false;
     child_ec=exit_code;
-    pid_unlock();
+    child_is_alive=false;
 }
 
 #pragma GCC diagnostic pop
@@ -288,7 +281,7 @@ int main(int argc, char* argv[])
     pthread_mutex_init(&pid_mutex,NULL);
     shutdown=0;
     command_mode=1; //until we attempt to launch user binary, this flag is set.
-    child_is_alive=false;
+    child_is_alive=true;
     child_ec=0;
     child_signal_set=false;
     child_signal=15;
@@ -1161,6 +1154,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     pid_lock();
     if(shutdown)
     {
+        child_is_alive=false;
         pid_unlock();
         return 255;
     }
@@ -1170,6 +1164,7 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     if (pid == -1)
     {
         log_message(logger,LOG_ERROR,"Failed to perform fork");
+        child_is_alive=false;
         pid_unlock();
         return 120;
     }
@@ -1252,7 +1247,6 @@ static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty)
     }
 
     command_mode=0;
-    child_is_alive=true;
     child_pid=pid;
     pid_unlock();
 
