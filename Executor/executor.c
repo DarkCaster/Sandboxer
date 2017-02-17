@@ -226,16 +226,22 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 
 static void slave_sigchld_signal_handler(int sig, siginfo_t* info, void* context)
 {
-    pid_lock();
-    child_pid=0;
-    child_is_alive=false;
-    child_ec=(uint8_t)(info->si_status);
+    //reap process as quick as possible
     id_t ch_pid=(id_t)(info->si_pid);
+    uint8_t exit_code=(uint8_t)(info->si_status);
     siginfo_t siginfo;
     if(waitid(P_PID,ch_pid,&siginfo,WEXITED|WNOHANG)!=0)
         log_message(logger,LOG_ERROR,"waitid failed! errno=%i",LI(errno));
     else
-        log_message(logger,LOG_INFO,"Child process was exit with code %i",LI(child_ec));
+        log_message(logger,LOG_INFO,"Child process was exit with code %i",LI(exit_code));
+    //set service stuff atomically
+    pid_lock();
+    //should not happen
+    if(child_pid!=(pid_t)ch_pid)
+        log_message(logger,LOG_WARNING,"PID of completed process does not match with registered child pid! expected pid = %i, actual pid = %i",LI(child_pid),LI(ch_pid));
+    child_pid=0;
+    child_is_alive=false;
+    child_ec=exit_code;
     pid_unlock();
 }
 
