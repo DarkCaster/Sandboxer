@@ -627,6 +627,43 @@ int main(int argc, char* argv[])
             wait_for_term_routine(o_cnt,MASTER_SHUTDOWN_WAIT_TIME_INTERVAL,_master_get_orphans_count);
             conditional_term_routine(o_cnt,_master_terminate_orphans,SIGKILL);
         }
+
+        //cleanup all channels that may left
+        struct dirent* d_entry=NULL;
+        DIR* ctl=opendir(ctldir);
+        if(ctl!=NULL)
+        {
+            while((d_entry = readdir(ctl)) != NULL)
+            {
+                size_t len=strlen(d_entry->d_name);
+                if(len<3)
+                    continue;
+                if (strncmp(d_entry->d_name,filename_in,len)==0||strncmp(d_entry->d_name,filename_out,len)==0)
+                    continue;
+                if(len>=3 && strncmp(((d_entry->d_name)+len-3),".in",3)==0)
+                {
+                    int ec=remove(d_entry->d_name);
+                    if(ec!=0)
+                        log_message(logger,LOG_WARNING,"Failed to remove pipe %s, ec==%i",LS(d_entry->d_name),LI(ec));
+                    else
+                        log_message(logger,LOG_WARNING,"Removed pipe from dead slave executor: %s",LS(d_entry->d_name));
+                    continue;
+                }
+                if(len>=4 && strncmp(((d_entry->d_name)+len-4),".out",4)==0)
+                {
+                    int ec=remove(d_entry->d_name);
+                    if(ec!=0)
+                        log_message(logger,LOG_WARNING,"Failed to remove pipe %s, ec==%i",LS(d_entry->d_name),LI(ec));
+                    else
+                        log_message(logger,LOG_WARNING,"Removed pipe from dead slave executor: %s",LS(d_entry->d_name));
+                    continue;
+                }
+            }
+            if(closedir(ctl)!=0)
+                log_message(logger,LOG_ERROR,"Failed to perform closedir, errno=%i",LI(errno));
+        }
+        else
+            log_message(logger,LOG_ERROR,"Failed to perform opendir, errno=%i",LI(errno));
     }
 
     int ec=remove(filename_in);
