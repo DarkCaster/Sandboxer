@@ -90,15 +90,21 @@ sandbox =
 		-- use static build of executor binary. may be useful for use in very restrictive, minimalistic or other custom chroots
 		static_executor=false, -- optional, will be set automatically to false if missing.
 
-		-- table with custom user commands, that will be run when creating chroot after tasks from chroot table (see above) is complete.
-		-- current dir will be set to chroot directory, that is located at sandbox.setup.basedir/chroot
-		-- custom command-groups executed in order of appearence.
-		-- this can be used to dynamically create configuration files and other things to mount inside sandbox later.
-		-- command-groups are executed by using eval in context of main sandboxer.sh launcher script. so, be careful!
+		-- table with commands, that will be run to create and prepare chroot.
+		-- commands defined by "groups", each group is a table with "strings" that will be executed by sandboxer.sh script.
+		-- command-groups executed in order of appearence.
+		-- current dir will be set to chroot directory (located at sandbox.setup.basedir/chroot) before process any command group.
+		-- command-groups are executed by using eval in a forked context, so there is no risk to corrupt main sandboxer.sh state.
+		-- this list will execute in parallel with other preparation tasks made by main sandboxer.sh script.
 		-- exit code from command group ($?) is examined, sandboxer.sh will automatically terminate is case of errors ($?!=0)
+		-- this mechanism should be used to dynamically create configuration files and other things to mount inside sandbox later.
+		-- there are several "builtin" commands that sandboxer system supports. all such commands are listed here with it's brief descriptions.
+		-- defaults commands may be changed in future, and may vary depending on your distribution or some general setup options above.
 		commands = -- optional
 		{
-			defaults.commands.etc_min, -- copy minimal config to defaults.chrootdir
+			--user command example:
+			-- {'mkdir -p "etc"', 'touch "hello"'}
+			defaults.commands.etc_min, -- copy minimal config to defaults.chrootdir, should not include system, kernel, and other machine stuff
 			defaults.commands.etc_dbus, -- copy dbus config to defaults.chrootdir
 			defaults.commands.etc_x11, -- copy x11 config to defaults.chrootdir
 			defaults.commands.etc_udev, -- copy /etc/udev config to defaults.chrootdir. may be needed for some apps, may leak some information about current hardware config
