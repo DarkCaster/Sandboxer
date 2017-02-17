@@ -33,56 +33,14 @@ defaults.signals=
 -- chroot build commands
 defaults.commands={}
 
-defaults.commands.etc_min=
+defaults.commands.etc_min= { nil }
+
+defaults.commands.etc_full =
 {
  'mkdir -p "etc"',
- '2>/dev/null cp -rf "/etc/zsh"* "etc"; true',
- '2>/dev/null cp "/etc/yp.conf" "etc"; true',
- '2>/dev/null cp "/etc/wgetrc" "etc"; true',
- '2>/dev/null cp "/etc/vimrc" "etc"; true',
- '2>/dev/null cp "/etc/vdpau_wrapper.cfg" "etc"; true',
- '2>/dev/null cp "/etc/termcap" "etc"; true',
- '2>/dev/null cp -rf "/etc/security" "etc"; true',
- 'cp "/etc/resolv.conf" "etc"',
- '2>/dev/null cp -r "/etc/pulse" "etc"; true',
- 'cp "/etc/profile" "etc"',
- 'cp -rf "/etc/profile.d" "etc"',
- 'cp "/etc/protocols" "etc"',
- '2>/dev/null cp "/etc/os-release" "etc"; true',
- 'cp "/etc/nsswitch.conf" "etc"',
- '2>/dev/null cp "/etc/nscd.conf" "etc"; true',
- '2>/dev/null cp "/etc/networks" "etc"; true',
- 'rm -f "etc/mtab"; ln -s "/proc/self/mounts" "etc/mtab"',
- '2>/dev/null cp "/etc/mime.types" "etc"; true',
- 'cp "/etc/localtime" "etc"',
- 'cp -rf "/etc/ld.so"* "etc"',
- 'cp "/etc/manpath.config" "etc"',
- '2>/dev/null cp "/etc/libao.conf" "etc"; true',
- '2>/dev/null cp "/etc/ksh.kshrc" "etc"; true',
- '2>/dev/null cp "/etc/krb5.conf" "etc"; true',
- '2>/dev/null cp -rf "/etc/kde4" "etc"; true',
- '2>/dev/null cp -rf "/etc/java" "etc"; true',
- '2>/dev/null cp "/etc/inputrc" "etc"; true',
- 'cp "/etc/host"* "etc"',
- '2>/dev/null cp "/etc/HOSTNAME" "etc"; true',
- '2>/dev/null cp "/etc/freshwrapper.conf" "etc"; true',
- '2>/dev/null cp "/etc/ethers" "etc"; true',
- '2>/dev/null cp "/etc/drirc" "etc"; true',
- '2>/dev/null cp "/etc/DIR_COLORS" "etc"; true',
- '2>/dev/null cp "/etc/dialogrc" "etc"; true',
- '2>/dev/null cp "/etc/csh"* "etc"; true',
- '2>/dev/null cp -rf "/etc/ca-certificates" "etc"; true',
- '2>/dev/null cp -rf "/etc/bash"* "etc"; true',
- '2>/dev/null cp -rf "/etc/mc" "etc"; true',
- '2>/dev/null cp "/etc/asound-pulse.conf" "etc"; true',
- '2>/dev/null cp "/etc/alsa-pulse.conf" "etc"; true',
- '2>/dev/null cp -rf "/etc/alternatives" "etc"; true',
- '2>/dev/null cp -rf "/etc/alias"* "etc"; true',
- '2>/dev/null cp "/etc/adjtime" "etc"; true',
- '2>/dev/null cp -rf "/etc/less"* "etc"; true',
+ '2>/dev/null cp -rf "/etc/"* "etc"; true',
+ 'rm -f "etc/mtab"; ln -s "/proc/self/mounts" "etc/mtab"; true',
 }
-
-defaults.commands.etc_full = {'mkdir -p "etc"','2>/dev/null cp -rf "/etc/"* "etc"; true'}
 
 defaults.commands.etc_dbus = {'mkdir -p "etc"','cp -rf "/etc/dbus"* "etc"'}
 
@@ -374,8 +332,9 @@ function defaults.recalculate()
  defaults.env.set_home[3][2]=defaults.user
  defaults.env.set_home[4][2]=loader.path.combine(defaults.env.set_home[1][2],".inputrc");
  defaults.env.set_home[5][2]=defaults.user
- defaults.commands.passwd[2]=loader.path.combine(config.sandboxer_dir,"tools","pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..defaults.env.set_home[1][2]..'" "etc/passwd" "etc/group"'
+ defaults.commands.passwd[2]=loader.path.combine(config.tools_dir,"pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..defaults.env.set_home[1][2]..'" "etc/passwd" "etc/group"'
  defaults.commands.x11[1]='test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true'
+ defaults.commands.etc_min[1]=loader.path.combine(config.tools_dir,"host_whitelist_etc_gen.sh")..' "etc"'
 end
 
 defaults.recalculate()
