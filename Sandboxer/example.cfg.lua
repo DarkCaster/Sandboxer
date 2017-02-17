@@ -90,6 +90,10 @@ sandbox =
 		-- use static build of executor binary. may be useful for use in very restrictive, minimalistic or other custom chroots
 		static_executor=false, -- optional, will be set automatically to false if missing.
 
+		-- perform control directory cleanup after all sandbox sessions are closed and sandbox is destroyed.
+		-- may be disabled for debug purposes. may also decrease time to full sandbox startup that is performed when no sessions currently running
+		cleanup_on_exit=true, -- optional, will be set automatically to true if missing.
+
 		-- table with commands, that will be run to create and prepare chroot.
 		-- commands defined by "groups", each group is a table with "strings" that will be executed by sandboxer.sh script.
 		-- command-groups executed in order of appearence.
