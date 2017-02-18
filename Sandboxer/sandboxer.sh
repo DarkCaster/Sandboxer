@@ -50,10 +50,12 @@ mkdir -p "$basedir"
 test "$?" != "0" && log "error creating basedir at $basedir" && exit 1
 
 lock_entered="false"
+lock_dirname="control.lock"
+lock_path="$basedir/$lock_dirname"
 
 lock_enter() {
  local nowait="$1"
- if mkdir "$basedir/executor.lock" 2>/dev/null; then
+ if mkdir "$lock_path" 2>/dev/null; then
   lock_entered="true"
   return 0
  else
@@ -69,7 +71,7 @@ lock_enter() {
 
 lock_exit() {
  if [ "$lock_entered" = "true" ]; then
-  rmdir "$basedir/executor.lock" 2>/dev/null
+  rmdir "$lock_path" 2>/dev/null
   lock_entered="false"
  fi
  true
