@@ -215,17 +215,22 @@ defaults.bwrap.devsnd_mount = {prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/
 defaults.bwrap.devdri_mount = {prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
 defaults.bwrap.devinput_mount = {prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
 
--- defines for features, fore use in main script
-defaults.features.gvfs_fix_conf =
+-- various tunables for features
+defaults.features.gvfs_fix_search_prefix = "/"
+
+defaults.features.gvfs_fix_search_locations =
 {
- 'mkdir -p "gvfs_fix/remote-volume-monitors"',
- 'mkdir -p "gvfs_fix/mounts"',
- 'cp "/usr/share/gvfs/mounts/archive.mount" "gvfs_fix/mounts"',
- 'cp "/usr/share/gvfs/mounts/cdda.mount" "gvfs_fix/mounts"',
- 'cp "/usr/share/gvfs/mounts/computer.mount" "gvfs_fix/mounts"',
- 'cp "/usr/share/gvfs/mounts/localtest.mount" "gvfs_fix/mounts"',
- 'cp "/usr/share/gvfs/mounts/recent.mount" "gvfs_fix/mounts"',
- 'cp "/usr/share/gvfs/mounts/trash.mount" "gvfs_fix/mounts"',
+ '/usr/share/gvfs',
+}
+
+defaults.features.gvfs_fix_mounts =
+{
+ 'archive.mount',
+ 'cdda.mount',
+ 'computer.mount',
+ 'localtest.mount',
+ 'recent.mount',
+ 'trash.mount',
 }
 
 -- (re)create tables that rely on tunable parameters
@@ -330,7 +335,7 @@ function defaults.recalculate()
 
  defaults.bwrap.pulse_mount = {prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
 
- defaults.features.gvfs_fix_mount = {"ro-bind",loader.path.combine(defaults.chrootdir,"gvfs_fix"),"/usr/share/gvfs"}
+ defaults.features.gvfs_fix_dir = loader.path.combine(defaults.chrootdir,"gvfs_fix")
 
 end
 
