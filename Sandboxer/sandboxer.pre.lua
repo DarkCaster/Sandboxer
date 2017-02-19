@@ -43,19 +43,6 @@ defaults.bwrap={}
 -- chroot environment setup group. intended for use inside main config files at sandbox.setup.env_blacklist and sandbox.setup.env_set tables
 defaults.env={}
 
-defaults.commands.etc_full =
-{
- 'mkdir -p "etc"',
- '2>/dev/null cp -rf "/etc/"* "etc"; true',
- 'rm -f "etc/mtab"; ln -s "/proc/self/mounts" "etc/mtab"; true',
-}
-
-defaults.commands.etc_dbus = {'mkdir -p "etc"','cp -rf "/etc/dbus"* "etc"'}
-
-defaults.commands.etc_x11 = {'mkdir -p "etc"','cp -rf "/etc/X11" "etc"','cp -rf "/etc/fonts" "etc"'}
-
-defaults.commands.etc_udev = {'mkdir -p "etc"','cp -rf "/etc/udev" "etc"'}
-
 defaults.commands.pulse =
 {
  'mkdir -p "pulse"',
@@ -219,19 +206,11 @@ defaults.bwrap.host_essentials_group =
  defaults.bwrap.host_lib64_mount,
 }
 
--- etc
-defaults.bwrap.etc_ro_mount = {prio=10,tag="etc","ro-bind",nil,"/etc"}
-defaults.bwrap.etc_rw_mount = {prio=10,tag="etc","bind",nil,"/etc"}
 defaults.bwrap.host_etc_mount = {prio=10,tag="etc","ro-bind","/etc","/etc"}
 
 -- service mounts
-defaults.bwrap.xdg_runtime_dir = {prio=20,tag="xdgrun","dir",nil}
-defaults.bwrap.home_mount = {prio=20,tag="home","bind",nil,"/home"}
-defaults.bwrap.var_cache_mount = {prio=20,tag="cache","bind",nil,"/var/cache"}
-defaults.bwrap.var_tmp_mount = {prio=20,tag="vartmp","bind",nil,"/var/tmp"}
 defaults.bwrap.dbus_system_mount = {prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
 defaults.bwrap.x11_mount = {prio=20,tag="x11","bind","/tmp/.X11-unix","/tmp/.X11-unix"}
-defaults.bwrap.pulse_mount = {prio=20,tag="pulse","bind",nil,"/etc/pulse"}
 defaults.bwrap.devsnd_mount = {prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
 defaults.bwrap.devdri_mount = {prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
 defaults.bwrap.devinput_mount = {prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
@@ -249,19 +228,35 @@ defaults.features.gvfs_fix_conf =
  'cp "/usr/share/gvfs/mounts/trash.mount" "gvfs_fix/mounts"',
 }
 
-defaults.features.gvfs_fix_mount = {"ro-bind",nil,"/usr/share/gvfs"}
-
+-- (re)create tables that rely on tunable parameters
 function defaults.recalculate()
+
  local home=loader.path.combine(defaults.datadir,"home")
+ local cache=loader.path.combine(defaults.datadir,"cache")
+ local tmp=loader.path.combine(defaults.datadir,"tmp")
  local user=loader.path.combine(home,defaults.user)
+ local etc=loader.path.combine(defaults.chrootdir,defaults.etcdir_name)
  local chroot_home=loader.path.combine("/home",defaults.user)
 
- defaults.commands.etc_min = { loader.path.combine(config.tools_dir,"host_whitelist_etc_gen.sh")..' "'..defaults.etcdir_name..'"' }
+ defaults.commands.etc_min = { loader.path.combine(config.tools_dir,"host_whitelist_etc_gen.sh")..' "'..etc..'"' }
+
+ defaults.commands.etc_full =
+ {
+  'mkdir -p "'..etc..'"',
+  '2>/dev/null cp -rf "/etc/"* "'..etc..'"; true',
+  'rm -f "'..loader.path.combine(etc,"mtab")..'"; ln -s "/proc/self/mounts" "'..loader.path.combine(etc,"mtab")..'"; true',
+ }
+
+ defaults.commands.etc_dbus = { 'mkdir -p "'..etc..'"','cp -rf "/etc/dbus"* "'..etc..'"' }
+
+ defaults.commands.etc_x11 = { 'mkdir -p "'..etc..'"','cp -rf "/etc/X11" "'..etc..'"','cp -rf "/etc/fonts" "'..etc..'"'}
+
+ defaults.commands.etc_udev = {'mkdir -p "'..etc..'"','cp -rf "/etc/udev" "'..etc..'"'}
 
  defaults.commands.passwd =
  {
-  'mkdir -p "'..defaults.etcdir_name..'"',
-  loader.path.combine(config.tools_dir,"pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..defaults.etcdir_name..'/passwd" "'..defaults.etcdir_name..'/group"',
+  'mkdir -p "'..etc..'"',
+  loader.path.combine(config.tools_dir,"pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
  }
 
  defaults.commands.x11 = { 'test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true' }
@@ -272,9 +267,9 @@ function defaults.recalculate()
   'test ! -d "'..user..'" && 2>/dev/null cp -rf /etc/skel "'..user..'" || true'
  }
 
- defaults.commands.var_cache = { 'mkdir -p "'..loader.path.combine(defaults.datadir,"cache")..'"' }
+ defaults.commands.var_cache = { 'mkdir -p "'..cache..'"' }
 
- defaults.commands.var_tmp = { 'mkdir -p "'..loader.path.combine(defaults.datadir,"tmp")..'"' }
+ defaults.commands.var_tmp = { 'mkdir -p "'..tmp..'"' }
  
  defaults.env.set_home=
  {
@@ -320,17 +315,19 @@ function defaults.recalculate()
   defaults.bwrap.lib_rw_mount,
   defaults.bwrap.lib64_rw_mount,
  }
- 
- defaults.features.gvfs_fix_mount[2]=loader.path.combine(defaults.chrootdir,"gvfs_fix")
- 
- defaults.bwrap.etc_ro_mount[2]=loader.path.combine(defaults.chrootdir,"etc")
- defaults.bwrap.etc_rw_mount[2]=defaults.bwrap.etc_ro_mount[2]
- defaults.bwrap.var_tmp_mount[2]=loader.path.combine(defaults.datadir,"tmp")
- defaults.bwrap.var_cache_mount[2]=loader.path.combine(defaults.datadir,"cache")
- defaults.bwrap.home_mount[2]=loader.path.combine(defaults.datadir,"home")
- defaults.bwrap.xdg_runtime_dir[2]=loader.path.combine("/run","user",defaults.uid)
- defaults.bwrap.pulse_mount[2]=loader.path.combine(defaults.chrootdir,"pulse")
- 
+
+ defaults.bwrap.etc_ro_mount = {prio=10,tag="etc","ro-bind",etc,"/etc"}
+
+ defaults.bwrap.etc_rw_mount = {prio=10,tag="etc","bind",etc,"/etc"}
+
+ defaults.bwrap.xdg_runtime_dir = {prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",defaults.uid)}
+ defaults.bwrap.home_mount = {prio=20,tag="home","bind",home,"/home"}
+ defaults.bwrap.var_cache_mount = {prio=20,tag="cache","bind",cache,"/var/cache"}
+ defaults.bwrap.var_tmp_mount = {prio=20,tag="vartmp","bind",tmp,"/var/tmp"}
+ defaults.bwrap.pulse_mount = {prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
+
+ defaults.features.gvfs_fix_mount = {"ro-bind",loader.path.combine(defaults.chrootdir,"gvfs_fix"),"/usr/share/gvfs"}
+
 end
 
 defaults.recalculate()
