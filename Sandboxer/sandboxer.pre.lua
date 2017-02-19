@@ -283,13 +283,13 @@ function defaults.recalculate()
  defaults.env.set_xdg_runtime = { {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",defaults.uid)} }
 
  defaults.bwrap.bin_ro_mount = {prio=10,tag="bin","ro-bind",loader.path.combine(defaults.chrootdir,"/bin"),"/bin"}
- 
+
  defaults.bwrap.usr_ro_mount = {prio=10,tag="usr","ro-bind",loader.path.combine(defaults.chrootdir,"/usr"),"/usr"}
- 
+
  defaults.bwrap.lib_ro_mount = {prio=10,tag="lib","ro-bind",loader.path.combine(defaults.chrootdir,"/lib"),"/lib"}
- 
+
  defaults.bwrap.lib64_ro_mount = {prio=10,tag="lib64","ro-bind",loader.path.combine(defaults.chrootdir,"/lib64"),"/lib64"}
- 
+
  defaults.bwrap.chroot_ro_essentials_group =
  {
   prio=10,
@@ -321,9 +321,13 @@ function defaults.recalculate()
  defaults.bwrap.etc_rw_mount = {prio=10,tag="etc","bind",etc,"/etc"}
 
  defaults.bwrap.xdg_runtime_dir = {prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",defaults.uid)}
+
  defaults.bwrap.home_mount = {prio=20,tag="home","bind",home,"/home"}
+
  defaults.bwrap.var_cache_mount = {prio=20,tag="cache","bind",cache,"/var/cache"}
+
  defaults.bwrap.var_tmp_mount = {prio=20,tag="vartmp","bind",tmp,"/var/tmp"}
+
  defaults.bwrap.pulse_mount = {prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
 
  defaults.features.gvfs_fix_mount = {"ro-bind",loader.path.combine(defaults.chrootdir,"gvfs_fix"),"/usr/share/gvfs"}
