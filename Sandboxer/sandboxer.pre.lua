@@ -22,6 +22,7 @@ defaults.uid=config.uid
 defaults.gid=config.gid
 defaults.user="sandboxer"
 defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
+defaults.etcdir_name="etc"
 
 -- signals list
 defaults.signals=
@@ -30,10 +31,17 @@ defaults.signals=
  SIGCHLD=17,SIGCONT=18,SIGSTOP=19,SIGTSTP=20,SIGTTIN=21,SIGTTOU=22,SIGURG=23,SIGXCPU=24,SIGXFSZ=25,SIGVTALRM=26,SIGPROF=27,SIGWINCH=28,SIGIO=29,SIGPWR=30,SIGSYS=31,
 }
 
--- chroot build commands
+-- chroot build commands container. intended for use inside main config files at sandbox.setup.commands table.
 defaults.commands={}
 
-defaults.commands.etc_min= { nil }
+-- container for commands and other configurable stuff for various include scripts. not for direct use in config.
+defaults.features={}
+
+-- bwrap command line options container. intended for use inside main config files at sandbox.bwrap table
+defaults.bwrap={}
+
+-- chroot environment setup group. intended for use inside main config files at sandbox.setup.env_blacklist and sandbox.setup.env_set tables
+defaults.env={}
 
 defaults.commands.etc_full =
 {
@@ -47,21 +55,6 @@ defaults.commands.etc_dbus = {'mkdir -p "etc"','cp -rf "/etc/dbus"* "etc"'}
 defaults.commands.etc_x11 = {'mkdir -p "etc"','cp -rf "/etc/X11" "etc"','cp -rf "/etc/fonts" "etc"'}
 
 defaults.commands.etc_udev = {'mkdir -p "etc"','cp -rf "/etc/udev" "etc"'}
-
--- etc/passwd and etc/group files generation
-defaults.commands.passwd=
-{
- 'mkdir -p "etc"',
- nil,
-}
-
-defaults.commands.x11 = {nil}
-
-defaults.commands.home = {nil,nil}
-
-defaults.commands.var_cache = {nil}
-
-defaults.commands.var_tmp = {nil}
 
 defaults.commands.pulse =
 {
@@ -79,8 +72,6 @@ defaults.commands.pulse =
  'ln "$pulse_socket" "pulse/socket"',
  'unset pulse_socket',
 }
-
-defaults.env={}
 
 defaults.env.blacklist_main=
 { -- main blacklist, include variables that may leak sensitive information
@@ -204,8 +195,6 @@ defaults.env.set_pulse =
  {"SDL_AUDIODRIVER","pulse"},
 }
 
-defaults.bwrap={}
-
 -- main bwrap command line options
 defaults.bwrap.unshare_user = {prio=0,tag="unshare-user","unshare-user"}
 defaults.bwrap.unshare_ipc = {prio=0,tag="unshare-ipc","unshare-ipc"}
@@ -289,7 +278,6 @@ defaults.bwrap.devdri_mount = {prio=20,tag="devdri","dev-bind","/dev/dri","/dev/
 defaults.bwrap.devinput_mount = {prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
 
 -- defines for features, fore use in main script
-defaults.features={}
 defaults.features.gvfs_fix_conf =
 {
  'mkdir -p "gvfs_fix/remote-volume-monitors"',
@@ -305,7 +293,39 @@ defaults.features.gvfs_fix_conf =
 defaults.features.gvfs_fix_mount = {"ro-bind",nil,"/usr/share/gvfs"}
 
 function defaults.recalculate()
+ local home=loader.path.combine(defaults.datadir,"home")
+ local user=loader.path.combine(home,defaults.user)
+ local chroot_home=loader.path.combine("/home",defaults.user)
+
+ defaults.commands.etc_min = { loader.path.combine(config.tools_dir,"host_whitelist_etc_gen.sh")..' "'..defaults.etcdir_name..'"' }
+
+ defaults.commands.passwd =
+ {
+  'mkdir -p "'..defaults.etcdir_name..'"',
+  loader.path.combine(config.tools_dir,"pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..defaults.etcdir_name..'/passwd" "'..defaults.etcdir_name..'/group"',
+ }
+
+ defaults.commands.x11 = { 'test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true' }
+
+ defaults.commands.home =
+ {
+  'mkdir -p "'..home..'"',
+  'test ! -d "'..user..'" && 2>/dev/null cp -rf /etc/skel "'..user..'" || true'
+ }
+
+ defaults.commands.var_cache = { 'mkdir -p "'..loader.path.combine(defaults.datadir,"cache")..'"' }
+
+ defaults.commands.var_tmp = { 'mkdir -p "'..loader.path.combine(defaults.datadir,"tmp")..'"' }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  defaults.features.gvfs_fix_mount[2]=loader.path.combine(defaults.chrootdir,"gvfs_fix")
+ 
  defaults.bwrap.bin_ro_mount[2] = loader.path.combine(defaults.chrootdir,"/bin")
  defaults.bwrap.usr_ro_mount[2] = loader.path.combine(defaults.chrootdir,"/usr")
  defaults.bwrap.lib_ro_mount[2] = loader.path.combine(defaults.chrootdir,"/lib")
@@ -321,20 +341,13 @@ function defaults.recalculate()
  defaults.bwrap.home_mount[2]=loader.path.combine(defaults.datadir,"home")
  defaults.bwrap.xdg_runtime_dir[2]=loader.path.combine("/run","user",defaults.uid)
  defaults.bwrap.pulse_mount[2]=loader.path.combine(defaults.chrootdir,"pulse")
+ 
+ 
  defaults.env.set_xdg_runtime[1][2]=loader.path.combine("/run","user",defaults.uid)
- defaults.commands.var_tmp[1]='mkdir -p "'..loader.path.combine(defaults.datadir,"tmp")..'"'
- defaults.commands.var_cache[1]='mkdir -p "'..loader.path.combine(defaults.datadir,"cache")..'"'
- local home=loader.path.combine(defaults.datadir,"home")
- local user=loader.path.combine(home,defaults.user)
- defaults.commands.home[1]='mkdir -p "'..home..'"'
- defaults.commands.home[2]='test ! -d "'..user..'" && 2>/dev/null cp -rf /etc/skel "'..user..'" || true'
  defaults.env.set_home[1][2]=loader.path.combine("/home",defaults.user);
  defaults.env.set_home[3][2]=defaults.user
  defaults.env.set_home[4][2]=loader.path.combine(defaults.env.set_home[1][2],".inputrc");
  defaults.env.set_home[5][2]=defaults.user
- defaults.commands.passwd[2]=loader.path.combine(config.tools_dir,"pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..defaults.env.set_home[1][2]..'" "etc/passwd" "etc/group"'
- defaults.commands.x11[1]='test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true'
- defaults.commands.etc_min[1]=loader.path.combine(config.tools_dir,"host_whitelist_etc_gen.sh")..' "etc"'
 end
 
 defaults.recalculate()
