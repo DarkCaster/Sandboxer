@@ -142,6 +142,10 @@ sandbox =
 		-- set custom env variables,
 		env_set =
 		{
+			-- setup user env, essential for normal operation (especially, for shells and scripts)
+			-- use this when "defaults.commands.passwd" used when constructing sandbox (recommended)
+			-- also define some env variables normally only defined when launching "login" shell
+			-- (launching login shell is usually overkill for sandbox and it may also expose some unneded env variables unset earlier by blacklist feature)
 			defaults.env.set_home,
 			defaults.env.set_xdg_runtime,
 			defaults.env.set_x11, -- export display value from host (and maybe some other values needed for x11)
