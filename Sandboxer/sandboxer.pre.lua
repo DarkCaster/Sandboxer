@@ -164,21 +164,6 @@ defaults.env.blacklist_xdg=
 "XDG_SESSION_TYPE",
 }
 
-defaults.env.set_home=
-{
--- setup user env, essential for normal operation (especially, for shells and scripts)
--- use this when "defaults.commands.pwd" used when constructing sandbox (recommended)
--- also define some env variables normally only defined when launching "login" shell
--- (launching login shell is usually overkill for sandbox and it may also expose some unneded env variables unset earlier by blacklist feature)
- {"HOME",nil},
- {"PATH","/usr/bin:/bin:/usr/bin/X11"},
- {"USER",nil},
- {"INPUTRC",nil},
- {"LOGNAME",nil}
-}
-
-defaults.env.set_xdg_runtime = {{"XDG_RUNTIME_DIR",nil}}
-
 defaults.env.set_x11 = {{"DISPLAY",os.getenv("DISPLAY")}}
 
 if os.getenv("XCURSOR_THEME")~=nil then
@@ -317,8 +302,16 @@ function defaults.recalculate()
 
  defaults.commands.var_tmp = { 'mkdir -p "'..loader.path.combine(defaults.datadir,"tmp")..'"' }
  
- 
- 
+ defaults.env.set_home=
+ {
+  {"HOME",chroot_home},
+  {"PATH","/usr/bin:/bin:/usr/bin/X11"},
+  {"USER",defaults.user},
+  {"INPUTRC",loader.path.combine(chroot_home,".inputrc")},
+  {"LOGNAME",defaults.user}
+ }
+
+ defaults.env.set_xdg_runtime = { {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",defaults.uid)} }
  
  
  
@@ -342,12 +335,6 @@ function defaults.recalculate()
  defaults.bwrap.xdg_runtime_dir[2]=loader.path.combine("/run","user",defaults.uid)
  defaults.bwrap.pulse_mount[2]=loader.path.combine(defaults.chrootdir,"pulse")
  
- 
- defaults.env.set_xdg_runtime[1][2]=loader.path.combine("/run","user",defaults.uid)
- defaults.env.set_home[1][2]=loader.path.combine("/home",defaults.user);
- defaults.env.set_home[3][2]=defaults.user
- defaults.env.set_home[4][2]=loader.path.combine(defaults.env.set_home[1][2],".inputrc");
- defaults.env.set_home[5][2]=defaults.user
 end
 
 defaults.recalculate()
