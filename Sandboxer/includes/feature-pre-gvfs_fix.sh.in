@@ -1,8 +1,40 @@
 #!/bin/bash
 
-cd "${cfg[defaults.chrootdir]}"
-check_errors
-wait_for_cmd_list
-exec_cmd_list_in_bg "defaults.features.gvfs_fix_conf"
-bwrap_process_list_contents "defaults.features.gvfs_fix_mount"
+#find gvfs location
+gvfs_src=""
 
+gvfs_cnt=1
+while `check_lua_export "defaults.features.gvfs_fix_search_locations.$gvfs_cnt"`
+do
+ test -z "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}" -o ! -d "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts" && gvfs_cnt=$((gvfs_cnt+1)) && continue
+ gvfs_src="${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}"
+ break
+done
+
+if [ ! -z "$gvfs_src" ]; then
+ mkdir -p "${cfg[defaults.features.gvfs_fix_dir]}"
+ check_errors
+ mkdir -p "${cfg[defaults.features.gvfs_fix_dir]}/remote-volume-monitors"
+ check_errors
+ mkdir -p "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
+ check_errors
+ gvfs_mount_cnt=1
+ while `check_lua_export "defaults.features.gvfs_fix_mounts.$gvfs_mount_cnt"`
+ do
+  2>/dev/null cp "$gvfs_src/mounts/${cfg[defaults.features.gvfs_fix_mounts.$gvfs_mount_cnt]}" "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
+  gvfs_mount_cnt=$((gvfs_mount_cnt+1))
+ done
+ #TODO: remote-volume-monitors
+ bwrap_add_param "--ro-bind"
+ bwrap_add_param "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
+ bwrap_add_param "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts"
+ bwrap_add_param "--ro-bind"
+ bwrap_add_param "${cfg[defaults.features.gvfs_fix_dir]}/remote-volume-monitors"
+ bwrap_add_param "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/remote-volume-monitors"
+else
+ log "gvfs location not found, skipping"
+fi
+
+unset gvfs_mount_cnt
+unset gvfs_cnt
+unset gvfs_src
