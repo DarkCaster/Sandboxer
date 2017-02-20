@@ -157,16 +157,6 @@ if os.getenv("XCURSOR_THEME")~=nil then
  table.insert(defaults.env.set_x11,{"XCURSOR_THEME",os.getenv("XCURSOR_THEME")})
 end
 
-defaults.env.set_pulse =
-{
- {"PULSE_SERVER","unix:/etc/pulse/socket"},
- {"PULSE_COOKIE","/etc/pulse/cookie"},
- {"ALSA_CONFIG_PATH","/etc/alsa-pulse.conf"},
- {"AUDIODRIVER","pulseaudio"},
- {"QEMU_AUDIO_DRV","pa"},
- {"SDL_AUDIODRIVER","pulse"},
-}
-
 -- main bwrap command line options
 defaults.bwrap.unshare_user = {prio=0,tag="unshare-user","unshare-user"}
 defaults.bwrap.unshare_ipc = {prio=0,tag="unshare-ipc","unshare-ipc"}
@@ -231,6 +221,16 @@ defaults.features.gvfs_fix_mounts =
  'localtest.mount',
  'recent.mount',
  'trash.mount',
+}
+
+defaults.features.pulse_env =
+{
+ {"PULSE_SERVER","unix:/etc/pulse/socket"},
+ {"PULSE_COOKIE","/etc/pulse/cookie"},
+ {"ALSA_CONFIG_PATH","/etc/alsa-pulse.conf"},
+ {"AUDIODRIVER","pulseaudio"},
+ {"QEMU_AUDIO_DRV","pa"},
+ {"SDL_AUDIODRIVER","pulse"},
 }
 
 -- (re)create tables that rely on tunable parameters
