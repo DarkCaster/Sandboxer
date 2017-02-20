@@ -134,7 +134,6 @@ sandbox =
 			defaults.commands.passwd, -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
 			defaults.commands.home, -- create userdata/home at this config file directory, if missing
 			defaults.commands.x11, -- copy .Xauthority, or use xhost utility to allow x11 use inside sandbox. should be run after defaults.commands.home
-			defaults.commands.pulse, -- generate pulse audio client configs
 			defaults.commands.var_cache, -- create userdata/cache at this config file directory, if missing
 			defaults.commands.var_tmp, -- create userdata/tmp at this config file directory, if missing
 		},
@@ -167,7 +166,6 @@ sandbox =
 			defaults.env.set_home,
 			defaults.env.set_xdg_runtime,
 			defaults.env.set_x11, -- export display value from host (and maybe some other values needed for x11)
-			defaults.env.set_pulse, -- export variables pointing to pulse socket and pulse cookie
 		}
 	},
 }
@@ -200,7 +198,6 @@ sandbox.bwrap =
 	-- other mounts, also essential for normal operation
 	-- defaults.bwrap.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
 	-- defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net 
-	defaults.bwrap.pulse_mount, -- mount /etc/pulse that contain generated pulseaudio configuration for sandboxed client
 	defaults.bwrap.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
 	defaults.bwrap.devdri_mount, -- mount /dev/dri to allow hardware acceleration
 	defaults.bwrap.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
