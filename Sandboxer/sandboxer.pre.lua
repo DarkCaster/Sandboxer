@@ -43,23 +43,6 @@ defaults.bwrap={}
 -- chroot environment setup group. intended for use inside main config files at sandbox.setup.env_blacklist and sandbox.setup.env_set tables
 defaults.env={}
 
-defaults.commands.pulse =
-{
- 'mkdir -p "pulse"',
- 'echo "autospawn=no" > "pulse/client.conf"',
- 'echo "enable-shm=no" >> "pulse/client.conf"',
- 'echo "default-server=unix:/etc/pulse/socket" >> "pulse/client.conf"',
- 'cat `test -f "$HOME/.pulse-cookie" && echo "$HOME/.pulse-cookie" || echo "$HOME/.config/pulse/cookie"` > "pulse/cookie"',
- 'chmod 600 "pulse/cookie"',
- 'rm -f "pulse/socket"; true',
- -- TODO: more complex pulseaudio socket detection
- 'pulse_socket=""',
- 'pulse_socket=`2>/dev/null cat "$HOME/.config/pulse/default.pa" | grep "module-native-protocol-unix" | grep "socket" | cut -d" " -f3 | cut -d"=" -f2`; true',
- 'test -z "$pulse_socket" && pulse_socket=/run/user/'..config.uid..'/pulse/native; true', -- TODO: also try use xdg_runtime dir env var
- 'ln "$pulse_socket" "pulse/socket"',
- 'unset pulse_socket',
-}
-
 defaults.env.blacklist_main=
 { -- main blacklist, include variables that may leak sensitive information
 -- or will be incorrect inside sandbox because of isolation. (TODO: ability to use subsystems defined by such variables)
