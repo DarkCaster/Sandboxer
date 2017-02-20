@@ -15,18 +15,21 @@
 
 -- base directory: defaults.basedir
 -- you may change this in case of debug.
--- default value is config.ctldir - automatically generated sandbox directory unique to config file, located in /tmp.
+-- default value is config.ctldir - automatically generated sandbox directory unique to config file, located in /tmp (or $TMPDIR if set).
 -- base directory for all internal sandbox control stuff, used by sandboxer system,
--- this directory will be automatically created\removed by sandboxer system.
--- automatically generated directories and files also stored here.
--- this directory should be unique for each sandbox config file, and should be placed on tmpfs.
+-- this directory will be automatically created, populated and cleaned up by sandboxer system.
+-- this directory MUST be unique for each sandbox config file, and should be placed on tmpfs.
+-- this directry may be automatically cleaned up on sandbox shutdown, so do not store any persistent stuff here.
 -- example:
 -- defaults.basedir=config.ctldir -- default
 -- defaults.basedir=loader.path.combine(loader.workdir,"basedir-"..config.sandbox_uid)
 
 -- chroot construction dir: defaults.chrootdir
--- used by defaults.commands\default.bwrap defines
--- this directory is set (chdir) before running sandbox.setup.commands blocks, and when applying some features
+-- used by builtin defaults.commands and default.bwrap defines.
+-- this directory is set (chdir) before running sandbox.setup.commands blocks, and when applying some features.
+-- this directory may be deleted on sandbox shutdown, if it is located inside defaults.basedir (default).
+-- you can change this parameter if you want to generate your own persistent\non-standard chroot
+-- and also want to use some builtin commands to perform some dynamic setup on each run.
 -- example:
 -- defaults.chrootdir=loader.path.combine(defaults.basedir,"chroot") -- default
 -- defaults.chrootdir=loader.path.combine(loader.workdir,"chroot-"..config.sandbox_uid)
@@ -58,6 +61,21 @@
 -- example:
 -- defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid) -- default
 -- defaults.datadir=loader.path.combine(os.getenv("HOME"),"sandboxer-"..config.sandbox_uid)
+
+-- etc directory name inside chroot construction dir: defaults.etcdir_name
+-- this dir-name used by various builtin commands for "/etc" generation (sandbox.setup.commands),
+-- and predefined "/etc" mount entries for bwrap (sandbox.bwrap).
+-- you may override this directory name if you constructing your own "etc" directory inside defaults.chrootdir
+-- and do not want accidentally overwrite your own stuff by standard chroot generation routines.
+-- this parameter do not affect name of "/etc" mount inside sandbox, but only "etc" directory name inside chroot construction dir.
+-- example:
+-- defaults.etcdir_name="etc" -- default
+-- defaults.etcdir_name="etc_auto"
+
+-- TODO: add descriptions for features tunables:
+-- defaults.features.gvfs_fix_search_prefix
+-- defaults.features.gvfs_fix_search_locations
+-- defaults.features.gvfs_fix_mounts
 
 -- if you changed ANY of tunable defaults (above), you MUST run defaults.recalculate() function here,
 -- this will update and recalculate all deps used by other defaults definitions and setup commands.
