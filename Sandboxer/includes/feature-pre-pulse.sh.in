@@ -101,4 +101,8 @@ else
  fi
 fi
 
+else
+
+log "pulseaudio not running or current configuration is not supported, skipping feature activation"
+
 fi
