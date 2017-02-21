@@ -19,7 +19,7 @@ pulse_server="$PULSE_SERVER"
 test -z "$pulse_server" && pulse_server=`2>/dev/null xprop -root | grep -E "^PULSE_SERVER.*" | sed -n "s|^PULSE_SERVER(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
 
 # TODO: detect and use alternative methods of communication
-pulse_socket="echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'"
+pulse_socket=`echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'`
 
 # detect pulse socket location, abort if not found
 # TODO: add more complex parsing, for now it only read simple string without spaces or other special symbols
@@ -94,7 +94,7 @@ else
  bwrap_add_param "/etc/pulse"
  if [ "$pulse_server_is_socket" = "true" ]; then
   bwrap_add_param "--bind"
-  bwrap_add_param "${cfg[defaults.features.pulse_dir]}/socket"
+  bwrap_add_param "$pulse_socket"
   bwrap_add_param "/etc/pulse/socket"
  fi
 fi
