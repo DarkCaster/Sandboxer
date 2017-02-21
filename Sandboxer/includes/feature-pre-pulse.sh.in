@@ -7,11 +7,11 @@ rm -f "${cfg[defaults.features.pulse_dir]}/client.conf"
 rm -f "${cfg[defaults.features.pulse_dir]}/cookie"
 rm -f "${cfg[defaults.features.pulse_dir]}/socket"
 
-echo "autospawn=no" > "pulse/client.conf"
+echo "autospawn=no" > "${cfg[defaults.features.pulse_dir]}/client.conf"
 check_errors
-echo "enable-shm=no" >> "pulse/client.conf"
+echo "enable-shm=no" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
 check_errors
-echo "default-server=unix:/etc/pulse/socket" >> "pulse/client.conf"
+echo "default-server=unix:/etc/pulse/socket" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
 check_errors
 
 # detect pulse socket location, abort if not found (TODO: detect and use alternative ways of communication, if enabled)
