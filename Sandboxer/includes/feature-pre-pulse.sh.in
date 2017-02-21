@@ -93,6 +93,8 @@ else
  bwrap_add_param "${cfg[defaults.features.pulse_dir]}"
  bwrap_add_param "/etc/pulse"
  if [ "$pulse_server_is_socket" = "true" ]; then
+  touch "${cfg[defaults.features.pulse_dir]}/socket"
+  check_errors
   bwrap_add_param "--bind"
   bwrap_add_param "$pulse_socket"
   bwrap_add_param "/etc/pulse/socket"
