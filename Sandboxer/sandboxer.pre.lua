@@ -208,13 +208,12 @@ defaults.features.gvfs_fix_mounts =
 
 defaults.features.pulse_env =
 {
- {"PULSE_SERVER","unix:/etc/pulse/socket"},
- {"PULSE_COOKIE","/etc/pulse/cookie"},
- {"ALSA_CONFIG_PATH","/etc/alsa-pulse.conf"},
  {"AUDIODRIVER","pulseaudio"},
  {"QEMU_AUDIO_DRV","pa"},
  {"SDL_AUDIODRIVER","pulse"},
 }
+
+defaults.features.pulse_env_alsa_config = ""
 
 -- (re)create tables that rely on tunable parameters
 function defaults.recalculate()
@@ -319,6 +318,8 @@ function defaults.recalculate()
  defaults.bwrap.pulse_mount = {prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
 
  defaults.features.gvfs_fix_dir = loader.path.combine(defaults.chrootdir,"gvfs_fix")
+
+ defaults.features.pulse_dir = loader.path.combine(defaults.chrootdir,"pulse_dyn_config")
 
 end
 
