@@ -1,0 +1,66 @@
+#!/bin/bash
+
+mkdir -p "${cfg[defaults.features.pulse_dir]}"
+check_errors
+
+rm -f "${cfg[defaults.features.pulse_dir]}/client.conf"
+rm -f "${cfg[defaults.features.pulse_dir]}/cookie"
+rm -f "${cfg[defaults.features.pulse_dir]}/socket"
+
+echo "autospawn=no" > "pulse/client.conf"
+check_errors
+echo "enable-shm=no" >> "pulse/client.conf"
+check_errors
+echo "default-server=unix:/etc/pulse/socket" >> "pulse/client.conf"
+check_errors
+
+# detect pulse socket location, abort if not found (TODO: detect and use alternative ways of communication, if enabled)
+
+# skip futher procesing if using unsuported communication method (or failed to detect)
+
+# export default env from defaults.features.pulse_env
+
+# if using socket
+#  try to hardlink socket
+# fi
+
+# export socket location env inside sandbox, depending on what communication method is used now
+# {"PULSE_SERVER","unix:/etc/pulse/socket"},
+
+# if defaults.features.pulse_env_alsa_config != "" 
+#  export defaults.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
+#  {"ALSA_CONFIG_PATH","/etc/alsa-pulse.conf"},
+# else if defaults.features.pulse_env_alsa_config = "" and current env ALSA_CONFIG_PATH is set
+#  export current host ALSA_CONFIG_PATH to sandbox
+# fi
+
+# detect - do we use cookie, and where it is located
+
+# copy cookie if exist, set env
+# {"PULSE_COOKIE","/etc/pulse/cookie"},
+
+# if using unix socket and hardlinked it
+#  add rw-bwrap mount define for constructed pulse_dir to /etc/pulse
+# else
+#  add ro-bwrap mount define for constructed pulse_dir to /etc/pulse
+#  if using unix socket
+#   add rw-bind mount from current socket location to /etc/pulse/socket
+#  fi
+# fi
+
+
+
+
+
+
+# below - old commands list from sandboxer.pre.lua, keep as reference for now
+
+# 'cat `test -f "$HOME/.pulse-cookie" && echo "$HOME/.pulse-cookie" || echo "$HOME/.config/pulse/cookie"` > "pulse/cookie"',
+# 'chmod 600 "pulse/cookie"',
+# 'rm -f "pulse/socket"; true',
+# -- TODO: more complex pulseaudio socket detection
+# 'pulse_socket=""',
+# 'pulse_socket=`2>/dev/null cat "$HOME/.config/pulse/default.pa" | grep "module-native-protocol-unix" | grep "socket" | cut -d" " -f3 | cut -d"=" -f2`; true',
+# 'test -z "$pulse_socket" && pulse_socket=/run/user/'..config.uid..'/pulse/native; true', -- TODO: also try use xdg_runtime dir env var
+# 'ln "$pulse_socket" "pulse/socket"',
+# 'unset pulse_socket',
