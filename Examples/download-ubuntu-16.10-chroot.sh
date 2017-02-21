@@ -12,15 +12,15 @@ check_errors () {
  fi
 }
 
-test ! -d "$script_dir/ubuntu_yakkety_chroot" || check_errors "directory $script_dir/ubuntu_yakkety_chroot already exist!"
+test ! -d "$script_dir/ubuntu_chroot" || check_errors "directory $script_dir/ubuntu_chroot already exist!"
 
 wget -O /tmp/ubuntu-root.tar.gz https://partner-images.canonical.com/core/yakkety/current/ubuntu-yakkety-core-cloudimg-amd64-root.tar.gz
 check_errors
 
-mkdir -p "$script_dir/ubuntu_yakkety_chroot"
+mkdir -p "$script_dir/ubuntu_chroot"
 check_errors
 
-cd "$script_dir/ubuntu_yakkety_chroot"
+cd "$script_dir/ubuntu_chroot"
 check_errors
 
 gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
