@@ -90,6 +90,7 @@ sandbox =
 	{
 		"dbus", -- run dbus-session instance inside sandbox, and allow other sandbox sessions to use it
 		"gvfs_fix", -- fix gvfs setup inside sandbox, and strip down it's features to bare minimum. TODO: find out what removed gvfs features works inside sandbox and reenable it
+		"pulse",
 	},
 
 	-- main sandbox setup parameters such as:
