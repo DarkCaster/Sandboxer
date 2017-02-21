@@ -207,11 +207,11 @@ defaults.features.gvfs_fix_mounts =
 }
 
 defaults.features.pulse_env =
-{
+{{
  {"AUDIODRIVER","pulseaudio"},
  {"QEMU_AUDIO_DRV","pa"},
  {"SDL_AUDIODRIVER","pulse"},
-}
+}}
 
 defaults.features.pulse_env_alsa_config = ""
 
