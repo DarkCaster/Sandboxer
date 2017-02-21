@@ -14,53 +14,89 @@ check_errors
 echo "default-server=unix:/etc/pulse/socket" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
 check_errors
 
-# detect pulse socket location, abort if not found (TODO: detect and use alternative ways of communication, if enabled)
+pulse_server="$PULSE_SERVER"
+
+test -z "$pulse_server" && pulse_server=`2>/dev/null xprop -root | grep -E "^PULSE_SERVER.*" | sed -n "s|^PULSE_SERVER(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
+
+# TODO: detect and use alternative methods of communication
+pulse_socket="echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'"
+
+# detect pulse socket location, abort if not found
+# TODO: add more complex parsing, for now it only read simple string without spaces or other special symbols
+test -z "$pulse_socket" && pulse_socket=`2>/dev/null pacmd dump | grep "module-native-protocol-unix" | sed -n 's|^.*\(socket=\)\([a-Z0-9/._-+]*\).*$|\2|p'`
+
+test -z "$pulse_socket" -a -S "$XDG_RUNTIME_DIR/pulse/native" && pulse_socket="$XDG_RUNTIME_DIR/pulse/native"
+
+test -z "$pulse_socket" -a -S "/run/user/$uid/pulse/native" && pulse_socket="/run/user/$uid/pulse/native"
+
+test ! -z "$pulse_socket" -a -S "$pulse_socket" && pulse_server_is_socket="true"
 
 # skip futher procesing if using unsuported communication method (or failed to detect)
+if [ "$pulse_server_is_socket" = "true" ] || [ ! -z "$pulse_server" ]; then
 
 # export default env from defaults.features.pulse_env
+bwrap_env_set_unset set "defaults.features.pulse_env"
 
-# if using socket
-#  try to hardlink socket
-# fi
+# if using socket try to hardlink socket
+test "$pulse_server_is_socket" = "true" && 2>/dev/null ln "$pulse_socket" "${cfg[defaults.features.pulse_dir]}/socket"
 
 # export socket location env inside sandbox, depending on what communication method is used now
-# {"PULSE_SERVER","unix:/etc/pulse/socket"},
+if [ "$pulse_server_is_socket" = "true" ]; then
+ bwrap_add_param "--setenv"
+ bwrap_add_param "PULSE_SERVER"
+ bwrap_add_param "unix:/etc/pulse/socket"
+else
+ # TODO: alternative methods of communication
+ bwrap_add_param "--setenv"
+ bwrap_add_param "PULSE_SERVER"
+ bwrap_add_param "$pulse_server"
+fi
 
-# if defaults.features.pulse_env_alsa_config != "" 
-#  export defaults.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
-#  {"ALSA_CONFIG_PATH","/etc/alsa-pulse.conf"},
-# else if defaults.features.pulse_env_alsa_config = "" and current env ALSA_CONFIG_PATH is set
-#  export current host ALSA_CONFIG_PATH to sandbox
-# fi
+if [ ! -z "${cfg[defaults.features.pulse_env_alsa_config]}" ]; then
+ # export defaults.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
+ bwrap_add_param "--setenv"
+ bwrap_add_param "ALSA_CONFIG_PATH"
+ bwrap_add_param "${cfg[defaults.features.pulse_env_alsa_config]}"
+elif [ -z "${cfg[defaults.features.pulse_env_alsa_config]}" ] && [ ! -z "$ALSA_CONFIG_PATH" ]; then
+ bwrap_add_param "--setenv"
+ bwrap_add_param "ALSA_CONFIG_PATH"
+ bwrap_add_param "$ALSA_CONFIG_PATH"
+fi
 
 # detect - do we use cookie, and where it is located
+pulse_cookie="$PULSE_COOKIE"
+
+test -z "$pulse_cookie" && pulse_cookie=`2>/dev/null xprop -root | grep -E "^PULSE_COOKIE.*" | sed -n "s|^PULSE_COOKIE(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
+
+test -z "$pulse_cookie" -a -f "$HOME/.pulse-cookie" && pulse_cookie="$HOME/.pulse-cookie"
+
+test -z "$pulse_cookie" -a -f "$HOME/.config/pulse/cookie" && pulse_cookie="$HOME/.config/pulse/cookie"
 
 # copy cookie if exist, set env
-# {"PULSE_COOKIE","/etc/pulse/cookie"},
+if [ ! -z "$pulse_cookie" ] && [ -f "$pulse_cookie" ]; then
+ cp "$pulse_cookie" "${cfg[defaults.features.pulse_dir]}/cookie"
+ check_errors
+ chmod 600 "${cfg[defaults.features.pulse_dir]}/cookie"
+ bwrap_add_param "--setenv"
+ bwrap_add_param "PULSE_COOKIE"
+ bwrap_add_param "/etc/pulse/cookie"
+fi
 
-# if using unix socket and hardlinked it
-#  add rw-bwrap mount define for constructed pulse_dir to /etc/pulse
-# else
-#  add ro-bwrap mount define for constructed pulse_dir to /etc/pulse
-#  if using unix socket
-#   add rw-bind mount from current socket location to /etc/pulse/socket
-#  fi
-# fi
+if [ "$pulse_server_is_socket" = "true" ] && [ -S "${cfg[defaults.features.pulse_dir]}/socket" ]; then
+ # add rw-bwrap mount define for constructed pulse_dir to /etc/pulse
+ bwrap_add_param "--bind"
+ bwrap_add_param "${cfg[defaults.features.pulse_dir]}"
+ bwrap_add_param "/etc/pulse"
+else
+ # add ro-bwrap mount define for constructed pulse_dir to /etc/pulse
+ bwrap_add_param "--ro-bind"
+ bwrap_add_param "${cfg[defaults.features.pulse_dir]}"
+ bwrap_add_param "/etc/pulse"
+ if [ "$pulse_server_is_socket" = "true" ]; then
+  bwrap_add_param "--bind"
+  bwrap_add_param "${cfg[defaults.features.pulse_dir]}/socket"
+  bwrap_add_param "/etc/pulse/socket"
+ fi
+fi
 
-
-
-
-
-
-# below - old commands list from sandboxer.pre.lua, keep as reference for now
-
-# 'cat `test -f "$HOME/.pulse-cookie" && echo "$HOME/.pulse-cookie" || echo "$HOME/.config/pulse/cookie"` > "pulse/cookie"',
-# 'chmod 600 "pulse/cookie"',
-# 'rm -f "pulse/socket"; true',
-# -- TODO: more complex pulseaudio socket detection
-# 'pulse_socket=""',
-# 'pulse_socket=`2>/dev/null cat "$HOME/.config/pulse/default.pa" | grep "module-native-protocol-unix" | grep "socket" | cut -d" " -f3 | cut -d"=" -f2`; true',
-# 'test -z "$pulse_socket" && pulse_socket=/run/user/'..config.uid..'/pulse/native; true', -- TODO: also try use xdg_runtime dir env var
-# 'ln "$pulse_socket" "pulse/socket"',
-# 'unset pulse_socket',
+fi
