@@ -198,7 +198,7 @@ sandbox.bwrap =
 	-- defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
 	-- other mounts, also essential for normal operation
 	-- defaults.bwrap.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
-	-- defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net 
+	defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net 
 	defaults.bwrap.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
 	defaults.bwrap.devdri_mount, -- mount /dev/dri to allow hardware acceleration
 	defaults.bwrap.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
