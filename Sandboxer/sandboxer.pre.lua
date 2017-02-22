@@ -8,7 +8,6 @@ config.tmpdir = loader.extra[6] -- temp directory
 config.ctldir = loader.extra[7] -- default control directory, where stuff for current sandbox will be created if not overriden
 config.uid = loader.extra[8] -- uid of user that started sandboxer.sh
 config.gid = loader.extra[9] -- effective gid of user that started sandboxer.sh
-config.fixups_dir = loader.extra[10] -- host directory path with helper tools\fixups\wrappers for sandbox
 config.tools_dir = loader.path.combine(config.sandboxer_dir,"tools") -- tools directory, service scripts and utilities used in sandbox construction located there
 
 -- define some defaults to use inside user-sandbox config files, to make them more portable and simple
@@ -188,7 +187,6 @@ defaults.bwrap.x11_mount = {prio=20,tag="x11","bind","/tmp/.X11-unix","/tmp/.X11
 defaults.bwrap.devsnd_mount = {prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
 defaults.bwrap.devdri_mount = {prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
 defaults.bwrap.devinput_mount = {prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
-defaults.bwrap.fixups_mount = {prio=20,tag="fixups","ro-bind",config.fixups_dir,"/fixups"}
 
 -- various tunables for features
 defaults.features.gvfs_fix_search_prefix = "/"
