@@ -1,0 +1,20 @@
+#!/bin/bash
+
+fixups_dir=""
+
+fixups_hints=( "$script_dir/fixups" "$script_dir/../Build/Fixups" )
+
+for hint in "$fixups_hints"
+do
+ test -d "$hint" && fixups_dir="$hint" && break
+done
+
+if [ ! -z "$fixups_dir" ]; then
+ fixups_dir=`realpath "$fixups_dir"`
+
+else
+ log "fixups directory not found, skipping feature activation"
+fi
+
+unset fixups_dir
+unset fixups_hints
