@@ -28,7 +28,7 @@ sandbox =
 		env_set =
 		{
 			{
-				{"PATH","/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"},
+				{"PATH","/fixups:/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"},
 				{"HOME","/root"},
 				{"USER",defaults.user},
 				{"LOGNAME",defaults.user}
@@ -50,6 +50,7 @@ sandbox =
 		defaults.bwrap.usr_rw_mount,
 		defaults.bwrap.lib_rw_mount,
 		defaults.bwrap.lib64_rw_mount,
+		defaults.bwrap.fixups_mount,
 		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
 		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
 		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
