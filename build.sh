@@ -27,3 +27,15 @@ check_error
 make
 check_error
 
+cd "$curdir"
+rm -rf "$curdir/Build/Fixups"
+
+mkdir -p "$curdir/Build/Fixups"
+check_error
+
+cp "$curdir/Fixups/chown" "$curdir/Build/Fixups"
+check_error
+
+cp "$curdir/Fixups/chmod" "$curdir/Build/Fixups"
+check_error
+
