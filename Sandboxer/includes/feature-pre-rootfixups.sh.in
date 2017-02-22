@@ -1,0 +1,41 @@
+#!/bin/bash
+
+fixups_dir=""
+
+for hint in "$script_dir/fixups" "$script_dir/../Build/Fixups"
+do
+ test -d "$hint" && fixups_dir="$hint" && break
+done
+
+if [ ! -z "$fixups_dir" ]; then
+ fixups_dir=`realpath "$fixups_dir"`
+ # add mounts to fixups directory
+ bwrap_add_param "--bind"
+ bwrap_add_param "$fixups_dir"
+ bwrap_add_param "/fixups"
+ # TODO: more complex search of fakeroot components
+ fakeroot_bin=`2>/dev/null which fakeroot`
+ faked_bin=`2>/dev/null which faked-sysv`
+ fakeroot_lib=""
+ for hint in "/usr/lib/x86_64-linux-gnu/libfakeroot" "/usr/lib64/libfakeroot" "/lib64/libfakeroot"  "/usr/lib32/libfakeroot" "/usr/lib/libfakeroot" "/lib/libfakeroot"
+ do
+  test -d "$hint" && fakeroot_lib="$hint" && break
+ done
+ if [ ! -z "$fakeroot_bin" ] && [ ! -z "$faked_bin" ] && [ ! -z "$fakeroot_lib" ]; then
+  bwrap_add_param "--ro-bind"
+  bwrap_add_param "$fakeroot_bin"
+  bwrap_add_param "/fixups/fakeroot"
+  bwrap_add_param "--ro-bind"
+  bwrap_add_param "$faked_bin"
+  bwrap_add_param "/fixups/faked"
+  bwrap_add_param "--ro-bind"
+  bwrap_add_param "$fakeroot_lib"
+  bwrap_add_param "/fixups/libfakeroot"
+ fi
+ bwrap_add_param "--remount-ro"
+ bwrap_add_param "/fixups"
+else
+ log "fixups directory not found, skipping feature activation"
+fi
+
+unset fixups_dir
