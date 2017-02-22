@@ -44,7 +44,7 @@ sandbox =
 		defaults.bwrap.unshare_uts,
 		defaults.bwrap.proc_mount,
 		defaults.bwrap.dev_mount,
-		{prio=10,"ro-bind",loader.path.combine(defaults.chrootdir,"etc"),"/etc"},
+		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc"),"/etc"},
 		defaults.bwrap.xdg_runtime_dir,
 		defaults.bwrap.bin_rw_mount,
 		defaults.bwrap.usr_rw_mount,
