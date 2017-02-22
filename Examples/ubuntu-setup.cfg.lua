@@ -15,6 +15,7 @@ sandbox =
 		static_executor=true,
 		commands =
 		{
+			{'rm -f "etc/resolv.conf"', 'cp "/etc/resolv.conf" "etc/resolv.conf"'},
 		},
 		env_blacklist =
 		{
