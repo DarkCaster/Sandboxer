@@ -1,5 +1,4 @@
 assert(config.profile~="dbus" and
- config.profile~="pulse" and
  config.profile~="profile" and
  config.profile~="loader" and
  config.profile~="config" and
@@ -189,5 +188,3 @@ end
 
 loader.check_profile(profile,config.profile)
 loader.check_profile(dbus,"dbus")
-loader.check_profile(pulse,"pulse")
-
