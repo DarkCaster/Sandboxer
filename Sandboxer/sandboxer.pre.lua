@@ -338,14 +338,3 @@ attach=true,
 pty=false,
 exclusive=true,
 }
-
-pulse =
-{
-exec="/bin/false", -- TODO
-path="/",
-term_signal=defaults.signals.SIGTERM,
-attach=false,
-pty=false,
-exclusive=true,
-}
-
