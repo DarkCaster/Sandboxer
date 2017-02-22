@@ -10,6 +10,10 @@ defaults.recalculate()
 
 sandbox =
 {
+	features =
+	{
+		"rootfixups",
+	},
 	setup =
 	{
 		static_executor=true,
@@ -51,8 +55,6 @@ sandbox =
 		defaults.bwrap.usr_rw_mount,
 		defaults.bwrap.lib_rw_mount,
 		defaults.bwrap.lib64_rw_mount,
-		defaults.bwrap.fixups_mount,
-		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
 		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
 		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
 		{prio=10,"bind",loader.path.combine(defaults.chrootdir,"run"),"/run"},
