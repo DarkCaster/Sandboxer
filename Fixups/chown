@@ -1,0 +1,5 @@
+#!/bin/sh
+
+2>/dev/null chown "$@"
+
+exit 0
