@@ -1,0 +1,15 @@
+#!/bin/bash
+
+fixups_dir=""
+
+for hint in "$@"
+do
+ test -d "$hint" && fixups_dir="$hint" && break
+done
+
+if [ -z "$fixups_dir" ]; then
+ echo "fixups directory not found!"
+ exit 1
+fi
+
+fixups_dir=`realpath "$fixups_dir"`
