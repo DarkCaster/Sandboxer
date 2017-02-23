@@ -27,12 +27,6 @@ check_error
 make
 check_error
 
-cd "$curdir"
-rm -rf "$curdir/Build/Fixups"
-
-mkdir -p "$curdir/Build/Fixups"
-check_error
-
 mkdir -p "$curdir/External"
 check_error
 
