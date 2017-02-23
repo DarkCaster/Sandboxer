@@ -33,9 +33,33 @@ rm -rf "$curdir/Build/Fixups"
 mkdir -p "$curdir/Build/Fixups"
 check_error
 
-cp "$curdir/Fixups/chown" "$curdir/Build/Fixups"
+mkdir -p "$curdir/External"
 check_error
 
-cp "$curdir/Fixups/chmod" "$curdir/Build/Fixups"
+if [ ! -d "$curdir/External/Fakeroot-UserNS" ]; then
+ git clone https://github.com/DarkCaster/Fakeroot-UserNS.git "$curdir/External/Fakeroot-UserNS"
+ check_error
+fi
+
+cd "$curdir/External/Fakeroot-UserNS"
 check_error
 
+make distclean
+
+./bootstrap
+check_error
+
+mkdir -p "$curdir/Build/Fakeroot-UserNS"
+check_error
+
+cd "$curdir/Build/Fakeroot-UserNS"
+check_error
+
+"$curdir/External/Fakeroot-UserNS/configure" --prefix=/fixups/fakeroot
+check_error
+
+make
+check_error
+
+make install DESTDIR="$curdir/Build"
+check_error
