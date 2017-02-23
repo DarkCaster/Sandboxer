@@ -13,7 +13,7 @@ function check_error {
 }
 
 cd "$curdir"
-rm -rf "$curdir/Build/Executor"
+rm -rf "$curdir/Build"
 
 mkdir -p "$curdir/Build/Executor"
 check_error
@@ -52,7 +52,10 @@ check_error
 "$curdir/External/Fakeroot-UserNS/configure" --prefix=/fixups/fakeroot
 check_error
 
-make
+make all
+check_error
+
+make doc
 check_error
 
 make install DESTDIR="$curdir/Build"
