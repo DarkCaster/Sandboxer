@@ -1,41 +1,39 @@
 #!/bin/bash
 
-fixups_dir=""
+fixups_srcdir=""
 
-for hint in "$script_dir/fixups" "$script_dir/../Build/Fixups"
+for hint in "$script_dir/fixups" "$script_dir/../Fixups"
 do
- test -d "$hint" && fixups_dir="$hint" && break
+ test -d "$hint" && fixups_srcdir="$hint" && break
 done
 
-if [ ! -z "$fixups_dir" ]; then
- fixups_dir=`realpath "$fixups_dir"`
- # add mounts to fixups directory
+if [ ! -z "$fixups_srcdir" ]; then
+ fixups_srcdir=`realpath "$fixups_srcdir"`
+ # construct directory, that will be mounted
+ rm -rf "${cfg[defaults.features.fixups_dir]}"
+ check_errors
+ mkdir "${cfg[defaults.features.fixups_dir]}"
+ check_errors
+ cp -rf "$fixups_srcdir"/* "${cfg[defaults.features.fixups_dir]}"
+ check_errors
+ # add mounts entries for fixups directory
  bwrap_add_param "--bind"
- bwrap_add_param "$fixups_dir"
+ bwrap_add_param "${cfg[defaults.features.fixups_dir]}"
  bwrap_add_param "/fixups"
- # TODO: more complex search of fakeroot components
- fakeroot_bin=`2>/dev/null which fakeroot`
- faked_bin=`2>/dev/null which faked-sysv`
- fakeroot_lib=""
- for hint in "/usr/lib/x86_64-linux-gnu/libfakeroot" "/usr/lib64/libfakeroot" "/lib64/libfakeroot"  "/usr/lib32/libfakeroot" "/usr/lib/libfakeroot" "/lib/libfakeroot"
+ # add mounts for available precompiled fakeroot binaries
+ for fakeroot_dir in "$HOME/.cache/sandboxer"/fakeroot* "$script_dir/../Build/Fakeroot/fixups"/*
  do
-  test -d "$hint" && fakeroot_lib="$hint" && break
+  test ! -d "$fakeroot_dir" && continue
+  fakeroot_basedir=`basename $fakeroot_dir`
+  bwrap_add_param "--ro-bind"
+  bwrap_add_param "$fakeroot_dir"
+  bwrap_add_param "/fixups/$fakeroot_basedir"
  done
- if [ ! -z "$fakeroot_bin" ] && [ ! -z "$faked_bin" ] && [ ! -z "$fakeroot_lib" ]; then
-  bwrap_add_param "--ro-bind"
-  bwrap_add_param "$fakeroot_bin"
-  bwrap_add_param "/fixups/fakeroot"
-  bwrap_add_param "--ro-bind"
-  bwrap_add_param "$faked_bin"
-  bwrap_add_param "/fixups/faked"
-  bwrap_add_param "--ro-bind"
-  bwrap_add_param "$fakeroot_lib"
-  bwrap_add_param "/fixups/libfakeroot"
- fi
  bwrap_add_param "--remount-ro"
  bwrap_add_param "/fixups"
 else
  log "fixups directory not found, skipping feature activation"
 fi
 
-unset fixups_dir
+unset fixups_srcdir
+unset fakeroot_basedir
