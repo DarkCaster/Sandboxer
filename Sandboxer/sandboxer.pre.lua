@@ -23,6 +23,7 @@ defaults.gid=config.gid
 defaults.user="sandboxer"
 defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
 defaults.etcdir_name="etc"
+defaults.fixupsdir_name="fixups"
 
 -- signals list
 defaults.signals=
@@ -320,6 +321,8 @@ function defaults.recalculate()
  defaults.features.gvfs_fix_dir = loader.path.combine(defaults.chrootdir,"gvfs_fix")
 
  defaults.features.pulse_dir = loader.path.combine(defaults.chrootdir,"pulse_dyn_config")
+
+ defaults.features.fixups_dir = loader.path.combine(defaults.chrootdir,defaults.fixupsdir_name)
 
 end
 
