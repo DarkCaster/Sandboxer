@@ -13,12 +13,9 @@ function check_error {
 }
 
 cd "$curdir"
-rm -rf "$curdir/Build"
+rm -rf "$curdir/Build/Executor"
 
-mkdir -p "$curdir/Build/Executor"
-check_error
-
-cd "$curdir/Build/Executor"
+mkdir -p "$curdir/Build/Executor" && cd "$curdir/Build/Executor"
 check_error
 
 cmake -DCMAKE_BUILD_TYPE=Release ../../Executor
@@ -38,10 +35,13 @@ fi
 cd "$curdir/External/Fakeroot-UserNS"
 check_error
 
-make distclean
+&>/dev/null make distclean
 
 ./preroll
 check_error
+
+rm -rf "$curdir/Build/Fakeroot-UserNS"
+rm -rf "$curdir/Build/Fakeroot"
 
 mkdir -p "$curdir/Build/Fakeroot-UserNS" && cd "$curdir/Build/Fakeroot-UserNS"
 check_error
@@ -52,5 +52,5 @@ check_error
 make
 check_error
 
-make install DESTDIR="$curdir/Build"
+make install DESTDIR="$curdir/Build/Fakeroot"
 check_error
