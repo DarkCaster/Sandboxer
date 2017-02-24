@@ -40,22 +40,16 @@ check_error
 
 make distclean
 
-./bootstrap
+./preroll
 check_error
 
-mkdir -p "$curdir/Build/Fakeroot-UserNS"
+mkdir -p "$curdir/Build/Fakeroot-UserNS" && cd "$curdir/Build/Fakeroot-UserNS"
 check_error
 
-cd "$curdir/Build/Fakeroot-UserNS"
+"$curdir/External/Fakeroot-UserNS/configure" --prefix=/fixups/fakeroot-host --bindir=/fixups/fakeroot-host --libdir=/fixups/fakeroot-host --mandir=/fixups/fakeroot-host/man --with-ipc=tcp
 check_error
 
-"$curdir/External/Fakeroot-UserNS/configure" --prefix=/fixups/fakeroot
-check_error
-
-make all
-check_error
-
-make doc
+make
 check_error
 
 make install DESTDIR="$curdir/Build"
