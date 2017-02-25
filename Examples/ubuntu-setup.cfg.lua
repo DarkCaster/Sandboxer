@@ -16,7 +16,7 @@ sandbox =
 	},
 	setup =
 	{
-		static_executor=true,
+		static_executor=false,
 		commands =
 		{
 			{'rm -f "etc/resolv.conf"', 'cp "/etc/resolv.conf" "etc/resolv.conf"'},
@@ -29,7 +29,9 @@ sandbox =
 			defaults.env.blacklist_home,
 			defaults.env.blacklist_xdg,
 		},
-		-- set custom env variables,
+		env_whitelist =
+		{
+		},
 		env_set =
 		{
 			{
