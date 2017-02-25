@@ -151,12 +151,14 @@ sandbox =
 			defaults.env.blacklist_xdg,
 		},
 
-		-- TODO: whitelist for env variables. all env variables not in list will be unset in sandboxed env
-		-- opposite to blacklist, blacklist processing will be skipped if env_whitelist is defined (even if it is empty!)
-		--
-		--env_whitelist =
-		--{
-		--},
+		-- whitelist for env variables. all env variables not in list will be unset in sandboxed env
+		-- opposite to blacklist, blacklist processing will be skipped if env_whitelist is defined and enabled (even if it is empty!)
+		env_whitelist =
+		{
+			enabled=false, -- optional, to quick enable\disable whitelist logic. applied only if true
+			-- { "HOST",
+			-- "INPUTRC", }, -- for now, all entries must be in subtable-blocks
+		},
 
 		-- set custom env variables,
 		env_set =

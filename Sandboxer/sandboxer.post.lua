@@ -104,8 +104,11 @@ loader.check_two_level_string_list(sandbox.setup.commands,"sandbox.setup.command
 
 -- env tables
 loader.check_two_level_string_list(sandbox.setup.env_blacklist,"sandbox.setup.env_blacklist")
+if sandbox.setup.env_blacklist.enabled==false then sandbox.setup.env_blacklist=nil end
 loader.check_two_level_string_list(sandbox.setup.env_whitelist,"sandbox.setup.env_whitelist")
+if sandbox.setup.env_whitelist.enabled==false then sandbox.setup.env_whitelist=nil end
 loader.check_two_level_env_set_list(sandbox.setup.env_set,"sandbox.setup.env_set")
+if sandbox.setup.env_set.enabled==false then sandbox.setup.env_set=nil end
 
 -- bwrap table
 loader.tags={}
