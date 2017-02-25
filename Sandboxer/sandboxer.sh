@@ -287,8 +287,41 @@ exec_cmd_list_in_bg "sandbox.setup.commands"
 # for now enforce --new-session parameter
 bwrap_add_param "--new-session"
 
-#unset default env by bwrap
-bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
+find_env_whitelist_match () {
+ local test_val="$1"
+ local top_cnt=1
+ while `check_lua_export "sandbox.setup.env_whitelist.$top_cnt"`
+ do
+  if [ -z "${cfg[sandbox.setup.env_whitelist.$top_cnt]}" ]; then
+   local fld_cnt=1
+   while `check_lua_export "sandbox.setup.env_whitelist.$top_cnt.$fld_cnt"`
+   do
+    test "$test_val" = "${cfg[sandbox.setup.env_whitelist.$top_cnt.$fld_cnt]}" && return 0
+    fld_cnt=$((fld_cnt+1))
+   done
+  else
+   test "$test_val" = "${cfg[sandbox.setup.env_whitelist.$top_cnt]}" && return 0
+  fi
+  top_cnt=$((top_cnt+1))
+ done
+ return 1
+}
+
+if check_lua_export "sandbox.setup.env_whitelist"; then
+ #get current env list
+ cur_env=`printenv -0 | tr -d '\n' | tr '\0' '\n' | sed -n 's|^\([^=]*\)=.*$|\1|p'`
+ #iterate over list
+ for test_val in $cur_env
+ do
+  #find match and add unset entry if not found
+  find_env_whitelist_match "$test_val" && continue
+  bwrap_add_param "--unsetenv"
+  bwrap_add_param "$test_val"
+ done
+else
+ #unset default env by bwrap
+ bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
+fi
 
 #set default env by bwrap
 bwrap_env_set_unset "set" "sandbox.setup.env_set"
