@@ -31,6 +31,8 @@ sandbox =
 		},
 		env_whitelist =
 		{
+			"LANG",
+			"LC_ALL",
 		},
 		env_set =
 		{
