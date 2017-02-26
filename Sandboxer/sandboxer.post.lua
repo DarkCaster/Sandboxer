@@ -64,38 +64,57 @@ function loader.check_two_level_string_list(target, name)
  end
 end
 
-function loader.check_two_level_env_set_list(target, name)
+function loader.transform_env_unset_list(target, name)
  assert(type(target)=="nil" or type(target)=="table", name.." table is incorrect")
+ local result={}
  if type(target)=="table" then
+  if target.enabled==false then return nil end
   for index,field in ipairs(target) do
-   assert(type(field)=="table", name.."["..index.."] subtable is incorrect")
-   for mi,mf in ipairs(field) do
-    assert(type(mf)=="table", name.."["..index.."]["..mi.."] value is incorrect (it should be a table)")
-    local env_idx=0
-    for vi,vf in ipairs(mf) do
-     assert(vi<3, name.."["..index.."]["..mi.."] has incorrect strings count")
-     assert(type(vf)=="string", name.."["..index.."]["..mi.."]["..vi.."] value is incorrect")
-     env_idx=env_idx+1
+   assert(type(field)=="table" or type(field)=="string", name.."[" .. index .. "] subtable is incorrect")
+   if type(field)=="table" then
+    for mi,mf in ipairs(field) do
+     assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
+     table.insert(result,mf)
     end
-    assert(env_idx==2 or env_idx==0, name.."["..index.."]["..mi.."] has incorrect strings count")
+   else
+    table.insert(result,field)
    end
   end
+  return result
+ else
+  return nil
  end
 end
 
-function loader.check_one_level_env_set_list(target, name)
+function loader.transform_env_set_list(target, name)
  assert(type(target)=="nil" or type(target)=="table", name.." table is incorrect")
- if type(target)=="table" then
-  for index,field in ipairs(target) do
+ local result={}
+ if type(target)=="table" then -- main container
+  if target.enabled==false then return nil end
+  for index,field in ipairs(target) do  -- field is a container top-level element
    assert(type(field)=="table", name.."["..index.."] subtable is incorrect")
-   local env_idx=0
-   for mi,mf in ipairs(field) do
-    assert(mi<3, name.."["..index.."] has incorrect strings count")
-    assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
-    env_idx=env_idx+1
+   local top_level_is_target=false
+   for mi,mf in ipairs(field) do -- field is a container 2nd-level element
+    assert(type(mf)=="table" or type(mf)=="string" , name.."["..index.."]["..mi.."] value is incorrect (it should be a table or string)")
+    if type(mf)=="table" and top_level_is_target==false then
+     assert(#mf==2 or #mf==0, name.."["..index.."]["..mi.."] has incorrect strings count")
+     for vi,vf in ipairs(mf) do -- vf is a 3rd level container, may contain only strings
+      assert(type(vf)=="string", name.."["..index.."]["..mi.."]["..vi.."] value is incorrect")
+     end
+     if #mf==2 then table.insert(result,mf) end
+    else
+     top_level_is_target=true
+     assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
+    end
+   end -- for 2nd-level
+   if top_level_is_target==true then
+    assert(#field==2 or #field==0, name.."["..index.."] has incorrect strings count")
+    if #field==2 then table.insert(result,field) end
    end
-   assert(env_idx==2 or env_idx==0, name.."["..index.."] has incorrect strings count")
   end
+  return result
+ else
+  return nil
  end
 end
 
@@ -103,12 +122,9 @@ end
 loader.check_two_level_string_list(sandbox.setup.commands,"sandbox.setup.commands")
 
 -- env tables
-loader.check_two_level_string_list(sandbox.setup.env_blacklist,"sandbox.setup.env_blacklist")
-if sandbox.setup.env_blacklist.enabled==false then sandbox.setup.env_blacklist=nil end
-loader.check_two_level_string_list(sandbox.setup.env_whitelist,"sandbox.setup.env_whitelist")
-if sandbox.setup.env_whitelist.enabled==false then sandbox.setup.env_whitelist=nil end
-loader.check_two_level_env_set_list(sandbox.setup.env_set,"sandbox.setup.env_set")
-if sandbox.setup.env_set.enabled==false then sandbox.setup.env_set=nil end
+sandbox.setup.env_blacklist=loader.transform_env_unset_list(sandbox.setup.env_blacklist,"sandbox.setup.env_blacklist")
+sandbox.setup.env_whitelist=loader.transform_env_unset_list(sandbox.setup.env_whitelist,"sandbox.setup.env_whitelist")
+sandbox.setup.env_set=loader.transform_env_set_list(sandbox.setup.env_set,"sandbox.setup.env_set")
 
 -- bwrap table
 loader.tags={}
@@ -167,8 +183,8 @@ function loader.check_profile(profile, name)
  assert(type(profile.exec)=="string", name..".exec value is incorrect or missing")
  assert(type(profile.path)=="string" or type(profile.path)=="nil", name..".path value is incorrect or missing")
  loader.check_one_level_string_list(profile.args, name..".args")
- loader.check_one_level_string_list(profile.env_unset, name..".env_unset")
- loader.check_one_level_env_set_list(profile.env_set, name..".env_set")
+ profile.env_unset=loader.transform_env_unset_list(profile.env_unset, name..".env_unset")
+ profile.env_set=loader.transform_env_set_list(profile.env_set, name..".env_set")
  assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", name..".term_signal value is incorrect or missing")
  assert(type(profile.term_child_only)=="boolean" or type(profile.term_child_only)=="nil", name..".term_child_only value is incorrect or missing")
  assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", name..".attach value is incorrect or missing")
