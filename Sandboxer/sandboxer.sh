@@ -208,22 +208,17 @@ bwrap_env_set_unset() {
  local env_blk_cnt=1
  while `check_lua_export "$env_table.$env_blk_cnt"`
  do
-  local env_cmd_cnt=1
-  while `check_lua_export "$env_table.$env_blk_cnt.$env_cmd_cnt"`
-  do
-   if [ "$env_op" = "unset" ]; then
-    bwrap_add_param "--unsetenv"
-    bwrap_add_param "${cfg[$env_table.$env_blk_cnt.$env_cmd_cnt]}"
-   elif [ "$env_op" = "set" ]; then
-    bwrap_add_param "--setenv"
-    bwrap_add_param "${cfg[$env_table.$env_blk_cnt.$env_cmd_cnt.1]}"
-    bwrap_add_param "${cfg[$env_table.$env_blk_cnt.$env_cmd_cnt.2]}"
-   else
-	log "internal error: unsupported env operation"
-    teardown 1
-   fi
-   env_cmd_cnt=$((env_cmd_cnt+1))
-  done
+  if [ "$env_op" = "unset" ]; then
+   bwrap_add_param "--unsetenv"
+   bwrap_add_param "${cfg[$env_table.$env_blk_cnt]}"
+  elif [ "$env_op" = "set" ]; then
+   bwrap_add_param "--setenv"
+   bwrap_add_param "${cfg[$env_table.$env_blk_cnt.1]}"
+   bwrap_add_param "${cfg[$env_table.$env_blk_cnt.2]}"
+  else
+   log "internal error: unsupported env operation"
+   teardown 1
+  fi
   env_blk_cnt=$((env_blk_cnt+1))
  done
 }
