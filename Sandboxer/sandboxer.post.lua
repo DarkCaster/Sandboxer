@@ -132,7 +132,7 @@ loader.tags={}
 function loader.check_bwrap_entry(entry,name)
  assert(type(entry.tag)=="nil" or type(entry.tag)=="string", name..".tag value is incorrect")
  if type(entry.tag)~="nil" then
-  assert(type(loader.tags[entry.tag])=="nil", "sandbox.bwrap entry with tag '"..entry.tag.."' already defined!")
+  assert(type(loader.tags[entry.tag])=="nil", name.." entry with tag '"..entry.tag.."' already defined!")
   loader.tags[entry.tag]=true
  end
  assert(type(entry.prio)=="number" or type(entry.prio)=="nil", name..".prio value is incorrect")
@@ -148,29 +148,28 @@ function loader.check_bwrap_entry(entry,name)
  end
 end
 
-assert(type(sandbox.bwrap)=="table", "sandbox.bwrap param incorrect")
-for index,field in ipairs(sandbox.bwrap) do
- assert(type(field)=="table", "sandbox.bwrap[" .. index .. "] value is incorrect")
- assert(type(field.prio)=="number" or type(field.prio)=="nil", "sandbox.bwrap[" .. index .. "].prio value is incorrect")
- if type(field.prio)=="number" then
-  assert(field.prio>=0 and field.prio<=100, "sandbox.bwrap[" .. index .. "].prio value is out of range (should be 0 <= prio <= 100)")
- elseif type(field.prio)=="nil" then
-  field.prio=100
- end
- for mi,mf in ipairs(field) do
-  assert(type(mf)=="string" or type(mf)=="table", "sandbox.bwrap["..index.."]["..mi.."] value is incorrect")
-  if type(mf)=="string" then
-   assert(mi==1, "sandbox.bwrap["..index.."]["..mi.."] value cannot be string, because previous value is a table!")
-   loader.check_bwrap_entry(field,"sandbox.bwrap["..index.."]")
-   break
-  else
-   loader.check_bwrap_entry(mf,"sandbox.bwrap["..index.."]["..mi.."]")
-  end
- end
+function loader.transform_bwrap_list(target, name)
+ assert(type(target)=="table", name.." table is incorrect")
+ local result={}
+ for i1,f1 in ipairs(target) do  -- f1 is a container top-level element
+  assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
+  for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
+   assert(type(f2)=="table" or type(f2)=="string" , name.."["..i1.."]["..i2.."] value is incorrect (it should be a table or string)")
+   if type(f2)=="table" and top_level_is_target==false then
+    loader.check_bwrap_entry(f2,name.."["..i1.."]["..i2.."]")
+    if #f2>0 then table.insert(result,f2) end
+   else
+    assert(i2==1,name.."["..i1.."]["..i2.."] value cannot be string, because previous value in this container is also a table!")
+    loader.check_bwrap_entry(f1,name.."["..i1.."]")
+    table.insert(result,f1)
+    break
+   end
+  end -- for 2nd-level
+ end -- for 1nd-level
+ return result
 end
 
-
-
+sandbox.bwrap=loader.transform_bwrap_list(sandbox.bwrap,"sandbox.bwrap")
 
 -- sort bwrap table, according to prio parameters
 function loader.bwrap_compare(first,second)
