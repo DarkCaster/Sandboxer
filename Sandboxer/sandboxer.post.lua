@@ -69,15 +69,15 @@ function loader.transform_env_unset_list(target, name)
  local result={}
  if type(target)=="table" then
   if target.enabled==false then return nil end
-  for index,field in ipairs(target) do
-   assert(type(field)=="table" or type(field)=="string", name.."[" .. index .. "] subtable is incorrect")
-   if type(field)=="table" then
-    for mi,mf in ipairs(field) do
-     assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
-     table.insert(result,mf)
+  for i1,f1 in ipairs(target) do
+   assert(type(f1)=="table" or type(f1)=="string", name.."[" .. i1 .. "] subtable is incorrect")
+   if type(f1)=="table" then
+    for i2,f2 in ipairs(f1) do
+     assert(type(f2)=="string", name.."["..i1.."]["..i2.."] value is incorrect")
+     table.insert(result,f2)
     end
    else
-    table.insert(result,field)
+    table.insert(result,f1)
    end
   end
   return result
@@ -91,25 +91,25 @@ function loader.transform_env_set_list(target, name)
  local result={}
  if type(target)=="table" then -- main container
   if target.enabled==false then return nil end
-  for index,field in ipairs(target) do  -- field is a container top-level element
-   assert(type(field)=="table", name.."["..index.."] subtable is incorrect")
+  for i1,f1 in ipairs(target) do  -- f1 is a container top-level element
+   assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
    local top_level_is_target=false
-   for mi,mf in ipairs(field) do -- field is a container 2nd-level element
-    assert(type(mf)=="table" or type(mf)=="string" , name.."["..index.."]["..mi.."] value is incorrect (it should be a table or string)")
-    if type(mf)=="table" and top_level_is_target==false then
-     assert(#mf==2 or #mf==0, name.."["..index.."]["..mi.."] has incorrect strings count")
-     for vi,vf in ipairs(mf) do -- vf is a 3rd level container, may contain only strings
-      assert(type(vf)=="string", name.."["..index.."]["..mi.."]["..vi.."] value is incorrect")
+   for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
+    assert(type(f2)=="table" or type(f2)=="string" , name.."["..i1.."]["..i2.."] value is incorrect (it should be a table or string)")
+    if type(f2)=="table" and top_level_is_target==false then
+     assert(#f2==2 or #f2==0, name.."["..i1.."]["..i2.."] has incorrect strings count")
+     for i3,f3 in ipairs(f2) do -- f3 is a 3rd level container, may contain only strings
+      assert(type(f3)=="string", name.."["..i1.."]["..i2.."]["..i3.."] value is incorrect")
      end
-     if #mf==2 then table.insert(result,mf) end
+     if #f2==2 then table.insert(result,f2) end
     else
      top_level_is_target=true
-     assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
+     assert(type(f2)=="string", name.."["..i1.."]["..i2.."] value is incorrect")
     end
    end -- for 2nd-level
    if top_level_is_target==true then
-    assert(#field==2 or #field==0, name.."["..index.."] has incorrect strings count")
-    if #field==2 then table.insert(result,field) end
+    assert(#f1==2 or #f1==0, name.."["..i1.."] has incorrect strings count")
+    if #f1==2 then table.insert(result,f1) end
    end
   end
   return result
@@ -168,6 +168,9 @@ for index,field in ipairs(sandbox.bwrap) do
   end
  end
 end
+
+
+
 
 -- sort bwrap table, according to prio parameters
 function loader.bwrap_compare(first,second)
