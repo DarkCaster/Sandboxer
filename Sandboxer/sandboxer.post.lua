@@ -155,7 +155,7 @@ function loader.transform_bwrap_list(target, name)
   assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
   for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
    assert(type(f2)=="table" or type(f2)=="string" , name.."["..i1.."]["..i2.."] value is incorrect (it should be a table or string)")
-   if type(f2)=="table" and top_level_is_target==false then
+   if type(f2)=="table" then
     loader.check_bwrap_entry(f2,name.."["..i1.."]["..i2.."]")
     if #f2>0 then table.insert(result,f2) end
    else
