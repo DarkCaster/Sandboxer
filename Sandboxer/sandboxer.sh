@@ -228,23 +228,10 @@ bwrap_process_list_contents() {
  local top_cnt=1
  while `check_lua_export "$list.$top_cnt"`
  do
-  if [ -z "${cfg[$list.$top_cnt]}" ]; then
-   local fold_cnt=1
-   while `check_lua_export "$list.$top_cnt.$fold_cnt"`
-   do
-    if [ "$fold_cnt" = "1" ]; then
-     bwrap_add_param "--${cfg[$list.$top_cnt.$fold_cnt]}"
-    else
-     bwrap_add_param "${cfg[$list.$top_cnt.$fold_cnt]}"
-    fi
-    fold_cnt=$((fold_cnt+1))
-   done
+  if [ "$top_cnt" = "1" ]; then
+   bwrap_add_param "--${cfg[$list.$top_cnt]}"
   else
-   if [ "$top_cnt" = "1" ]; then
-    bwrap_add_param "--${cfg[$list.$top_cnt]}"
-   else
-    bwrap_add_param "${cfg[$list.$top_cnt]}"
-   fi
+   bwrap_add_param "${cfg[$list.$top_cnt]}"
   fi
   top_cnt=$((top_cnt+1))
  done
