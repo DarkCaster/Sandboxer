@@ -138,6 +138,8 @@ function loader.check_bwrap_entry(entry,name)
  assert(type(entry.prio)=="number" or type(entry.prio)=="nil", name..".prio value is incorrect")
  if type(entry.prio)=="number" then
   assert(entry.prio>=0 and entry.prio<=100, name.."].prio value is out of range (should be 0 <= prio <= 100)")
+ else
+  entry.prio=100
  end
  for mi,mf in ipairs(entry) do
   if mi==1 then
