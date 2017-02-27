@@ -19,7 +19,6 @@ command mode:
 101 - same as 100, but start in detached mode instead, commander will exit after successfull start
 200 - start process in captive mode, perform pty-device allocation and create new session. useful for shells inside sandbox
 201 - same as 200, but start in detached mode instead, commander will exit after successfull start
-253 <1\0>- shutdown slave, parameter must be provided but it is not used now
 
 control mode:
 102 - reattach to detached session started with command 101
