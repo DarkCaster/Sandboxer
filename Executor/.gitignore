@@ -1,3 +1,4 @@
+#cmake stuff, generated when building project in current directory
 /CMakeFiles/
 /Makefile
 /build/
@@ -5,4 +6,6 @@
 /CMakeCache.txt
 /CMakeLists.txt.user
 /config.h
-
+#netbeans stuff
+/compile_commands.json
+/nbproject/
