@@ -12,4 +12,4 @@ do
  result=$((result^sum1^sum2^sum3^sum4))
 done
 
-printf "0x%x\n" "$result"
+printf "0x%x" "$result"
