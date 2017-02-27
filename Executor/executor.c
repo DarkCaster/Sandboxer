@@ -100,6 +100,7 @@ static uint8_t operation_4(char* name, size_t n_len);
 static uint8_t operation_5(uint8_t signal);
 static uint8_t operation_6(char* dir, size_t len);
 static uint8_t operation_7(uint8_t _child_only_terminate);
+static uint8_t operation_240(uint32_t source_checksum);
 static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
@@ -517,6 +518,15 @@ int main(int argc, char* argv[])
                 break;
             case 201:
                 err=operation_100_101_200_201(1,1);
+                break;
+            case 240:
+                if((size_t)pl_len-(size_t)CMDHDRSZ==4)
+                {
+                    uint32_t source_checksum=u32_read(data_buf,CMDHDRSZ);
+                    err=operation_240(source_checksum);
+                }
+                else
+                    err=14;
                 break;
             case 250:
                 err=operation_250();
@@ -1053,6 +1063,15 @@ static uint8_t operation_253(bool grace_shutdown)
 {
     if(mode==0)
         _master_terminate_slaves(grace_shutdown?SIGTERM:SIGUSR1);
+    if(operation_status(0)!=0)
+        return 255;
+    return 0;
+}
+
+static uint8_t operation_240(uint32_t source_checksum)
+{
+    if(source_checksum!=SOURCE_CHECKSUM)
+        return 1;
     if(operation_status(0)!=0)
         return 255;
     return 0;
