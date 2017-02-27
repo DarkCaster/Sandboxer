@@ -134,6 +134,11 @@ else()
  message(STATUS "CMAKE_THREAD_LIBS_INIT = ${CMAKE_THREAD_LIBS_INIT}")
 endif(NOT(HAVE_PTHREAD_H))
 
+#compute source checksum
+execute_process(COMMAND "${CMAKE_SOURCE_DIR}/source-checksum.sh" "commander.c" "executor.c" "comm_helper.c" "hash.c" "logger.c" "message.c" "pid_list.c" "comm_helper.h" "cmd_defs.h" "hash.h" "helper_macro.h" "logger.h" "message.h" "pid_list.h" "config.h.in"
+WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+OUTPUT_VARIABLE SOURCE_CHECKSUM)
+
 #save module configuration to config.h
 configure_file(config.h.in config.h)
 
