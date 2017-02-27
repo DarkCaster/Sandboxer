@@ -51,7 +51,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
  set(CMAKE_C_FLAGS "-std=gnu99 -Wall -Wextra -Wshadow -Wstrict-overflow=5 -Wwrite-strings -Winit-self -Wmissing-include-dirs -Wbad-function-cast -Wc++-compat -Wcast-qual -Wcast-align -Wconversion -Wlogical-op -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wdisabled-optimization -Woverlength-strings -Wfloat-equal -Wswitch-default ${OPTFLAGS}")
  #set build-type dependent additional flags
  set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
- set(CMAKE_C_FLAGS_DEBUG "-DDEBUG -ggdb")
+ set(CMAKE_C_FLAGS_DEBUG "-DDEBUG -ggdb -no-pie")
  add_definitions(-D_GNU_SOURCE)
  set(EXELINKFLAGS "-Wl,-rpath-link,'${CMAKE_LIBRARY_OUTPUT_DIRECTORY}'")
 endif()
