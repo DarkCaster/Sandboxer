@@ -564,7 +564,7 @@ static uint8_t operation_250(void)
         return 2;
     }
     uint32_t count=u32_read(data_buf,CMDHDRSZ);
-    fprintf(stdout,"%d\n",count);
+    fprintf(stdout,"%u\n",count);
     fflush(stdout);
     return 0;
 }
