@@ -8,8 +8,8 @@
 --   profile (defined by sandboxer at post-script, will overwrite same define made here)
 --   defaults (some sane defaults for current linux distribution to simplify config file creation and improve it's portability across different linux distributions. see sandboxer.pre.lua for more info)
 --   dbus (internal profile for dbus feature support)
---   pulse (internal profile for pulseaudio feature support)
--- try not to redefine this identifiers accidentally (TODO add some more checks)
+-- try not to redefine this identifiers accidentally
+-- TODO: add some more checks
 
 -- some tunable defaults:
 
@@ -165,52 +165,83 @@ sandbox={
       defaults.env.set_x11, -- export display value from host (and maybe some other values needed for x11)
     }
   },
-}
 
--- remaining parameters, applied to bwrap utility in order of appearence.
--- recommended to add mount commands here to form root directory layout for sandboxed application.
--- this table presented here as separate definition in order to be able to use all definitions already done in sandbox table earlier.
-sandbox.bwrap={
-  defaults.bwrap.unshare_user,
-  defaults.bwrap.unshare_ipc,
-  defaults.bwrap.unshare_pid,
-  -- defaults.bwrap.unshare_net,
-  defaults.bwrap.unshare_uts,
-  -- defaults.bwrap.unshare_cgroup,
-  defaults.bwrap.system_group,
-  -- defaults.bwrap.run_dir, -- included in "system_group"
-  -- defaults.bwrap.tmp_dir, -- included in "system_group"
-  -- defaults.bwrap.proc_mount, -- included in "system_group". mount /proc prepared by bwrap (according by unshare_* options)
-  -- defaults.bwrap.dev_mount, -- included in "system_group". mount /dev, prepared and filtered by bwrap
-  -- defaults.bwrap.var_dir, -- included in "system_group"
-  defaults.bwrap.xdg_runtime_dir,
-  -- make some essential mounts
-  defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
-  defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
-  defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
-  defaults.bwrap.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-  -- defaults.bwrap.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-  -- defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
-  -- other mounts, also essential for normal operation
-  -- defaults.bwrap.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
-  defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net
-  defaults.bwrap.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
-  defaults.bwrap.devdri_mount, -- mount /dev/dri to allow hardware acceleration
-  defaults.bwrap.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
-  -- TODO: add mounts only to some parts of sys directory only needed for particular apps to work
-  defaults.bwrap.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
-  defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
-  defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
-  defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
-  defaults.bwrap.host_lib64_mount, -- readonly mount host /lib64 directory
--- defaults.bwrap.bin_ro_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
--- defaults.bwrap.usr_ro_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
--- defaults.bwrap.lib_ro_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
--- defaults.bwrap.lib64_ro_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
--- defaults.bwrap.bin_rw_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
--- defaults.bwrap.usr_rw_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
--- defaults.bwrap.lib_rw_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
--- defaults.bwrap.lib64_rw_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
+  -- parameters for bwrap utility. parameter string should be wrapped to subtable, and applied acording to its priorities (see below)
+  -- you must add mount commands here to form root directory layout for sandboxed application.
+  bwrap={
+    --[[
+    -- example parameter entry subtable
+    {
+      -- entry priority. optional.
+      -- parameter-entries sorted by its prio (0<=prio<=100). 0 goes first, 100 goes last.
+      -- defaut priority is 100, you MUST define different priority to entries that must be applied in correct order
+      -- for entries with equal priorities - same order is not guaranteed even if it defined in correct order
+      prio=50,
+
+      -- optional string with entry tag. used primary by entries defined at "defaults" tale.
+      -- needed to deny applying of conflicting entries - if there are more than one entries with same tag - config verification will fail
+      tag="test",
+
+      -- mandatory fields below.
+      -- this parameters will be applied to bwap in order of appearence.
+
+      -- first parameter must be a string. because all bwrap command line parameters prefixed with "--"
+      -- there is no need to prepend "--" to this field, it will be done automatically
+      -- TODO: add validation to supported bwrap parameters
+      "ro-bind",
+
+      -- all other fields - optional arguments for selected bwrap parameter
+      loader.path.combine(loader.workdir,"test"), -- directory "test" at basedir of this config file.
+      "/test" -- mount point at sandbox
+    }, ]]--
+
+    -- there are builtin "defaults" for most of bwrap commands.
+    -- theese defaults covers most of the bwrap parameters needed for proper sanbox function.
+    -- if you change any tunable parameter at the beginning of this file,
+    -- defaults will be also tuned according to your changes
+    -- (do not forget to run defaults.recalculate() function (see top of config file for more info)
+
+    defaults.bwrap.unshare_user,
+    defaults.bwrap.unshare_ipc,
+    defaults.bwrap.unshare_pid,
+    -- defaults.bwrap.unshare_net,
+    defaults.bwrap.unshare_uts,
+    -- defaults.bwrap.unshare_cgroup,
+    defaults.bwrap.system_group,
+    -- defaults.bwrap.run_dir, -- included in "system_group"
+    -- defaults.bwrap.tmp_dir, -- included in "system_group"
+    -- defaults.bwrap.proc_mount, -- included in "system_group". mount /proc prepared by bwrap (according by unshare_* options)
+    -- defaults.bwrap.dev_mount, -- included in "system_group". mount /dev, prepared and filtered by bwrap
+    -- defaults.bwrap.var_dir, -- included in "system_group"
+    defaults.bwrap.xdg_runtime_dir,
+    -- make some essential mounts
+    defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
+    defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
+    defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
+    defaults.bwrap.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+    -- defaults.bwrap.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+    -- defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
+    -- other mounts, also essential for normal operation
+    -- defaults.bwrap.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
+    defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net
+    defaults.bwrap.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
+    defaults.bwrap.devdri_mount, -- mount /dev/dri to allow hardware acceleration
+    defaults.bwrap.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
+    -- TODO: add mounts only to some parts of sys directory only needed for particular apps to work
+    defaults.bwrap.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
+    defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
+    defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
+    defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
+    defaults.bwrap.host_lib64_mount, -- readonly mount host /lib64 directory
+  -- defaults.bwrap.bin_ro_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
+  -- defaults.bwrap.usr_ro_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
+  -- defaults.bwrap.lib_ro_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
+  -- defaults.bwrap.lib64_ro_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
+  -- defaults.bwrap.bin_rw_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
+  -- defaults.bwrap.usr_rw_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
+  -- defaults.bwrap.lib_rw_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
+  -- defaults.bwrap.lib64_rw_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
+  }
 }
 
 -- configuration for applications to run inside this sandbox
