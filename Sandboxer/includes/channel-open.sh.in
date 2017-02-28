@@ -13,6 +13,10 @@ else
  req_channel=""
 fi
 
+#test source-checksum, in order to verify that commander and executor modules was built from the same source files
+2>/dev/null "$commander" "$basedir/control" control "${cfg[sandbox.setup.security_key]}" 240
+test "$?" != "0" && log "executor's build version mismatch detected. you must update executor module used for this sandbox: run sandboxer-download-extra.sh" && teardown 1
+
 channel=`2>/dev/null "$commander" "$basedir/control" control "${cfg[sandbox.setup.security_key]}" 0 "$req_channel"`
 test -z "$channel" && log "failed to create new session to run selected exec-profile" && teardown 1
 
