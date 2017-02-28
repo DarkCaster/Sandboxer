@@ -55,10 +55,10 @@ end
 function loader.check_two_level_string_list(target, name)
   assert(type(target)=="nil" or type(target)=="table", name.." table is incorrect")
   if type(target)=="table" then
-    for index,field in ipairs(target) do
-      assert(type(field)=="table", name.."[" .. index .. "] subtable is incorrect")
-      for mi,mf in ipairs(field) do
-        assert(type(mf)=="string", name.."["..index.."]["..mi.."] value is incorrect")
+    for i1,f1 in ipairs(target) do
+      assert(type(f1)=="table", name.."[" .. i1 .. "] subtable is incorrect")
+      for i2,f2 in ipairs(f1) do
+        assert(type(f2)=="string", name.."["..i1.."]["..i2.."] value is incorrect")
       end
     end
   end
