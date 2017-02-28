@@ -1,3 +1,5 @@
 /userdata/
 /userdata-*/
-
+.project
+.settings
+.buildpath
