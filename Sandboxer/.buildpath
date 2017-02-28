@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<buildpath>
+	<buildpathentry excluding="includes/|tools/|userdata-*/" kind="src" path=""/>
+	<buildpathentry kind="src" path="includes"/>
+	<buildpathentry kind="src" path="tools"/>
+	<buildpathentry kind="con" path="org.eclipse.dltk.launching.INTERPRETER_CONTAINER"/>
+</buildpath>
