@@ -150,8 +150,8 @@ sandbox={
     -- opposite to blacklist, blacklist processing will be skipped if env_whitelist is defined and enabled (even if it is empty!)
     env_whitelist={
       enabled=false, -- optional, to quick enable\disable whitelist logic. applied only if true
-    -- { "HOST",
-    -- "INPUTRC", }, -- for now, all entries must be in subtable-blocks
+    --"HOST",
+    --"INPUTRC",
     },
 
     -- set custom env variables,
