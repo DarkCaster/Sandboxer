@@ -32,8 +32,8 @@ end
 -- setup table
 assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")
 
-assert(type(sandbox.setup.static_executor)=="nil" or type(sandbox.setup.static_executor)=="boolean", "sandbox.setup.static_executor param incorrect")
-if type(sandbox.setup.static_executor)=="nil" then sandbox.setup.static_executor=false end
+assert(type(sandbox.setup.executor_build)=="nil" or type(sandbox.setup.executor_build)=="string", "sandbox.setup.executor_build param incorrect")
+if type(sandbox.setup.executor_build)=="nil" then sandbox.setup.executor_build="default" end
 
 assert(type(sandbox.setup.cleanup_on_exit)=="nil" or type(sandbox.setup.cleanup_on_exit)=="boolean", "sandbox.setup.cleanup_on_exit param incorrect")
 if type(sandbox.setup.cleanup_on_exit)=="nil" then sandbox.setup.cleanup_on_exit=true end
