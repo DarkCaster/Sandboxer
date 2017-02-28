@@ -82,6 +82,15 @@ static void sigusr2_signal_handler(int sig, siginfo_t* info, void* context)
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
 int main(int argc, char* argv[])
 {
+    if(argc<5)
+    {
+        fputs("some of mandatory parameters missing\n",stderr);
+        fputs("usage: <control-dir> <channel-name> <security-key> <operation-code> [operation param1] [operation param2] ...\n",stderr);
+        fputs("SOURCE_CHECKSUM for this binary (stdout):\n",stderr);
+        fprintf(stdout,"%x\n",SOURCE_CHECKSUM);
+        exit(10);
+    }
+
     term_size_update_needed=true;
     detach_pending=false;
     comm_shutdown(0u);
@@ -111,13 +120,6 @@ int main(int argc, char* argv[])
     {
         log_message(logger,LOG_ERROR,"Failed to set SIGUSR2 signal handler");
         teardown(8);
-    }
-
-    if(argc<5)
-    {
-        log_message(logger,LOG_ERROR,"<control-dir>, <channel-name>, <security-key> or <operation-code> parameters missing");
-        log_message(logger,LOG_ERROR,"usage: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...");
-        teardown(10);
     }
 
     if(strnlen(argv[1], MAXARGLEN)>=MAXARGLEN)
