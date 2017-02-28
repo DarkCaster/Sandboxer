@@ -263,3 +263,14 @@ shell={
   exclusive=false, -- optional, default value is false. exclusive mode - will create io channels with name match to profile name instead of random. refuse to launch this profile if already running
 }
 
+-- another example profile. do not allocate new pty, just connect stdout\stderr\stdin
+shell_no_pty={
+  exec="/bin/bash",
+  path="/",
+  args=loader.args,
+  env_unset={"TERM"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=false,
+}
