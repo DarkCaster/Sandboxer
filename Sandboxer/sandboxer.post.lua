@@ -108,7 +108,7 @@ function loader.transform_env_set_list(target, name)
         end
       end -- for 2nd-level
       if top_level_is_target==true then
-        assert(#f1==2 or #f1==0, name.."["..i1.."] has incorrect strings count")
+        assert(#f1==2 or #f1==0, name.."["..i1.."] has incorrect strings count, expected count==2, actual count=="..#f1)
         if #f1==2 then table.insert(result,f1) end
       end
     end
