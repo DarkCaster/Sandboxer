@@ -257,7 +257,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   check_errors
 
   #copy executor binary
-  test "${cfg[sandbox.setup.static_executor]}" = "true" && cp "$executor_static" "$basedir/executor" || cp "$executor" "$basedir/executor"
+  cp "$executor" "$basedir/executor"
 
   #execute custom chroot construction commands
   cd "${cfg[defaults.chrootdir]}"
