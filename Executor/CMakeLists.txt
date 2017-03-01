@@ -159,7 +159,9 @@ target_link_libraries(executor.static ${CMAKE_THREAD_LIBS_INIT} -lutil)
 #executor util, static
 add_executable(executor helper_macro.h cmd_defs.h comm_helper.c hash.c message.c logger.c pid_list.c executor.c)
 target_link_libraries(executor ${CMAKE_THREAD_LIBS_INIT} -lutil)
+install(TARGETS executor DESTINATION "executor")
 
 #commander util
 add_executable(commander helper_macro.h cmd_defs.h comm_helper.c hash.c message.c logger.c commander.c)
 target_link_libraries(commander ${CMAKE_THREAD_LIBS_INIT})
+install(TARGETS commander DESTINATION "commander")
