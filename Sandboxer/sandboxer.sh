@@ -41,11 +41,37 @@ shift $#
 
 test "${#cfg[@]}" = "0" && echo "can't find config storage variable populated by bash_lua_helper. bash_lua_helper failed!" && exit 1
 
-. "$includes_dir/find-executor-binaries.bash.in" "$script_dir/executor" "$script_dir/../Build/Executor/build"
-
 log () {
   echo "[ $@ ]"
 }
+
+# find commander binary
+commander=""
+for hint in "$script_dir/commander" "$script_dir/../Build/commander"
+do
+  if [ -x "$hint/commander" ]; then
+    commander="$hint/commander"
+    break
+  fi
+done
+
+test -z "$commander" && log "commander binary not found!" && exit 1
+
+# get source-checksum
+source_checksum=`2>/dev/null "$commander"`
+test -z "$source_checksum" && log "failed to read correct source_checksum from commander!" && exit 1
+
+# find executor binary
+executor=""
+for hint in "$HOME/.cache/sandboxer-${cfg[sandbox.setup.executor_build]}-$source_checksum" "$script_dir/executor" "$script_dir/../Build/executor"
+do
+  if [ -x "$hint/executor" ]; then
+    executor="$hint/executor"
+    break
+  fi
+done
+
+test -z "$executor" && log "executor binary not found!" && exit 1
 
 basedir="${cfg[defaults.basedir]}"
 
