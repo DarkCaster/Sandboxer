@@ -1,11 +1,9 @@
 #!/bin/bash
 
-fixups_srcdir=""
+fixups_srcdir="$script_dir/fixups"
 
-for hint in "$script_dir/fixups" "$script_dir/../Fixups"
-do
-  test -d "$hint" && fixups_srcdir="$hint" && break
-done
+fixups_srcdir_extra="$script_dir/../Build/fixups"
+test ! -d "$fixups_srcdir_extra" && fixups_srcdir_extra=""
 
 if [ ! -z "$fixups_srcdir" ]; then
   fixups_srcdir=`realpath "$fixups_srcdir"`
@@ -14,26 +12,31 @@ if [ ! -z "$fixups_srcdir" ]; then
   check_errors
   mkdir "${cfg[defaults.features.fixups_dir]}"
   check_errors
+  # populate with main directory contents
   cp -rf "$fixups_srcdir"/* "${cfg[defaults.features.fixups_dir]}"
   check_errors
-  # add mounts entries for fixups directory
-  bwrap_add_param "--bind"
-  bwrap_add_param "${cfg[defaults.features.fixups_dir]}"
-  bwrap_add_param "/fixups"
-  # add mounts for available precompiled fakeroot binaries
-  for fakeroot_dir in "$HOME/.cache/sandboxer"/fakeroot* "$script_dir/../Build/Fakeroot/fixups"/*
+  # populate with extra directory contents
+  if [ ! -z "$fixups_srcdir_extra" ]; then
+    for extra_dir in "$fixups_srcdir_extra"/*
+    do
+      test -z "$extra_dir" -o ! -d "$extra_dir" && continue
+      cp -rf "$extra_dir" "${cfg[defaults.features.fixups_dir]}"
+      check_errors
+    done
+  fi
+  # populate with downloaded prebuilt fakeroot packages for different distributions
+  for fakeroot_dir in "$HOME/.cache/sandboxer"/fakeroot*
   do
-    test ! -d "$fakeroot_dir" && continue
-    fakeroot_basedir=`basename $fakeroot_dir`
-    bwrap_add_param "--ro-bind"
-    bwrap_add_param "$fakeroot_dir"
-    bwrap_add_param "/fixups/$fakeroot_basedir"
+    test -z "$fakeroot_dir" -o ! -d "$fakeroot_dir" && continue
+    cp -rf "$fakeroot_dir" "${cfg[defaults.features.fixups_dir]}"
+    check_errors
   done
-  bwrap_add_param "--remount-ro"
+  # add mounts entries for fixups directory
+  bwrap_add_param "--ro-bind"
+  bwrap_add_param "${cfg[defaults.features.fixups_dir]}"
   bwrap_add_param "/fixups"
 else
   log "fixups directory not found, skipping feature activation"
 fi
 
-unset fixups_srcdir
-unset fakeroot_basedir
+unset fixups_srcdir fixups_srcdir_extra
