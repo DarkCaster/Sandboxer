@@ -34,6 +34,7 @@ assert(type(sandbox.setup)=="table", "sandbox.setup param incorrect")
 
 assert(type(sandbox.setup.executor_build)=="nil" or type(sandbox.setup.executor_build)=="string", "sandbox.setup.executor_build param incorrect")
 if type(sandbox.setup.executor_build)=="nil" then sandbox.setup.executor_build="default" end
+assert(string.match(sandbox.setup.executor_build,'^[0-9a-z_]*$')==sandbox.setup.executor_build, 'sandbox.setup.executor_build value contain invalid characters: only numbers, letters (lowercase) and "_" characters allowed')
 
 assert(type(sandbox.setup.cleanup_on_exit)=="nil" or type(sandbox.setup.cleanup_on_exit)=="boolean", "sandbox.setup.cleanup_on_exit param incorrect")
 if type(sandbox.setup.cleanup_on_exit)=="nil" then sandbox.setup.cleanup_on_exit=true end
