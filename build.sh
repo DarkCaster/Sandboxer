@@ -13,15 +13,18 @@ function check_error {
 }
 
 cd "$curdir"
-rm -rf "$curdir/Build/Executor"
+rm -rf "$curdir/Build/Executor-build"
 
-mkdir -p "$curdir/Build/Executor" && cd "$curdir/Build/Executor"
+mkdir -p "$curdir/Build/Executor-build" && cd "$curdir/Build/Executor-build"
 check_error
 
-cmake -DCMAKE_BUILD_TYPE=Release ../../Executor
+cmake -DCMAKE_INSTALL_PREFIX="$curdir/Build" -DCMAKE_BUILD_TYPE=Release ../../Executor
 check_error
 
 make
+check_error
+
+make install
 check_error
 
 mkdir -p "$curdir/External"
@@ -40,10 +43,10 @@ check_error
 ./preroll
 check_error
 
-rm -rf "$curdir/Build/Fakeroot-UserNS"
-rm -rf "$curdir/Build/Fakeroot"
+rm -rf "$curdir/Build/Fakeroot-UserNS-build"
+rm -rf "$curdir/Build/fixups/fakeroot"/*
 
-mkdir -p "$curdir/Build/Fakeroot-UserNS" && cd "$curdir/Build/Fakeroot-UserNS"
+mkdir -p "$curdir/Build/Fakeroot-UserNS-build" && cd "$curdir/Build/Fakeroot-UserNS-build"
 check_error
 
 "$curdir/External/Fakeroot-UserNS/configure" --prefix=/fixups/fakeroot-host --bindir=/fixups/fakeroot-host --libdir=/fixups/fakeroot-host --mandir=/fixups/fakeroot-host/man --with-ipc=tcp
@@ -52,5 +55,5 @@ check_error
 make
 check_error
 
-make install DESTDIR="$curdir/Build/Fakeroot"
+make install DESTDIR="$curdir/Build"
 check_error
