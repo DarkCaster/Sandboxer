@@ -63,6 +63,22 @@ sandbox={
   }
 }
 
+-- start bash shell with fakeroot utility built for ubuntu-16.10 (it maybe downloaded by running sandboxer-download-extra.sh script)
+-- this profile should be used to perform package management inside sandbox: apt-get, dpkg should work.
+-- but, still there may be some errors, because virtual "root" env running inside regular user sandbox has some very tight restrictions,
+-- that may be not overriden even by using fakeroot utility. so, do not expect that every program that require real root privs will work.
+fakeroot_shell_16_10={
+  exec="/fixups/fakeroot-session-starter.sh",
+  path="/",
+  args={"ubuntu-16.10","/bin/bash","--login"},
+  env_set={
+    {"TERM",os.getenv("TERM")},
+  },
+  term_signal=defaults.signals.SIGHUP,
+  attach=true,
+  pty=true,
+}
+
 shell={
   exec="/bin/bash",
   path="/",
