@@ -216,7 +216,7 @@ defaults.features.pulse_env_alsa_config=""
 function defaults.recalculate()
 
   local home=loader.path.combine(defaults.datadir,"home")
-  if defaults.user=="root" then home=loader.path.combine(defaults.chrootdir) end
+  if defaults.user=="root" then home=tostring(defaults.chrootdir) end
 
   local cache=loader.path.combine(defaults.datadir,"cache")
   local tmp=loader.path.combine(defaults.datadir,"tmp")
