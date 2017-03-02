@@ -308,6 +308,10 @@ function defaults.recalculate()
 
   defaults.bwrap.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
 
+  if config.uid~=defaults.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",defaults.uid} else defaults.bwrap.uid={} end
+
+  if config.gid~=defaults.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",defaults.gid} else defaults.bwrap.gid={} end
+
   defaults.features.gvfs_fix_dir=loader.path.combine(defaults.chrootdir,"gvfs_fix")
 
   defaults.features.pulse_dir=loader.path.combine(defaults.chrootdir,"pulse_dyn_config")
