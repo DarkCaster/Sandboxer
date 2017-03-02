@@ -207,6 +207,8 @@ sandbox={
     -- defaults.bwrap.unshare_net,
     defaults.bwrap.unshare_uts,
     -- defaults.bwrap.unshare_cgroup,
+    defaults.bwrap.uid, -- set uid inside sandbox according to defaults.uid setting. if you manually change defaults.uid - use of this entry is mandatory.
+    defaults.bwrap.gid, -- set gid inside sandbox according to defaults.gid setting. if you manually change defaults.gid - use of this entry is mandatory.
     defaults.bwrap.system_group,
     -- defaults.bwrap.run_dir, -- included in "system_group"
     -- defaults.bwrap.tmp_dir, -- included in "system_group"
