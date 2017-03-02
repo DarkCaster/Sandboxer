@@ -311,7 +311,18 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   # return 0 if selected entry is in env_unset list
   env_unset_find() {
     local variable="$1"
-    # TODO:
+    local cnt=0
+    while [ "$cnt" -lt "$bwrap_env_unset_cnt" ]
+    do
+      if [ "${bwrap_env_unset[$cnt]}" == "--unsetenv" ]; then
+        cnt=$((cnt+1))
+        test "${bwrap_env_unset[$cnt]}" == "$variable" && return 0
+        cnt=$((cnt+1))
+      else
+        log "error detected at bwrap_env_unset list!"
+        teardown 1
+      fi
+    done
     return 1
   }
 
