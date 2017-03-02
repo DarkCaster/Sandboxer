@@ -42,25 +42,17 @@ test "$pulse_server_is_socket" = "true" && 2>/dev/null ln "$pulse_socket" "${cfg
 
 # export socket location env inside sandbox, depending on what communication method is used now
 if [ "$pulse_server_is_socket" = "true" ]; then
- bwrap_add_param "--setenv"
- bwrap_add_param "PULSE_SERVER"
- bwrap_add_param "unix:/etc/pulse/socket"
+  env_set_add "PULSE_SERVER" "unix:/etc/pulse/socket"
 else
- # TODO: alternative methods of communication
- bwrap_add_param "--setenv"
- bwrap_add_param "PULSE_SERVER"
- bwrap_add_param "$pulse_server"
+  # TODO: alternative methods of communication
+  env_set_add "PULSE_SERVER" "$pulse_server"
 fi
 
 if [ ! -z "${cfg[defaults.features.pulse_env_alsa_config]}" ]; then
  # export defaults.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
- bwrap_add_param "--setenv"
- bwrap_add_param "ALSA_CONFIG_PATH"
- bwrap_add_param "${cfg[defaults.features.pulse_env_alsa_config]}"
+ env_set_add "ALSA_CONFIG_PATH" "${cfg[defaults.features.pulse_env_alsa_config]}"
 elif [ -z "${cfg[defaults.features.pulse_env_alsa_config]}" ] && [ ! -z "$ALSA_CONFIG_PATH" ]; then
- bwrap_add_param "--setenv"
- bwrap_add_param "ALSA_CONFIG_PATH"
- bwrap_add_param "$ALSA_CONFIG_PATH"
+ env_set_add "ALSA_CONFIG_PATH" "$ALSA_CONFIG_PATH"
 fi
 
 # detect - do we use cookie, and where it is located
@@ -77,9 +69,7 @@ if [ ! -z "$pulse_cookie" ] && [ -f "$pulse_cookie" ]; then
  cp "$pulse_cookie" "${cfg[defaults.features.pulse_dir]}/cookie"
  check_errors
  chmod 600 "${cfg[defaults.features.pulse_dir]}/cookie"
- bwrap_add_param "--setenv"
- bwrap_add_param "PULSE_COOKIE"
- bwrap_add_param "/etc/pulse/cookie"
+ env_set_add "PULSE_COOKIE" "/etc/pulse/cookie"
 fi
 
 if [ "$pulse_server_is_socket" = "true" ] && [ -S "${cfg[defaults.features.pulse_dir]}/socket" ]; then
