@@ -216,11 +216,15 @@ defaults.features.pulse_env_alsa_config=""
 function defaults.recalculate()
 
   local home=loader.path.combine(defaults.datadir,"home")
+  if defaults.user=="root" then home=loader.path.combine(defaults.chrootdir) end
+
   local cache=loader.path.combine(defaults.datadir,"cache")
   local tmp=loader.path.combine(defaults.datadir,"tmp")
   local user=loader.path.combine(home,defaults.user)
   local etc=loader.path.combine(defaults.chrootdir,defaults.etcdir_name)
+
   local chroot_home=loader.path.combine("/home",defaults.user)
+  if defaults.user=="root" then chroot_home=loader.path.combine("/","root") end
 
   defaults.commands.etc_min={ loader.path.combine(config.tools_dir,"host_whitelist_etc_gen.sh")..' "'..etc..'"' }
 
@@ -254,11 +258,12 @@ function defaults.recalculate()
 
   defaults.env.set_home={
     {"HOME",chroot_home},
-    {"PATH","/usr/bin:/bin:/usr/bin/X11"},
+    {"PATH",os.getenv("PATH")}, -- TODO: correct path env by using special feature script
     {"USER",defaults.user},
-    {"INPUTRC",loader.path.combine(chroot_home,".inputrc")},
     {"LOGNAME",defaults.user}
   }
+
+  if defaults.user=="root" then defaults.env.set_home[2]={"PATH","/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"} end
 
   defaults.env.set_xdg_runtime={ {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",defaults.uid)} }
 
