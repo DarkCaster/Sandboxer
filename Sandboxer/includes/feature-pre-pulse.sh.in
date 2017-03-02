@@ -35,7 +35,7 @@ test ! -z "$pulse_socket" -a -S "$pulse_socket" && pulse_server_is_socket="true"
 if [ "$pulse_server_is_socket" = "true" ] || [ ! -z "$pulse_server" ]; then
 
 # export default env from defaults.features.pulse_env
-bwrap_env_set_unset set "defaults.features.pulse_env"
+env_set_add_list "defaults.features.pulse_env"
 
 # if using socket try to hardlink socket
 test "$pulse_server_is_socket" = "true" && 2>/dev/null ln "$pulse_socket" "${cfg[defaults.features.pulse_dir]}/socket"

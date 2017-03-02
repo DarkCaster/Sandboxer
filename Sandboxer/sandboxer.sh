@@ -174,7 +174,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     (
     #cleanup current env to enhance secutity when running custom commands
     unset -f exec_cmd_list_in_bg wait_for_cmd_list extra_env_unset_add extra_env_set_add check_errors teardown lock_exit lock_enter \
-    bwrap_add_param bwrap_env_set_unset bwrap_process_list_contents bwrap_process_list
+    bwrap_add_param bwrap_process_list_contents bwrap_process_list
     unset extra_env_unset extra_env_unset_cnt extra_env_set_name extra_env_set_value extra_env_set_cnt lock_entered \
     basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid \
     bwrap_params bwrap_param_cnt feature_cnt
@@ -289,27 +289,6 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     bwrap_param_cnt=$((bwrap_param_cnt+1))
   }
 
-  bwrap_env_set_unset() {
-    local env_op="$1"
-    local env_table="$2"
-    local env_blk_cnt=1
-    while `check_lua_export "$env_table.$env_blk_cnt"`
-    do
-      if [ "$env_op" = "unset" ]; then
-        bwrap_add_param "--unsetenv"
-        bwrap_add_param "${cfg[$env_table.$env_blk_cnt]}"
-      elif [ "$env_op" = "set" ]; then
-        bwrap_add_param "--setenv"
-        bwrap_add_param "${cfg[$env_table.$env_blk_cnt.1]}"
-        bwrap_add_param "${cfg[$env_table.$env_blk_cnt.2]}"
-      else
-        log "internal error: unsupported env operation"
-        teardown 1
-      fi
-      env_blk_cnt=$((env_blk_cnt+1))
-    done
-  }
-
   bwrap_process_list_contents() {
     local list="$1"
     local top_cnt=1
@@ -383,16 +362,15 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     do
       #find match and add unset entry if not found
       find_env_whitelist_match "$test_val" && continue
-      bwrap_add_param "--unsetenv"
-      bwrap_add_param "$test_val"
+      env_unset_add "$test_val"
     done
   else
     #unset default env by bwrap
-    bwrap_env_set_unset "unset" "sandbox.setup.env_blacklist"
+    env_unset_add_list "sandbox.setup.env_blacklist"
   fi
 
   #set default env by bwrap
-  bwrap_env_set_unset "set" "sandbox.setup.env_set"
+  env_set_add_list "sandbox.setup.env_set"
 
   #append remaining parameters from sandbox.bwrap table
   bwrap_process_list "sandbox.bwrap"
@@ -428,7 +406,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   (
 
   #run bwrap, start master executor
-  &>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}"
+  &>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}"
 
   test "${cfg[sandbox.setup.cleanup_on_exit]}" != "true" && exit 0
 
