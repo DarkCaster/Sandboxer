@@ -218,6 +218,39 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     fi
   }
 
+  bwrap_env_set=()
+  bwrap_env_set_cnt=0
+
+  bwrap_env_unset=()
+  bwrap_env_unset_cnt=0
+
+  # add env_set entries for "init" process inside sandbox
+  # list processed by sandboxing tool (bwrap only for now)
+  # this methods is for indirect env_list processing in case of
+  # sandboxing tool other than bwrap is added in the future
+  env_set_add() {
+
+  }
+
+  # return 0 if selected entry is in env_set list
+  env_set_find() {
+    local variable="$1"
+    # TODO:
+    return 1
+  }
+
+  # add env_unset entries for "init" process inside sandbox
+  env_unset_add() {
+
+  }
+
+  # return 0 if selected entry is in env_unset list
+  env_unset_find() {
+    local variable="$1"
+    # TODO:
+    return 1
+  }
+
   bwrap_params=()
   bwrap_param_cnt=0
 
