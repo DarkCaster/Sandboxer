@@ -123,8 +123,8 @@ check_errors () {
   fi
 }
 
-#extra env used by executor module
-
+# extra env used by executor module ONLY
+# "-post" features may use it to add extra env definitions to executor module
 extra_env_set_name=()
 extra_env_set_value=()
 extra_env_set_cnt=0
