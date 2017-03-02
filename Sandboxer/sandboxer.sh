@@ -290,6 +290,21 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     done
   }
 
+  env_set_get_names() {
+    local cnt=0
+    while [ "$cnt" -lt "$bwrap_env_set_cnt" ]
+    do
+      if [ "${bwrap_env_set[$cnt]}" == "--setenv" ]; then
+        cnt=$((cnt+1))
+        echo "${bwrap_env_set[$cnt]}"
+        cnt=$((cnt+2))
+      else
+        log "error detected at bwrap_env_set list!"
+        teardown 1
+      fi
+    done
+  }
+
   # add env_unset entries for "init" process inside sandbox
   env_unset_add() {
     bwrap_env_unset[$bwrap_env_unset_cnt]="--unsetenv"
@@ -324,6 +339,21 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
       fi
     done
     return 1
+  }
+
+  env_unset_get_names() {
+    local cnt=0
+    while [ "$cnt" -lt "$bwrap_env_unset_cnt" ]
+    do
+      if [ "${bwrap_env_unset[$cnt]}" == "--unsetenv" ]; then
+        cnt=$((cnt+1))
+        echo "${bwrap_env_unset[$cnt]}"
+        cnt=$((cnt+1))
+      else
+        log "error detected at bwrap_env_unset list!"
+        teardown 1
+      fi
+    done
   }
 
   bwrap_params=()
