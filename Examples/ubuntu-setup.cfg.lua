@@ -20,7 +20,6 @@ sandbox={
     commands={
       {'rm -f "etc/resolv.conf"', 'cp "/etc/resolv.conf" "etc/resolv.conf"'},
       defaults.commands.x11,
-
     },
     env_blacklist={
       defaults.env.blacklist_main,
@@ -69,6 +68,7 @@ sandbox={
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"opt"),"/opt"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"tmp"),"/tmp"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"var"),"/var"},
+    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"home"),"/home"},
   }
 }
 
