@@ -323,6 +323,7 @@ function defaults.recalculate()
 
   defaults.features.fixups_dir=loader.path.combine(defaults.chrootdir,defaults.fixupsdir_name)
 
+  defaults.features.envfix_home=chroot_home
 end
 
 defaults.recalculate()
