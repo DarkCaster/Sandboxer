@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# find "HOME" env define (and maybe others) from current bwrap parameters
+
+# do not proceed if not found
+
+# get current env
+
+# update current env and store changed variables
+
+# process current bwrap parameters and remove our variables that already defined there
+
+# add remaining changed variables to bwrap
