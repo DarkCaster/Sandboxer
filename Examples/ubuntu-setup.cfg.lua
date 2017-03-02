@@ -88,6 +88,18 @@ fakeroot_shell_16_10={
   pty=true,
 }
 
+fakeroot_shell_12_04={
+  exec="/fixups/fakeroot-session-starter.sh",
+  path="/",
+  args={"ubuntu-12.04","/bin/bash","--login"},
+  env_set={
+    {"TERM",os.getenv("TERM")},
+  },
+  term_signal=defaults.signals.SIGHUP,
+  attach=true,
+  pty=true,
+}
+
 shell={
   exec="/bin/bash",
   path="/",
