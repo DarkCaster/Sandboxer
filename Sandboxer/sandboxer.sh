@@ -250,8 +250,44 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   # return 0 if selected entry is in env_set list
   env_set_find() {
     local variable="$1"
-    # TODO:
+    local cnt=0
+    while [ "$cnt" -lt "$bwrap_env_set_cnt" ]
+    do
+      if [ "${bwrap_env_set[$cnt]}" == "--setenv" ]; then
+        cnt=$((cnt+1))
+        if [ "${bwrap_env_set[$cnt]}" == "$variable" ]; then
+          return 0
+        else
+          cnt=$((cnt+2))
+        fi
+      else
+        log "error detected at bwrap_env_set list!"
+        teardown 1
+      fi
+    done
     return 1
+  }
+
+  # read selected value, return "" if nothing found
+  env_set_readval() {
+    local variable="$1"
+    local cnt=0
+    while [ "$cnt" -lt "$bwrap_env_set_cnt" ]
+    do
+      if [ "${bwrap_env_set[$cnt]}" == "--setenv" ]; then
+        cnt=$((cnt+1))
+        if [ "${bwrap_env_set[$cnt]}" == "$variable" ]; then
+          cnt=$((cnt+1))
+          echo "${bwrap_env_set[$cnt]}"
+          cnt=$((cnt+1))
+        else
+          cnt=$((cnt+2))
+        fi
+      else
+        log "error detected at bwrap_env_set list!"
+        teardown 1
+      fi
+    done
   }
 
   # add env_unset entries for "init" process inside sandbox
