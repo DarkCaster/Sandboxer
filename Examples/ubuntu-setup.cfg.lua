@@ -1,5 +1,8 @@
 defaults.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
 
+-- special tweaks applied to some of "defaults" entries when using "root" username
+-- use "root" username for sandbox only if you want to get pseudo-superuser session
+-- do not set it for regular sandbox usage
 defaults.user="root"
 
 defaults.uid=0
@@ -16,6 +19,8 @@ sandbox={
     static_executor=false,
     commands={
       {'rm -f "etc/resolv.conf"', 'cp "/etc/resolv.conf" "etc/resolv.conf"'},
+      defaults.commands.x11,
+
     },
     env_blacklist={
       defaults.env.blacklist_main,
@@ -29,11 +34,14 @@ sandbox={
       "LC_ALL",
     },
     env_set={
+      defaults.env.set_xdg_runtime,
+      defaults.env.set_x11,
+      defaults.env.set_home, --equialent to:
+      --[[
       {"PATH","/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"},
       {"HOME","/root"},
       {"USER",defaults.user},
-      {"LOGNAME",defaults.user},
-      defaults.env.set_xdg_runtime,
+      {"LOGNAME",defaults.user},]]--
     }
   },
   bwrap={
@@ -50,7 +58,8 @@ sandbox={
     defaults.bwrap.usr_rw_mount,
     defaults.bwrap.lib_rw_mount,
     defaults.bwrap.lib64_rw_mount,
-    defaults.bwrap.sys_mount,
+    defaults.bwrap.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
+    defaults.bwrap.x11_mount, -- optional for root usage, may be used to run synaptic
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc"),"/etc"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
