@@ -229,7 +229,22 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   # this methods is for indirect env_list processing in case of
   # sandboxing tool other than bwrap is added in the future
   env_set_add() {
+    bwrap_env_set[$bwrap_env_set_cnt]="--setenv"
+    bwrap_env_set_cnt=$((bwrap_env_set_cnt+1))
+    bwrap_env_set[$bwrap_env_set_cnt]="$1"
+    bwrap_env_set_cnt=$((bwrap_env_set_cnt+1))
+    bwrap_env_set[$bwrap_env_set_cnt]="$2"
+    bwrap_env_set_cnt=$((bwrap_env_set_cnt+1))
+  }
 
+  env_set_add_list() {
+    local env_table="$1"
+    local env_blk_cnt=1
+    while `check_lua_export "$env_table.$env_blk_cnt"`
+    do
+      env_set_add "${cfg[$env_table.$env_blk_cnt.1]}" "${cfg[$env_table.$env_blk_cnt.2]}"
+      env_blk_cnt=$((env_blk_cnt+1))
+    done
   }
 
   # return 0 if selected entry is in env_set list
@@ -241,7 +256,20 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
 
   # add env_unset entries for "init" process inside sandbox
   env_unset_add() {
+    bwrap_env_unset[$bwrap_env_unset_cnt]="--unsetenv"
+    bwrap_env_unset_cnt=$((bwrap_env_unset_cnt+1))
+    bwrap_env_unset[$bwrap_env_unset_cnt]="$1"
+    bwrap_env_unset_cnt=$((bwrap_env_unset_cnt+1))
+  }
 
+  env_unset_add_list() {
+    local env_table="$1"
+    local env_blk_cnt=1
+    while `check_lua_export "$env_table.$env_blk_cnt"`
+    do
+      env_unset_add "${cfg[$env_table.$env_blk_cnt]}"
+      env_blk_cnt=$((env_blk_cnt+1))
+    done
   }
 
   # return 0 if selected entry is in env_unset list
