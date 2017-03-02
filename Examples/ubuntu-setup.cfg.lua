@@ -41,6 +41,8 @@ sandbox={
     defaults.bwrap.unshare_ipc,
     defaults.bwrap.unshare_pid,
     defaults.bwrap.unshare_uts,
+    defaults.bwrap.uid,
+    defaults.bwrap.gid,
     defaults.bwrap.proc_mount,
     defaults.bwrap.dev_mount,
     defaults.bwrap.xdg_runtime_dir,
@@ -58,8 +60,6 @@ sandbox={
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"opt"),"/opt"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"tmp"),"/tmp"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"var"),"/var"},
-    {"uid",defaults.uid},
-    {"gid",defaults.gid},
   }
 }
 
