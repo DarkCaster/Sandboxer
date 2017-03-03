@@ -232,15 +232,15 @@ function defaults.recalculate()
 
   defaults.commands.etc_full={
     'mkdir -p "'..etc..'"',
-    '2>/dev/null cp -rf "/etc/"* "'..etc..'"; true',
+    '2>/dev/null cp -rf "'..etchost_path..'/"* "'..etc..'"; true',
     'rm -f "'..loader.path.combine(etc,"mtab")..'"; ln -s "/proc/self/mounts" "'..loader.path.combine(etc,"mtab")..'"; true',
   }
 
-  defaults.commands.etc_dbus={ 'mkdir -p "'..etc..'"','cp -rf "/etc/dbus"* "'..etc..'"' }
+  defaults.commands.etc_dbus={ 'mkdir -p "'..etc..'"','cp -rf "'..etchost_path..'/dbus"* "'..etc..'"' }
 
-  defaults.commands.etc_x11={ 'mkdir -p "'..etc..'"','cp -rf "/etc/X11" "'..etc..'"','cp -rf "/etc/fonts" "'..etc..'"'}
+  defaults.commands.etc_x11={ 'mkdir -p "'..etc..'"','cp -rf "'..etchost_path..'/X11" "'..etc..'"','cp -rf "'..etchost_path..'/fonts" "'..etc..'"'}
 
-  defaults.commands.etc_udev={'mkdir -p "'..etc..'"','cp -rf "/etc/udev" "'..etc..'"'}
+  defaults.commands.etc_udev={'mkdir -p "'..etc..'"','cp -rf "'..etchost_path..'/udev" "'..etc..'"'}
 
   defaults.commands.passwd={
     'mkdir -p "'..etc..'"',
@@ -251,7 +251,7 @@ function defaults.recalculate()
 
   defaults.commands.home={
     'mkdir -p "'..home..'"',
-    'test ! -d "'..user..'" && 2>/dev/null cp -rf /etc/skel "'..user..'" || true'
+    'test ! -d "'..user..'" && 2>/dev/null cp -rf "'..etchost_path..'/skel" "'..user..'" || true'
   }
 
   defaults.commands.var_cache={ 'mkdir -p "'..cache..'"' }
