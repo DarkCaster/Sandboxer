@@ -254,6 +254,11 @@ function defaults.recalculate()
     'test ! -d "'..user..'" && 2>/dev/null cp -rf "'..etchost_path..'/skel" "'..user..'" || true'
   }
 
+  defaults.commands.home_gui_config={
+    'mkdir -p "'..home..'"',
+    'if [ -d "'..user..'" ]; then "'..loader.path.combine(config.tools_dir,"gui_toolkits_conf_copy.sh")..'" "'..defaults.user..'" "'..chroot_home..'" "'..user..'" fi'
+  }
+
   defaults.commands.var_cache={ 'mkdir -p "'..cache..'"' }
 
   defaults.commands.var_tmp={ 'mkdir -p "'..tmp..'"' }
