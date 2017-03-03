@@ -256,7 +256,7 @@ function defaults.recalculate()
 
   defaults.commands.home_gui_config={
     'mkdir -p "'..home..'"',
-    'if [ -d "'..user..'" ]; then "'..loader.path.combine(config.tools_dir,"gui_toolkits_conf_copy.sh")..'" "'..defaults.user..'" "'..chroot_home..'" "'..user..'" fi'
+    'if [ -d "'..user..'" ]; then "'..loader.path.combine(config.tools_dir,"gui_toolkits_conf_copy.sh")..'" "'..defaults.user..'" "'..chroot_home..'" "'..user..'"; fi'
   }
 
   defaults.commands.var_cache={ 'mkdir -p "'..cache..'"' }
