@@ -219,7 +219,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   }
 
   # load env lists management logic for bwrap
-  . "$includes_dir/env_lists_manage_bwrap.sh.in"
+  . "$includes_dir/sandbox-defines-bwrap.sh.in"
 
   bwrap_params=()
   bwrap_param_cnt=0
