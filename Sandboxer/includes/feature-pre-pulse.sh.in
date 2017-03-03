@@ -73,10 +73,10 @@ if [ ! -z "$pulse_cookie" ] && [ -f "$pulse_cookie" ]; then
 fi
 
 if [ "$pulse_server_is_socket" = "true" ] && [ -S "${cfg[defaults.features.pulse_dir]}/socket" ]; then
- # add rw-bwrap mount define for constructed pulse_dir to /etc/pulse
+ # add rw-mount define for constructed pulse_dir to /etc/pulse
  sandbox_bind_rw "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
 else
- # add ro-bwrap mount define for constructed pulse_dir to /etc/pulse
+ # add ro-mount define for constructed pulse_dir to /etc/pulse
  sandbox_bind_ro "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
  if [ "$pulse_server_is_socket" = "true" ]; then
   touch "${cfg[defaults.features.pulse_dir]}/socket"

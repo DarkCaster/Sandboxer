@@ -238,6 +238,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   exec_cmd_list_in_bg "sandbox.setup.commands"
 
   if check_lua_export "sandbox.setup.env_whitelist"; then
+    #process env_whitelist from lua config file and fillup initial env_unset list
     find_env_whitelist_match () {
       local test_val="$1"
       local top_cnt=1
@@ -267,11 +268,11 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
       env_unset_add "$test_val"
     done
   else
-    #unset default env by bwrap
+    #because whitelist is disabled, fillup initial env_unset list by using sandbox.setup.env_blacklist table from lua config file
     env_unset_add_list "sandbox.setup.env_blacklist"
   fi
 
-  #set default env by bwrap
+  #set initial env_set list (it may be altered later by "feature" scripts)
   env_set_add_list "sandbox.setup.env_set"
 
   #initialize parameters for selected sandboxing tool

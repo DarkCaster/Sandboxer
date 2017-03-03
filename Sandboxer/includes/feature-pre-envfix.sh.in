@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# find "HOME" env define (and maybe others) from current bwrap parameters
+# find "HOME" env define (and maybe others) from current sandbox env parameters
 envfix_home=`env_set_readval "HOME"`
 test -z "$envfix_home" && envfix_home="${cfg[defaults.features.envfix_home]}"
 
@@ -38,13 +38,13 @@ if [ ! -z "$envfix_home" ]; then
     envfix_var_fix=`echo "${!var}" | sed -e "s|$envfix_host_home|$envfix_home|g"`
     test "${!var}" != "$envfix_var_fix" && envfix_env_add "$var" "$envfix_var_fix" # && echo "pre-added: $var=$envfix_var_fix" # debug
   done
-  # process current bwrap parameters and remove our variables that already defined there
+  # process current env lists and remove our variables that already defined there
   for val in `env_unset_get_names` `env_set_get_names`
   do
     test -z "$var" -o "$var" == "_" -o "$var" == "PWD" && continue
     envfix_env_remove "$val" # && echo "removed: $val" # debug
   done
-  # add final list of changed variables to bwrap env list
+  # add final list of changed variables to env_set list
   for ((envfix_cnt=0;envfix_cnt<envfix_env_cnt;++envfix_cnt))
   do
     #log "envfix: added env var ${envfix_env_names[$envfix_cnt]}=${envfix_env_values[$envfix_cnt]}"
