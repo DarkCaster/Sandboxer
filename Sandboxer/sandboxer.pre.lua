@@ -216,6 +216,7 @@ defaults.features.pulse_env_alsa_config=""
 -- (re)create tables that rely on tunable parameters
 function defaults.recalculate()
 
+  local etchost_path=loader.path.combine(defaults.etchost_path)
   local home=loader.path.combine(defaults.datadir,"home")
   if defaults.user=="root" then home=tostring(defaults.chrootdir) end
 
@@ -227,7 +228,7 @@ function defaults.recalculate()
   local chroot_home=loader.path.combine("/home",defaults.user)
   if defaults.user=="root" then chroot_home=loader.path.combine("/","root") end
 
-  defaults.commands.etc_min={ loader.path.combine(config.tools_dir,"host_whitelist_etc_gen.sh")..' "'..etc..'"' }
+  defaults.commands.etc_min={ loader.path.combine(config.tools_dir,"etcgen.sh")..' "'..etchost_path..'" "'..etc..'"' }
 
   defaults.commands.etc_full={
     'mkdir -p "'..etc..'"',
