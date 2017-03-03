@@ -26,5 +26,8 @@ check_errors
 gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
 check_errors
 
+mv "$script_dir/ubuntu_chroot/etc" "$script_dir/ubuntu_chroot/etc_orig"
+check_errors
+
 rm /tmp/ubuntu-root.tar.gz
 check_errors

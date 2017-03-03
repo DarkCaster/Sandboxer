@@ -4,10 +4,9 @@ defaults.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
 -- use "root" username for sandbox only if you want to get pseudo-superuser session
 -- do not set it for regular sandbox usage
 defaults.user="root"
-
 defaults.uid=0
-
 defaults.gid=0
+defaults.etcdir_name="etc_orig"
 
 defaults.recalculate()
 
@@ -25,7 +24,7 @@ sandbox={
       --(or else dpkg configure stage will fail, becase there is no running init daemon inside sandbox)
       {'test ! -x "usr/sbin/policy-rc.d" && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
-      {'rm -f "etc/resolv.conf"', 'cp "/etc/resolv.conf" "etc/resolv.conf"'},
+      {'rm -f "etc_orig/resolv.conf"', 'cp "/etc/resolv.conf" "etc_orig/resolv.conf"'},
       defaults.commands.x11,
     },
     env_blacklist={
@@ -58,7 +57,7 @@ sandbox={
       defaults.mounts.lib64_rw_mount,
       defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
       defaults.mounts.x11_mount, -- optional for root usage, may be used to run synaptic
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc"),"/etc"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc_orig"),"/etc"},
       {prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
       {prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
       {prio=10,"bind",loader.path.combine(defaults.chrootdir,"run"),"/run"},
