@@ -37,12 +37,11 @@ sandbox={
       "LC_ALL",
     },
     env_set={
+      {"PATH","/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"},
       defaults.env.set_xdg_runtime,
       defaults.env.set_x11,
       defaults.env.set_home, --equialent to:
-      --[[
-      {"PATH","/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"},
-      {"HOME","/root"},
+      --[[{"HOME","/root"},
       {"USER",defaults.user},
       {"LOGNAME",defaults.user},]]--
     }
