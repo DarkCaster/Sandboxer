@@ -1,13 +1,59 @@
 #!/bin/bash
 
 # find "HOME" env define (and maybe others) from current bwrap parameters
+envfix_home=`env_set_readval "HOME"`
+test -z "$envfix_home" && envfix_home="${cfg[defaults.features.envfix_home]}"
 
 # do not proceed if not found
-
-# get current env
-
-# update current env and store changed variables
-
-# process current bwrap parameters and remove our variables that already defined there
-
-# add remaining changed variables to bwrap
+if [ ! -z "$envfix_home" ]; then
+  # trim leading / symbols if any
+  envfix_host_home=`echo "$HOME" | sed -n 's|^\(.*[^/]\+\)/*$|\1|p'`
+  envfix_home=`echo "$envfix_home" | sed -n 's|^\(.*[^/]\+\)/*$|\1|p'`
+  # get current env
+  envfix_host_env=`printenv -0 | tr -d '\n' | tr '\0' '\n' | sed -n 's|^\([^=]*\)=.*$|\1|p'`
+  # update current env and store changed variables
+  envfix_env_names=()
+  envfix_env_values=()
+  envfix_env_cnt=0
+  envfix_env_add() {
+    envfix_env_names[$envfix_env_cnt]="$1"
+    envfix_env_values[$envfix_env_cnt]="$2"
+    envfix_env_cnt=$((envfix_env_cnt+1))
+  }
+  envfix_env_remove() {
+    local target="$1"
+    local cnt=0
+    local removed=0
+    for ((cnt=0;cnt<envfix_env_cnt;++cnt))
+    do
+      test "$removed" == "0" -a "${envfix_env_names[$cnt]}" == "$target" && removed=1 && envfix_env_cnt=$((envfix_env_cnt-1))
+      test "$removed" == "1" && envfix_env_names[$cnt]="${envfix_env_names[$((cnt+1))]}" && envfix_env_values[$cnt]="${envfix_env_values[$((cnt+1))]}"
+    done
+    #debug
+    test "$removed" == "1" && return 0
+  }
+  for var in $envfix_host_env
+  do
+    test -z "$var" -o "$var" == "_" && continue
+    envfix_var_fix=`echo "${!var}" | sed -e "s|$envfix_host_home|$envfix_home|g"`
+    test "${!var}" != "$envfix_var_fix" && envfix_env_add "$var" "$envfix_var_fix" # && echo "pre-added: $var=$envfix_var_fix" # debug
+  done
+  # process current bwrap parameters and remove our variables that already defined there
+  for val in `env_unset_get_names` `env_set_get_names`
+  do
+    test -z "$var" -o "$var" == "_" && continue
+    envfix_env_remove "$val" # && echo "removed: $val" # debug
+  done
+  # add final list of changed variables to bwrap env list
+  for ((envfix_cnt=0;envfix_cnt<envfix_env_cnt;++envfix_cnt))
+  do
+    #log "envfix: added env var ${envfix_env_names[$envfix_cnt]}=${envfix_env_values[$envfix_cnt]}"
+    log "envfix: ${envfix_env_names[$envfix_cnt]} env variable was updated"
+    env_set_add "${envfix_env_names[$envfix_cnt]}" "${envfix_env_values[$envfix_cnt]}"
+  done
+  # unset all globally defined stuff
+  unset -f envfix_env_remove envfix_env_add
+  unset envfix_cnt envfix_home envfix_host_home envfix_host_env envfix_env_names envfix_env_values envfix_env_cnt envfix_var_fix
+else
+  log "HOME env variable was not found at env_set list. You must apply correct HOME variable to sandbox in order to use envfix feature!"
+fi
