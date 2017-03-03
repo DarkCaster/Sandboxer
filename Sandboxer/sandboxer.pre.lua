@@ -37,6 +37,9 @@ defaults.commands={}
 -- container for commands and other configurable stuff for various include scripts. not for direct use in config.
 defaults.features={}
 
+-- standard mount entries, intended for use inside main config files at sandbox.mounts table
+defaults.mounts={}
+
 -- bwrap command line options container. intended for use inside main config files at sandbox.bwrap table
 defaults.bwrap={}
 
