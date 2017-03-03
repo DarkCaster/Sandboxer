@@ -72,6 +72,13 @@
 -- defaults.etcdir_name="etc" -- default
 -- defaults.etcdir_name="etc_auto"
 
+-- etc directory path that will a source path for some construction commands
+-- that used to dynamically build etc directory for sandbox.
+-- by default it is equal to host etc directory location (/etc).
+-- you may override this tunable parameter if you want to create dynamic etc directory for sandbox from your own source
+-- (separate extracted rootfs directory, for example)
+-- defaults.etchost_path="/etc"
+
 -- TODO: add descriptions for features tunables:
 -- defaults.fixupsdir_name="fixups"
 -- defaults.features.gvfs_fix_search_prefix

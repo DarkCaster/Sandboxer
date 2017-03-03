@@ -23,6 +23,7 @@ defaults.gid=config.gid
 defaults.user="sandboxer"
 defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
 defaults.etcdir_name="etc"
+defaults.etchost_path="/etc"
 defaults.fixupsdir_name="fixups"
 
 -- signals list
