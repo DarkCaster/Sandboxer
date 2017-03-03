@@ -181,9 +181,13 @@ sandbox_init() {
 }
 
 sandbox_bind_ro() {
-  true
+  bwrap_add_param "--ro-bind"
+  bwrap_add_param "$1"
+  bwrap_add_param "$2"
 }
 
 sandbox_bind_rw() {
-  true
+  bwrap_add_param "--bind"
+  bwrap_add_param "$1"
+  bwrap_add_param "$2"
 }
