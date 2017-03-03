@@ -191,3 +191,61 @@ sandbox_bind_rw() {
   bwrap_add_param "$1"
   bwrap_add_param "$2"
 }
+
+sandbox_start() {
+(
+
+  #run bwrap, start master executor
+  &>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}"
+
+  #below is a cleanup-on-exit logic that may be activated when bwrap is complete
+  test "${cfg[sandbox.setup.cleanup_on_exit]}" != "true" && exit 0
+
+  #we are forked from main script, set this service variable to default state
+  lock_entered="false"
+
+  function check_sessions() {
+    test `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | wc -l` != "0" && return 0
+    return 1
+  }
+
+  while true
+  do
+
+    if check_sessions; then
+      #sleep and continue, if true
+      sleep 5
+      continue
+    fi
+
+    #enter lock
+    lock_enter
+
+    if check_sessions; then
+      #exit lock and continue, if true
+      lock_exit
+      sleep 5
+      continue
+    fi
+
+    #remove basedir contents
+    cd "$basedir"
+
+    for el in *
+    do
+      test "$el" = "$lock_dirname" && continue
+      rm -rf "$el"
+    done
+
+    #exit lock
+    lock_exit
+
+    #debug
+    #log "cleanup complete"
+
+    #cleanup complete at this point, exit
+    exit 0
+
+  done
+) &
+}

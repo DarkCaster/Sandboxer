@@ -296,67 +296,9 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   #we must wait here for completion of background command list procssing if any
   wait_for_cmd_list
 
-  log "starting new master executor"
-
-  #run bwrap in subshell, in background
-  #####################################
-  (
-
-  #run bwrap, start master executor
-  &>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}"
-
-  test "${cfg[sandbox.setup.cleanup_on_exit]}" != "true" && exit 0
-
-  #we are forked from main script, set this service variable to default state
-  lock_entered="false"
-
-  function check_sessions() {
-    test `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | wc -l` != "0" && return 0
-    return 1
-  }
-
-  while true
-  do
-
-    if check_sessions; then
-      #sleep and continue, if true
-      sleep 5
-      continue
-    fi
-
-    #enter lock
-    lock_enter
-
-    if check_sessions; then
-      #exit lock and continue, if true
-      lock_exit
-      sleep 5
-      continue
-    fi
-
-    #remove basedir contents
-    cd "$basedir"
-
-    for el in *
-    do
-      test "$el" = "$lock_dirname" && continue
-      rm -rf "$el"
-    done
-
-    #exit lock
-    lock_exit
-
-    #debug
-    #log "cleanup complete"
-
-    #cleanup complete at this point, exit
-    exit 0
-
-  done
-
-  ) &
-  #####################################
-  #run bwrap in subshell, in background
+  #start sandbox and launch executor module
+  log "starting sandbox and master executor"
+  sandbox_start
 
   log "waiting for control comm-channels to appear"
 
