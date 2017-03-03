@@ -113,7 +113,6 @@ defaults.env.blacklist_home={
   -- blacklist, that include some variables related to currently logged-in user env
   -- use with caution, may brake things if some of this variables not set
   "HOME",
-  "PATH",
   "USER",
   "INPUTRC",
   "LOGNAME",
@@ -258,12 +257,9 @@ function defaults.recalculate()
 
   defaults.env.set_home={
     {"HOME",chroot_home},
-    {"PATH",os.getenv("PATH")}, -- TODO: correct path env by using special feature script
     {"USER",defaults.user},
     {"LOGNAME",defaults.user}
   }
-
-  if defaults.user=="root" then defaults.env.set_home[2]={"PATH","/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"} end
 
   defaults.env.set_xdg_runtime={ {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",defaults.uid)} }
 
