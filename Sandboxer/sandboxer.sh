@@ -123,26 +123,6 @@ check_errors () {
   fi
 }
 
-# extra env used by slave executor module ONLY
-# "-post" features may use it to add extra env definitions to executor module
-extra_env_set_name=()
-extra_env_set_value=()
-extra_env_set_cnt=0
-
-extra_env_set_add() {
-  extra_env_set_name[$extra_env_set_cnt]="$1"
-  extra_env_set_value[$extra_env_set_cnt]="$2"
-  extra_env_set_cnt=$((extra_env_set_cnt+1))
-}
-
-extra_env_unset=()
-extra_env_unset_cnt=0
-
-extra_env_unset_add() {
-  extra_env_unset[$extra_env_unset_cnt]="$1"
-  extra_env_unset_cnt=$((extra_env_unset_cnt+1))
-}
-
 #placeholder for run-profile.sh.in
 wait_for_cmd_list() { true; }
 
@@ -317,6 +297,26 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
 fi
 ###############################
 #check that executor is running
+
+# extra env used by slave executor module ONLY
+# "-post" features may use it to add extra env definitions to slave executor module
+extra_env_set_name=()
+extra_env_set_value=()
+extra_env_set_cnt=0
+
+extra_env_set_add() {
+  extra_env_set_name[$extra_env_set_cnt]="$1"
+  extra_env_set_value[$extra_env_set_cnt]="$2"
+  extra_env_set_cnt=$((extra_env_set_cnt+1))
+}
+
+extra_env_unset=()
+extra_env_unset_cnt=0
+
+extra_env_unset_add() {
+  extra_env_unset[$extra_env_unset_cnt]="$1"
+  extra_env_unset_cnt=$((extra_env_unset_cnt+1))
+}
 
 #post-launch features
 
