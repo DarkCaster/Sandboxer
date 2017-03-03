@@ -221,40 +221,6 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   # load env lists management logic for bwrap
   . "$includes_dir/sandbox-defines-bwrap.sh.in"
 
-  bwrap_params=()
-  bwrap_param_cnt=0
-
-  bwrap_add_param() {
-    bwrap_params[$bwrap_param_cnt]="$@"
-    #debug
-    #echo "added: $@"
-    bwrap_param_cnt=$((bwrap_param_cnt+1))
-  }
-
-  bwrap_process_list_contents() {
-    local list="$1"
-    local top_cnt=1
-    while `check_lua_export "$list.$top_cnt"`
-    do
-      if [ "$top_cnt" = "1" ]; then
-        bwrap_add_param "--${cfg[$list.$top_cnt]}"
-      else
-        bwrap_add_param "${cfg[$list.$top_cnt]}"
-      fi
-      top_cnt=$((top_cnt+1))
-    done
-  }
-
-  bwrap_process_list() {
-    local list="$1"
-    local cnt=1
-    while `check_lua_export "$list.$cnt"`
-    do
-      bwrap_process_list_contents "$list.$cnt"
-      cnt=$((cnt+1))
-    done
-  }
-
   log "creating sandbox"
 
   #chroot dir
@@ -273,9 +239,6 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
 
   #this will start commands execution in subshell and in background
   exec_cmd_list_in_bg "sandbox.setup.commands"
-
-  # for now enforce --new-session parameter
-  bwrap_add_param "--new-session"
 
   if check_lua_export "sandbox.setup.env_whitelist"; then
     find_env_whitelist_match () {
@@ -314,12 +277,11 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   #set default env by bwrap
   env_set_add_list "sandbox.setup.env_set"
 
-  #append remaining parameters from sandbox.bwrap table
-  bwrap_process_list "sandbox.bwrap"
+  #initialize parameters for selected sandboxing tool
+  #(bwrap for now - it will read and apply parameters from "sandbox.bwrap")
+  sandbox_init
 
   #append parameters to mount executor binary and control directory
-  bwrap_add_param "--dir"
-  bwrap_add_param "/executor"
   bwrap_add_param "--ro-bind"
   bwrap_add_param "$basedir/executor"
   bwrap_add_param "/executor/executor"

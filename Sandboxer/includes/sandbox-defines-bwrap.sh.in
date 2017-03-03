@@ -138,3 +138,52 @@ env_unset_get_names() {
     fi
   done
 }
+
+bwrap_params=()
+bwrap_param_cnt=0
+
+bwrap_add_param() {
+  bwrap_params[$bwrap_param_cnt]="$@"
+  #debug
+  #echo "added: $@"
+  bwrap_param_cnt=$((bwrap_param_cnt+1))
+}
+
+bwrap_process_list_contents() {
+  local list="$1"
+  local top_cnt=1
+  while `check_lua_export "$list.$top_cnt"`
+  do
+    if [ "$top_cnt" = "1" ]; then
+      bwrap_add_param "--${cfg[$list.$top_cnt]}"
+    else
+      bwrap_add_param "${cfg[$list.$top_cnt]}"
+    fi
+    top_cnt=$((top_cnt+1))
+  done
+}
+
+bwrap_process_list() {
+  local list="$1"
+  local cnt=1
+  while `check_lua_export "$list.$cnt"`
+  do
+    bwrap_process_list_contents "$list.$cnt"
+    cnt=$((cnt+1))
+  done
+}
+
+# for now enforce --new-session parameter
+bwrap_add_param "--new-session"
+
+sandbox_init() {
+  bwrap_process_list "sandbox.bwrap"
+}
+
+sandbox_bind_ro() {
+  true
+}
+
+sandbox_bind_rw() {
+  true
+}
