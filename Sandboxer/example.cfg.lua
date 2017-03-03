@@ -89,7 +89,8 @@ sandbox={
   features={
     "dbus", -- run dbus-session instance inside sandbox, and allow other sandbox sessions to use it
     "gvfs_fix", -- fix gvfs setup inside sandbox, and strip down it's features to bare minimum. TODO: find out what removed gvfs features works inside sandbox and reenable it
-    "pulse",
+    "pulse", -- make pass-through of running pulseaudio daemon from host to sandbox env. may be used together with defaults.bwrap.devsnd_mount if you also need alsa and mixer functionality
+    "envfix", -- fix final env variables in sandbox - change all links to host home dir to sandboxed home dir
   },
 
   -- main sandbox setup parameters such as:
