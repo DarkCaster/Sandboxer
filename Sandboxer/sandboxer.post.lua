@@ -151,9 +151,8 @@ function loader.check_bwrap_entry(entry,name)
   end
 end
 
-function loader.transform_bwrap_list(target, name)
-  assert(type(target)=="table", name.." table is incorrect")
-  local result={}
+function loader.transform_bwrap_list(target, name, result)
+  assert(type(target)=="table", name.." table is incorrect or missing")
   for i1,f1 in ipairs(target) do  -- f1 is a container top-level element
     assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
     for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
@@ -169,10 +168,15 @@ function loader.transform_bwrap_list(target, name)
       end
     end -- for 2nd-level
   end -- for 1nd-level
-  return result
 end
 
-sandbox.bwrap=loader.transform_bwrap_list(sandbox.bwrap,"sandbox.bwrap")
+-- produce result sandbox.bwrap tables with all definitions needed for bwrap to perform mounts and it's setup tasks.
+-- if there will be added another sandboxing tool support, this part will be different.
+-- for now just transform, simplify and concatenate sandbox.setup.mounts and sandbox.bwrap tables.
+loader.bwrap_table_result={}
+loader.transform_bwrap_list(sandbox.bwrap,"sandbox.bwrap",loader.bwrap_table_result)
+loader.transform_bwrap_list(sandbox.setup.mounts,"sandbox.setup.mounts",loader.bwrap_table_result)
+sandbox.bwrap=loader.bwrap_table_result
 
 -- sort bwrap table, according to prio parameters
 function loader.bwrap_compare(first,second)
