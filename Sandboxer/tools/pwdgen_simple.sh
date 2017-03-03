@@ -60,9 +60,11 @@ check_errors
 false_bin=`2>/dev/null which "false"`
 test ! -z "$false_bin" || check_errors "'false' binary detection failed"
 
+login_shell=`getent passwd $USER | cut -d':' -f7`
+
 #group and passwd records for target user and it's main group
 cache_add "$tgt_gid"
-echo "$tgt_name:x:$tgt_uid:$tgt_gid:$tgt_name:$tgt_home:$false_bin" >> "$passwd_out"
+echo "$tgt_name:x:$tgt_uid:$tgt_gid:$tgt_name:$tgt_home:$login_shell" >> "$passwd_out"
 check_errors
 echo "$tgt_name:x:$tgt_gid:" >> "$group_out"
 check_errors
