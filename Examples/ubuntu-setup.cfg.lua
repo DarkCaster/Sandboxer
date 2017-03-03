@@ -53,15 +53,15 @@ sandbox={
     defaults.bwrap.unshare_uts,
     defaults.bwrap.uid,
     defaults.bwrap.gid,
-    defaults.bwrap.proc_mount,
-    defaults.bwrap.dev_mount,
-    defaults.bwrap.xdg_runtime_dir,
-    defaults.bwrap.bin_rw_mount,
-    defaults.bwrap.usr_rw_mount,
-    defaults.bwrap.lib_rw_mount,
-    defaults.bwrap.lib64_rw_mount,
-    defaults.bwrap.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
-    defaults.bwrap.x11_mount, -- optional for root usage, may be used to run synaptic
+    defaults.mounts.proc_mount,
+    defaults.mounts.dev_mount,
+    defaults.mounts.xdg_runtime_dir,
+    defaults.mounts.bin_rw_mount,
+    defaults.mounts.usr_rw_mount,
+    defaults.mounts.lib_rw_mount,
+    defaults.mounts.lib64_rw_mount,
+    defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
+    defaults.mounts.x11_mount, -- optional for root usage, may be used to run synaptic
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc"),"/etc"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
     {prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},

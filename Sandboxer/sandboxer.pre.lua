@@ -149,43 +149,44 @@ defaults.bwrap.unshare_net={prio=0,tag="unshare-net","unshare-net"}
 defaults.bwrap.unshare_uts={prio=0,tag="unshare-uts","unshare-uts"}
 defaults.bwrap.unshare_cgroup={prio=0,tag="unshare-cgroup","unshare-cgroup"}
 defaults.bwrap.unshare_all={prio=0,tag="unshare-all","unshare-all"}
--- essential directories and mounts
-defaults.bwrap.run_dir={prio=10,tag="run","dir","/run"}
-defaults.bwrap.tmp_dir={prio=10,tag="tmp","dir","/tmp"}
-defaults.bwrap.var_dir={prio=10,tag="var","dir","/var"}
-defaults.bwrap.proc_mount={prio=10,tag="proc","proc","/proc"}
-defaults.bwrap.dev_mount={prio=10,tag="dev","dev","/dev"}
-defaults.bwrap.system_group={
+
+-- defines for mounts
+defaults.mounts.run_dir={prio=10,tag="run","dir","/run"}
+defaults.mounts.tmp_dir={prio=10,tag="tmp","dir","/tmp"}
+defaults.mounts.var_dir={prio=10,tag="var","dir","/var"}
+defaults.mounts.proc_mount={prio=10,tag="proc","proc","/proc"}
+defaults.mounts.dev_mount={prio=10,tag="dev","dev","/dev"}
+defaults.mounts.system_group={
   prio=10,
-  defaults.bwrap.run_dir,
-  defaults.bwrap.tmp_dir,
-  defaults.bwrap.var_dir,
-  defaults.bwrap.proc_mount,
-  defaults.bwrap.dev_mount,
+  defaults.mounts.run_dir,
+  defaults.mounts.tmp_dir,
+  defaults.mounts.var_dir,
+  defaults.mounts.proc_mount,
+  defaults.mounts.dev_mount,
 }
 
-defaults.bwrap.sys_mount={prio=10,tag="sys","ro-bind","/sys","/sys"}
+defaults.mounts.sys_mount={prio=10,tag="sys","ro-bind","/sys","/sys"}
 
-defaults.bwrap.host_bin_mount={prio=10,tag="bin","ro-bind","/bin","/bin"}
-defaults.bwrap.host_usr_mount={prio=10,tag="usr","ro-bind","/usr","/usr"}
-defaults.bwrap.host_lib_mount={prio=10,tag="lib","ro-bind","/lib","/lib"}
-defaults.bwrap.host_lib64_mount={prio=10,tag="lib64","ro-bind","/lib64","/lib64"}
-defaults.bwrap.host_essentials_group={
+defaults.mounts.host_bin_mount={prio=10,tag="bin","ro-bind","/bin","/bin"}
+defaults.mounts.host_usr_mount={prio=10,tag="usr","ro-bind","/usr","/usr"}
+defaults.mounts.host_lib_mount={prio=10,tag="lib","ro-bind","/lib","/lib"}
+defaults.mounts.host_lib64_mount={prio=10,tag="lib64","ro-bind","/lib64","/lib64"}
+defaults.mounts.host_essentials_group={
   prio=10,
-  defaults.bwrap.host_bin_mount,
-  defaults.bwrap.host_usr_mount,
-  defaults.bwrap.host_lib_mount,
-  defaults.bwrap.host_lib64_mount,
+  defaults.mounts.host_bin_mount,
+  defaults.mounts.host_usr_mount,
+  defaults.mounts.host_lib_mount,
+  defaults.mounts.host_lib64_mount,
 }
 
-defaults.bwrap.host_etc_mount={prio=10,tag="etc","ro-bind","/etc","/etc"}
+defaults.mounts.host_etc_mount={prio=10,tag="etc","ro-bind","/etc","/etc"}
 
 -- service mounts
-defaults.bwrap.dbus_system_mount={prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
-defaults.bwrap.x11_mount={prio=20,tag="x11","bind","/tmp/.X11-unix","/tmp/.X11-unix"}
-defaults.bwrap.devsnd_mount={prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
-defaults.bwrap.devdri_mount={prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
-defaults.bwrap.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
+defaults.mounts.dbus_system_mount={prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
+defaults.mounts.x11_mount={prio=20,tag="x11","bind","/tmp/.X11-unix","/tmp/.X11-unix"}
+defaults.mounts.devsnd_mount={prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
+defaults.mounts.devdri_mount={prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
+defaults.mounts.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
 
 -- various tunables for features
 defaults.features.gvfs_fix_search_prefix="/"
@@ -263,51 +264,51 @@ function defaults.recalculate()
 
   defaults.env.set_xdg_runtime={ {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",defaults.uid)} }
 
-  defaults.bwrap.bin_ro_mount={prio=10,tag="bin","ro-bind",loader.path.combine(defaults.chrootdir,"/bin"),"/bin"}
+  defaults.mounts.bin_ro_mount={prio=10,tag="bin","ro-bind",loader.path.combine(defaults.chrootdir,"/bin"),"/bin"}
 
-  defaults.bwrap.usr_ro_mount={prio=10,tag="usr","ro-bind",loader.path.combine(defaults.chrootdir,"/usr"),"/usr"}
+  defaults.mounts.usr_ro_mount={prio=10,tag="usr","ro-bind",loader.path.combine(defaults.chrootdir,"/usr"),"/usr"}
 
-  defaults.bwrap.lib_ro_mount={prio=10,tag="lib","ro-bind",loader.path.combine(defaults.chrootdir,"/lib"),"/lib"}
+  defaults.mounts.lib_ro_mount={prio=10,tag="lib","ro-bind",loader.path.combine(defaults.chrootdir,"/lib"),"/lib"}
 
-  defaults.bwrap.lib64_ro_mount={prio=10,tag="lib64","ro-bind",loader.path.combine(defaults.chrootdir,"/lib64"),"/lib64"}
+  defaults.mounts.lib64_ro_mount={prio=10,tag="lib64","ro-bind",loader.path.combine(defaults.chrootdir,"/lib64"),"/lib64"}
 
-  defaults.bwrap.chroot_ro_essentials_group={
+  defaults.mounts.chroot_ro_essentials_group={
     prio=10,
-    defaults.bwrap.bin_ro_mount,
-    defaults.bwrap.usr_ro_mount,
-    defaults.bwrap.lib_ro_mount,
-    defaults.bwrap.lib64_ro_mount,
+    defaults.mounts.bin_ro_mount,
+    defaults.mounts.usr_ro_mount,
+    defaults.mounts.lib_ro_mount,
+    defaults.mounts.lib64_ro_mount,
   }
 
-  defaults.bwrap.bin_rw_mount={prio=10,tag="bin","bind",defaults.bwrap.bin_ro_mount[2],"/bin"}
+  defaults.mounts.bin_rw_mount={prio=10,tag="bin","bind",defaults.mounts.bin_ro_mount[2],"/bin"}
 
-  defaults.bwrap.usr_rw_mount={prio=10,tag="usr","bind",defaults.bwrap.usr_ro_mount[2],"/usr"}
+  defaults.mounts.usr_rw_mount={prio=10,tag="usr","bind",defaults.mounts.usr_ro_mount[2],"/usr"}
 
-  defaults.bwrap.lib_rw_mount={prio=10,tag="lib","bind",defaults.bwrap.lib_ro_mount[2],"/lib"}
+  defaults.mounts.lib_rw_mount={prio=10,tag="lib","bind",defaults.mounts.lib_ro_mount[2],"/lib"}
 
-  defaults.bwrap.lib64_rw_mount={prio=10,tag="lib64","bind",defaults.bwrap.lib64_ro_mount[2],"/lib64"}
+  defaults.mounts.lib64_rw_mount={prio=10,tag="lib64","bind",defaults.mounts.lib64_ro_mount[2],"/lib64"}
 
-  defaults.bwrap.chroot_rw_essentials_group={
+  defaults.mounts.chroot_rw_essentials_group={
     prio=10,
-    defaults.bwrap.bin_rw_mount,
-    defaults.bwrap.usr_rw_mount,
-    defaults.bwrap.lib_rw_mount,
-    defaults.bwrap.lib64_rw_mount,
+    defaults.mounts.bin_rw_mount,
+    defaults.mounts.usr_rw_mount,
+    defaults.mounts.lib_rw_mount,
+    defaults.mounts.lib64_rw_mount,
   }
 
-  defaults.bwrap.etc_ro_mount={prio=10,tag="etc","ro-bind",etc,"/etc"}
+  defaults.mounts.etc_ro_mount={prio=10,tag="etc","ro-bind",etc,"/etc"}
 
-  defaults.bwrap.etc_rw_mount={prio=10,tag="etc","bind",etc,"/etc"}
+  defaults.mounts.etc_rw_mount={prio=10,tag="etc","bind",etc,"/etc"}
 
-  defaults.bwrap.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",defaults.uid)}
+  defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",defaults.uid)}
 
-  defaults.bwrap.home_mount={prio=20,tag="home","bind",home,"/home"}
+  defaults.mounts.home_mount={prio=20,tag="home","bind",home,"/home"}
 
-  defaults.bwrap.var_cache_mount={prio=20,tag="cache","bind",cache,"/var/cache"}
+  defaults.mounts.var_cache_mount={prio=20,tag="cache","bind",cache,"/var/cache"}
 
-  defaults.bwrap.var_tmp_mount={prio=20,tag="vartmp","bind",tmp,"/var/tmp"}
+  defaults.mounts.var_tmp_mount={prio=20,tag="vartmp","bind",tmp,"/var/tmp"}
 
-  defaults.bwrap.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
+  defaults.mounts.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
 
   if config.uid~=defaults.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",defaults.uid} else defaults.bwrap.uid={} end
 

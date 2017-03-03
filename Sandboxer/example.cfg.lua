@@ -89,7 +89,7 @@ sandbox={
   features={
     "dbus", -- run dbus-session instance inside sandbox, and allow other sandbox sessions to use it
     "gvfs_fix", -- fix gvfs setup inside sandbox, and strip down it's features to bare minimum. TODO: find out what removed gvfs features works inside sandbox and reenable it
-    "pulse", -- make pass-through of running pulseaudio daemon from host to sandbox env. may be used together with defaults.bwrap.devsnd_mount if you also need alsa and mixer functionality
+    "pulse", -- make pass-through of running pulseaudio daemon from host to sandbox env. may be used together with defaults.mounts.devsnd_mount if you also need alsa and mixer functionality
     "envfix", -- fix final env variables in sandbox - change all links to host home dir to sandboxed home dir
   },
 
@@ -210,40 +210,40 @@ sandbox={
     -- defaults.bwrap.unshare_cgroup,
     defaults.bwrap.uid, -- set uid inside sandbox according to defaults.uid setting. if you manually change defaults.uid - use of this entry is mandatory.
     defaults.bwrap.gid, -- set gid inside sandbox according to defaults.gid setting. if you manually change defaults.gid - use of this entry is mandatory.
-    defaults.bwrap.system_group,
-    -- defaults.bwrap.run_dir, -- included in "system_group"
-    -- defaults.bwrap.tmp_dir, -- included in "system_group"
-    -- defaults.bwrap.proc_mount, -- included in "system_group". mount /proc prepared by bwrap (according by unshare_* options)
-    -- defaults.bwrap.dev_mount, -- included in "system_group". mount /dev, prepared and filtered by bwrap
-    -- defaults.bwrap.var_dir, -- included in "system_group"
-    defaults.bwrap.xdg_runtime_dir,
+    defaults.mounts.system_group,
+    -- defaults.mounts.run_dir, -- included in "system_group"
+    -- defaults.mounts.tmp_dir, -- included in "system_group"
+    -- defaults.mounts.proc_mount, -- included in "system_group". mount /proc prepared by bwrap (according by unshare_* options)
+    -- defaults.mounts.dev_mount, -- included in "system_group". mount /dev, prepared and filtered by bwrap
+    -- defaults.mounts.var_dir, -- included in "system_group"
+    defaults.mounts.xdg_runtime_dir,
     -- make some essential mounts
-    defaults.bwrap.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
-    defaults.bwrap.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
-    defaults.bwrap.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
-    defaults.bwrap.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-    -- defaults.bwrap.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-    -- defaults.bwrap.host_etc_mount, -- readonly mount host etc directory
+    defaults.mounts.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
+    defaults.mounts.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
+    defaults.mounts.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
+    defaults.mounts.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+    -- defaults.mounts.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+    -- defaults.mounts.host_etc_mount, -- readonly mount host etc directory
     -- other mounts, also essential for normal operation
-    -- defaults.bwrap.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
-    defaults.bwrap.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net
-    defaults.bwrap.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
-    defaults.bwrap.devdri_mount, -- mount /dev/dri to allow hardware acceleration
-    defaults.bwrap.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
+    -- defaults.mounts.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
+    defaults.mounts.x11_mount, -- mount x11 socket on host filesystem, required if you want to use host x11 when using defaults.bwrap.unshare_net
+    defaults.mounts.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
+    defaults.mounts.devdri_mount, -- mount /dev/dri to allow hardware acceleration
+    defaults.mounts.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
     -- TODO: add mounts only to some parts of sys directory only needed for particular apps to work
-    defaults.bwrap.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
-    defaults.bwrap.host_bin_mount, -- readonly mount host /bin directory
-    defaults.bwrap.host_usr_mount, -- readonly mount host /usr directory
-    defaults.bwrap.host_lib_mount, -- readonly mount host /lib directory
-    defaults.bwrap.host_lib64_mount, -- readonly mount host /lib64 directory
-  -- defaults.bwrap.bin_ro_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
-  -- defaults.bwrap.usr_ro_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
-  -- defaults.bwrap.lib_ro_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
-  -- defaults.bwrap.lib64_ro_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
-  -- defaults.bwrap.bin_rw_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
-  -- defaults.bwrap.usr_rw_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
-  -- defaults.bwrap.lib_rw_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
-  -- defaults.bwrap.lib64_rw_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
+    defaults.mounts.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
+    defaults.mounts.host_bin_mount, -- readonly mount host /bin directory
+    defaults.mounts.host_usr_mount, -- readonly mount host /usr directory
+    defaults.mounts.host_lib_mount, -- readonly mount host /lib directory
+    defaults.mounts.host_lib64_mount, -- readonly mount host /lib64 directory
+  -- defaults.mounts.bin_ro_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
+  -- defaults.mounts.usr_ro_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
+  -- defaults.mounts.lib_ro_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
+  -- defaults.mounts.lib64_ro_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
+  -- defaults.mounts.bin_rw_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
+  -- defaults.mounts.usr_rw_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
+  -- defaults.mounts.lib_rw_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
+  -- defaults.mounts.lib64_rw_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
   }
 }
 
