@@ -25,12 +25,8 @@ if [ ! -z "$gvfs_src" ]; then
   gvfs_mount_cnt=$((gvfs_mount_cnt+1))
  done
  #TODO: remote-volume-monitors
- bwrap_add_param "--ro-bind"
- bwrap_add_param "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
- bwrap_add_param "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts"
- bwrap_add_param "--ro-bind"
- bwrap_add_param "${cfg[defaults.features.gvfs_fix_dir]}/remote-volume-monitors"
- bwrap_add_param "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/remote-volume-monitors"
+ sandbox_bind_ro "${cfg[defaults.features.gvfs_fix_dir]}/mounts" "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts"
+ sandbox_bind_ro "${cfg[defaults.features.gvfs_fix_dir]}/remote-volume-monitors" "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/remote-volume-monitors"
 else
  log "gvfs location not found, skipping"
 fi

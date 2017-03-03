@@ -32,9 +32,7 @@ if [ ! -z "$fixups_srcdir" ]; then
     check_errors
   done
   # add mounts entries for fixups directory
-  bwrap_add_param "--ro-bind"
-  bwrap_add_param "${cfg[defaults.features.fixups_dir]}"
-  bwrap_add_param "/fixups"
+  sandbox_bind_ro "${cfg[defaults.features.fixups_dir]}" "/fixups"
 else
   log "fixups directory not found, skipping feature activation"
 fi

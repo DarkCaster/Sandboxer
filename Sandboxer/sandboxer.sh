@@ -172,12 +172,9 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     #debug
     #log "executing commands from $list list"
     (
-    #cleanup current env to enhance secutity when running custom commands
-    unset -f exec_cmd_list_in_bg wait_for_cmd_list extra_env_unset_add extra_env_set_add check_errors teardown lock_exit lock_enter \
-    bwrap_add_param bwrap_process_list_contents bwrap_process_list
-    unset extra_env_unset extra_env_unset_cnt extra_env_set_name extra_env_set_value extra_env_set_cnt lock_entered \
-    basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid \
-    bwrap_params bwrap_param_cnt feature_cnt
+    #cleanup some important defines when running custom commands to prevent possible problems
+    unset -f exec_cmd_list_in_bg wait_for_cmd_list check_errors teardown lock_exit lock_enter
+    unset lock_entered basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid
     local top_cnt=1
     local err_code=0
     local exec_bg_pid_error=""
@@ -281,13 +278,9 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   #(bwrap for now - it will read and apply parameters from "sandbox.bwrap")
   sandbox_init
 
-  #append parameters to mount executor binary and control directory
-  bwrap_add_param "--ro-bind"
-  bwrap_add_param "$basedir/executor"
-  bwrap_add_param "/executor/executor"
-  bwrap_add_param "--bind"
-  bwrap_add_param "$basedir/control"
-  bwrap_add_param "/executor/control"
+  #add sandbox mounts for executor
+  sandbox_bind_ro "$basedir/executor" "/executor/executor"
+  sandbox_bind_rw "$basedir/control" "/executor/control"
 
   #pre-launch features
   feature_cnt=1
