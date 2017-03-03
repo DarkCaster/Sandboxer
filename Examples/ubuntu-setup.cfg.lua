@@ -44,6 +44,27 @@ sandbox={
       --[[{"HOME","/root"},
       {"USER",defaults.user},
       {"LOGNAME",defaults.user},]]--
+    },
+    mounts={
+      defaults.mounts.proc_mount,
+      defaults.mounts.dev_mount,
+      defaults.mounts.xdg_runtime_dir,
+      defaults.mounts.bin_rw_mount,
+      defaults.mounts.usr_rw_mount,
+      defaults.mounts.lib_rw_mount,
+      defaults.mounts.lib64_rw_mount,
+      defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
+      defaults.mounts.x11_mount, -- optional for root usage, may be used to run synaptic
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc"),"/etc"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"run"),"/run"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"sbin"),"/sbin"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"srv"),"/srv"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"opt"),"/opt"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"tmp"),"/tmp"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"var"),"/var"},
+      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"home"),"/home"},
     }
   },
   bwrap={
@@ -53,25 +74,6 @@ sandbox={
     defaults.bwrap.unshare_uts,
     defaults.bwrap.uid,
     defaults.bwrap.gid,
-    defaults.mounts.proc_mount,
-    defaults.mounts.dev_mount,
-    defaults.mounts.xdg_runtime_dir,
-    defaults.mounts.bin_rw_mount,
-    defaults.mounts.usr_rw_mount,
-    defaults.mounts.lib_rw_mount,
-    defaults.mounts.lib64_rw_mount,
-    defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
-    defaults.mounts.x11_mount, -- optional for root usage, may be used to run synaptic
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc"),"/etc"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"run"),"/run"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"sbin"),"/sbin"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"srv"),"/srv"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"opt"),"/opt"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"tmp"),"/tmp"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"var"),"/var"},
-    {prio=10,"bind",loader.path.combine(defaults.chrootdir,"home"),"/home"},
   }
 }
 
