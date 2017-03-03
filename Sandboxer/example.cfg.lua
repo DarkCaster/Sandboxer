@@ -105,8 +105,8 @@ sandbox={
     -- for now it is just a 32-bit unsigned number, it may change in future
     security_key=42,  -- optional
 
-    -- use static build of executor binary. may be useful for use in very restrictive, minimalistic or other custom chroots
-    static_executor=false, -- optional, will be set automatically to false if missing.
+    -- select executor build for use inside sandox. builds other than "default" may be downloaded with sandboxer-download-extra.sh script
+    executor_build="default", -- optional
 
     -- perform control directory cleanup after all sandbox sessions are closed and sandbox is destroyed.
     -- may be disabled for debug purposes. may also decrease time to full sandbox startup that is performed when no sessions currently running

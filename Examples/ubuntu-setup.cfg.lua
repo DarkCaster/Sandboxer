@@ -16,7 +16,10 @@ sandbox={
     "rootfixups",
   },
   setup={
-    static_executor=false,
+    executor_build="default",
+    --use one of this builds, if you experience problems with default
+    --executor_build="ubuntu-12.04",
+    --executor_build="ubuntu-16.10",
     commands={
       --disable automatic services startup on package installing
       --(or else dpkg configure stage will fail, becase there is no running init daemon inside sandbox)
