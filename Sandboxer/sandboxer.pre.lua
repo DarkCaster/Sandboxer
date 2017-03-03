@@ -244,7 +244,7 @@ function defaults.recalculate()
 
   defaults.commands.passwd={
     'mkdir -p "'..etc..'"',
-    loader.path.combine(config.tools_dir,"pwdgen.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
+    loader.path.combine(config.tools_dir,"pwdgen_simple.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
   }
 
   defaults.commands.x11={ 'test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true' }
