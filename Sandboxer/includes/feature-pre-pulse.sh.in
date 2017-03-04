@@ -70,6 +70,8 @@ if [ ! -z "$pulse_cookie" ] && [ -f "$pulse_cookie" ]; then
  check_errors
  chmod 600 "${cfg[defaults.features.pulse_dir]}/cookie"
  env_set_add "PULSE_COOKIE" "/etc/pulse/cookie"
+else
+  test ! -z "$pulse_cookie" && log "warning: cannot copy pulse cookie, debug: pulse_cookie=$pulse_cookie"
 fi
 
 if [ "$pulse_server_is_socket" = "true" ] && [ -S "${cfg[defaults.features.pulse_dir]}/socket" ]; then
