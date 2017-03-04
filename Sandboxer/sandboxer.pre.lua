@@ -188,6 +188,7 @@ defaults.mounts.x11_mount={prio=20,tag="x11","bind","/tmp/.X11-unix","/tmp/.X11-
 defaults.mounts.devsnd_mount={prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
 defaults.mounts.devdri_mount={prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
 defaults.mounts.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
+defaults.mounts.devshm_mount={prio=20,tag="devshm","bind","/dev/shm","/dev/shm"}
 
 -- various tunables for features
 defaults.features.gvfs_fix_search_prefix="/"
