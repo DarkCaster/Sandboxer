@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ ! -z "$x11host_pre_triggered" ]; then
+  x11util_dir=""
+  for hint in "$HOME/.cache/sandboxer/x11util-${cfg[defaults.features.x11util_build]}" "$script_dir/x11util" "$script_dir/../Build/x11util"
+  do
+    test -z "$hint" -o ! -d "$hint" && continue
+    #cp "$hint" ...
+    #check_errors
+  done
+fi
