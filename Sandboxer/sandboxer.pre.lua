@@ -318,6 +318,8 @@ function defaults.recalculate()
   defaults.features.fixups_dir=loader.path.combine(defaults.chrootdir,defaults.fixupsdir_name)
 
   defaults.features.envfix_home=chroot_home
+
+  defaults.features.x11host_target_dir=user
 end
 
 defaults.recalculate()

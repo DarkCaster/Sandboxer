@@ -1,3 +1,23 @@
 #!/bin/bash
 
 # prepare host x11 passthrough to sandbox
+
+if [ -d "${cfg[defaults.features.x11host_target_dir]}" ] && [ -f "$HOME/.Xauthority" ]; then
+  # copy .Xauthority to user's home dir inside sandbox
+  cp "$HOME/.Xauthority" "${cfg[defaults.features.x11host_target_dir]}"
+else
+  # or allow access to x11 with xhost utility
+  &>/dev/null xhost "+si:localuser:$USER"
+fi
+
+# export DISPLAY variable
+env_set_add "DISPLAY" "$DISPLAY"
+
+# export XCURSOR_THEME
+test ! -z "$XCURSOR_THEME" && env_set_add "XCURSOR_THEME" "$XCURSOR_THEME"
+
+# bind socket
+sandbox_bind_rw "/tmp/.X11-unix" "/tmp/.X11-unix"
+
+# set flag, that will be used later at -post feature script
+x11host_pre_triggered=1
