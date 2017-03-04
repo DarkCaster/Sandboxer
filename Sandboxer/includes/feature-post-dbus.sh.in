@@ -3,52 +3,52 @@
 # dbus feature
 
 if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; then
- #remove old dbus-daemon.stdout
- rm -f "$basedir/dbus-daemon.stdout"
- check_errors
- log "starting new dbus session"
- #execute dbus daemon in background
- exec_profile="dbus"
- if [ "${cfg[$exec_profile.exec]}" == "placeholder" ]; then
-  cfg[$exec_profile.exec]=`2>/dev/null which "dbus-daemon"`
-  test -z "${cfg[$exec_profile.exec]}" && log "dbus-daemon binary is not found!" && teardown 1
- fi
- . "$includes_dir/channel-open.sh.in"
- exec_bg="true"
- exec_bg_pid=""
- exec_log_out="$basedir/dbus-daemon.stdout"
- exec_log_err="$basedir/dbus-daemon.stderr"
- . "$includes_dir/run-profile.sh.in"
- #wait for output
- dbus_wait=400
- while [ $dbus_wait -ge 1 ]
- do
-  if [ -f "$basedir/dbus-daemon.stdout" ] && [ `wc -l <"$basedir/dbus-daemon.stdout"` = 2 ]; then
-   mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"
-   if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
-    dbus_env="${dbus_env_a[0]}"
-    break
-   fi
+  #remove old dbus-daemon.stdout
+  rm -f "$basedir/dbus-daemon.stdout"
+  check_errors
+  log "starting new dbus session"
+  #execute dbus daemon in background
+  exec_profile="dbus"
+  if [ "${cfg[$exec_profile.exec]}" == "placeholder" ]; then
+    cfg[$exec_profile.exec]=`2>/dev/null which "dbus-daemon"`
+    test -z "${cfg[$exec_profile.exec]}" && log "dbus-daemon binary is not found!" && teardown 1
   fi
-  sleep 0.025
-  dbus_wait=$((dbus_wait-1))
- done
- #detach commander for dbus session if it is running
- 2>/dev/null kill -SIGUSR2 $exec_bg_pid
- check_errors "failed to send detach command to dbus-session commander"
- (. "$includes_dir/dbus-watchdog.sh.in" ) &>"$basedir/dbus-watchdog.log" &
+  . "$includes_dir/channel-open.sh.in"
+  exec_bg="true"
+  exec_bg_pid=""
+  exec_log_out="$basedir/dbus-daemon.stdout"
+  exec_log_err="$basedir/dbus-daemon.stderr"
+  . "$includes_dir/run-profile.sh.in"
+  #wait for output
+  dbus_wait=400
+  while [ $dbus_wait -ge 1 ]
+  do
+    if [ -f "$basedir/dbus-daemon.stdout" ] && [ `wc -l <"$basedir/dbus-daemon.stdout"` = 2 ]; then
+      mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"
+      if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
+        dbus_env="${dbus_env_a[0]}"
+        break
+      fi
+    fi
+    sleep 0.025
+    dbus_wait=$((dbus_wait-1))
+  done
+  #detach commander for dbus session if it is running
+  2>/dev/null kill -SIGUSR2 $exec_bg_pid
+  check_errors "failed to send detach command to dbus-session commander"
+  (. "$includes_dir/dbus-watchdog.sh.in" ) &>"$basedir/dbus-watchdog.log" &
 elif [ -p "$basedir/control/dbus.in" ] && [ -p "$basedir/control/dbus.out" ]; then
- # just read already created dbus-daemon.stdout
- mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"
- if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
-  dbus_env="${dbus_env_a[0]}"
- fi
+  # just read already created dbus-daemon.stdout
+  mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"
+  if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
+    dbus_env="${dbus_env_a[0]}"
+  fi
 fi
 
 # check, do we succeed with dbus startup, and do not procced if we are not
 if [ -z "$dbus_env" ]; then
- log "failed to get valid dbus-daemon env parameters"
- teardown 1
+  log "failed to get valid dbus-daemon env parameters"
+  teardown 1
 fi
 
 extra_env_set_add "DBUS_SESSION_BUS_ADDRESS" "$dbus_env"
