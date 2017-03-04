@@ -205,6 +205,8 @@ defaults.features.pulse_env={
 
 defaults.features.pulse_env_alsa_config=""
 
+defaults.features.x11util_build="default"
+
 -- (re)create tables that rely on tunable parameters
 function defaults.recalculate()
 
