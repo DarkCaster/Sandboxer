@@ -134,14 +134,6 @@ defaults.env.blacklist_xdg={
   "XDG_SESSION_TYPE",
 }
 
-defaults.env.set_x11={
-  {"DISPLAY",os.getenv("DISPLAY")}
-}
-
-if os.getenv("XCURSOR_THEME")~=nil then
-  table.insert(defaults.env.set_x11,{"XCURSOR_THEME",os.getenv("XCURSOR_THEME")})
-end
-
 -- main bwrap command line options
 defaults.bwrap.unshare_user={prio=0,tag="unshare-user","unshare-user"}
 defaults.bwrap.unshare_ipc={prio=0,tag="unshare-ipc","unshare-ipc"}
@@ -184,7 +176,6 @@ defaults.mounts.host_etc_mount={prio=10,tag="etc","ro-bind","/etc","/etc"}
 
 -- service mounts
 defaults.mounts.dbus_system_mount={prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
-defaults.mounts.x11_mount={prio=20,tag="x11","bind","/tmp/.X11-unix","/tmp/.X11-unix"}
 defaults.mounts.devsnd_mount={prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
 defaults.mounts.devdri_mount={prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
 defaults.mounts.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
@@ -239,7 +230,7 @@ function defaults.recalculate()
 
   defaults.commands.etc_dbus={ 'mkdir -p "'..etc..'"','cp -rf "'..etchost_path..'/dbus"* "'..etc..'"' }
 
-  defaults.commands.etc_x11={ 'mkdir -p "'..etc..'"','cp -rf "'..etchost_path..'/X11" "'..etc..'"','cp -rf "'..etchost_path..'/fonts" "'..etc..'"'}
+  defaults.commands.etc_x11={ 'mkdir -p "'..etc..'"','cp -rf "'..etchost_path..'/X11" "'..etc..'"'}
 
   defaults.commands.etc_udev={'mkdir -p "'..etc..'"','cp -rf "'..etchost_path..'/udev" "'..etc..'"'}
 
@@ -247,8 +238,6 @@ function defaults.recalculate()
     'mkdir -p "'..etc..'"',
     loader.path.combine(config.tools_dir,"pwdgen_simple.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
   }
-
-  defaults.commands.x11={ 'test -d "'..user..'" -a -f "$HOME/.Xauthority" && cp "$HOME/.Xauthority" "'..user..'" || &>/dev/null xhost "+si:localuser:$USER"; true' }
 
   defaults.commands.home={
     'mkdir -p "'..home..'"',
