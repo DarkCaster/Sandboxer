@@ -12,6 +12,8 @@ function check_error {
  fi
 }
 
+# Executor and Commander utils
+
 cd "$curdir"
 rm -rf "$curdir/Build/Executor-build"
 
@@ -26,6 +28,25 @@ check_error
 
 make install
 check_error
+
+# X11Util
+
+cd "$curdir"
+rm -rf "$curdir/Build/X11Util-build"
+
+mkdir -p "$curdir/Build/X11Util-build" && cd "$curdir/Build/X11Util-build"
+check_error
+
+cmake -DCMAKE_INSTALL_PREFIX="$curdir/Build" -DCMAKE_BUILD_TYPE=Release ../../X11Util
+check_error
+
+make
+check_error
+
+make install
+check_error
+
+# Fakeroot-UserNS
 
 mkdir -p "$curdir/External"
 check_error
