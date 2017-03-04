@@ -1,0 +1,3 @@
+#!/bin/bash
+
+# prepare host x11 passthrough to sandbox
