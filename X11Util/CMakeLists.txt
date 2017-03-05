@@ -93,5 +93,5 @@ endif(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
 
 #x11util
 add_executable(x11util helper_macro.h main.c)
-target_link_libraries(x11util)
+target_link_libraries(x11util) # -lxcb -lX11 -lm -lrt
 install(TARGETS x11util DESTINATION "x11util")
