@@ -19,6 +19,16 @@ do
  cnt=$((cnt+1))
 done
 
+#set extra args
+test -z "$exec_args_cnt" && exec_args_cnt=0
+for ((cnt=0;cnt<exec_args_cnt;++cnt))
+do
+ 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 2 "${exec_args[$cnt]}"
+ check_errors
+done
+exec_args=()
+exec_args_cnt=0
+
 #set env_unset list
 cnt=1
 while `check_lua_export "$exec_profile.env_unset.$cnt"`
@@ -76,4 +86,3 @@ fi
 exec_bg=""
 exec_log_out=""
 exec_log_err=""
-
