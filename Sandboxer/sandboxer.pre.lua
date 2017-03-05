@@ -338,3 +338,13 @@ dbus={
   pty=false,
   exclusive=true,
 }
+
+x11util={
+  exec="/executor/extra/x11util",
+  path="/",
+  term_signal=defaults.signals.SIGTERM,
+  term_child_only=true,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}

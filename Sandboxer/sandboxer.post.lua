@@ -3,6 +3,7 @@ assert(config.profile~="dbus" and
   config.profile~="loader" and
   config.profile~="config" and
   config.profile~="defaults" and
+  config.profile~="x11util" and
   config.profile~="control",
   "cannot use service table name as profile: "..config.profile)
 
@@ -216,3 +217,4 @@ end
 
 loader.check_profile(profile,config.profile)
 loader.check_profile(dbus,"dbus")
+loader.check_profile(x11util,"x11util")
