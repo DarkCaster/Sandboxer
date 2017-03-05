@@ -207,6 +207,9 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   mkdir -p "$basedir/control"
   check_errors
 
+  mkdir -p "$basedir/extra"
+  check_errors
+
   #copy executor binary
   cp "$executor" "$basedir/executor"
 
@@ -262,6 +265,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   #add sandbox mounts for executor
   sandbox_bind_ro "$basedir/executor" "/executor/executor"
   sandbox_bind_rw "$basedir/control" "/executor/control"
+  sandbox_bind_ro "$basedir/extra" "/executor/extra"
 
   #pre-launch features
   feature_cnt=1
