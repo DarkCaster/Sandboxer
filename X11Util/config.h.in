@@ -3,10 +3,13 @@
 
 #cmakedefine HAVE_INTTYPES_H
 #cmakedefine HAVE_STDINT_H
-#cmakedefine HAVE_STDDEF_H
+#cmakedefine HAVE_CTYPE_H
 
 #cmakedefine HAVE_UNISTD_H
-#cmakedefine HAVE_ERRNO_H
 #cmakedefine HAVE_STDBOOL_H
+#cmakedefine HAVE_ERRNO_H
+
+#cmakedefine HAVE_SYSIPC_H
+#cmakedefine HAVE_SYSSHM_H
 
 #endif
