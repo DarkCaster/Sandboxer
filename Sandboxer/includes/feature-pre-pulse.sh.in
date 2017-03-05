@@ -60,6 +60,11 @@ pulse_cookie="$PULSE_COOKIE"
 
 test -z "$pulse_cookie" && pulse_cookie=`2>/dev/null xprop -root | grep -E "^PULSE_COOKIE.*" | sed -n "s|^PULSE_COOKIE(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
 
+if [ ! -z "$pulse_cookie" ]; then
+  echo "$pulse_cookie" | xxd -r -p - "$basedir/pulse-cookie-from-x11"
+  test "${PIPESTATUS[*]}" = "0 0" && pulse_cookie="$basedir/pulse-cookie-from-x11"
+fi
+
 test -z "$pulse_cookie" -a -f "$HOME/.pulse-cookie" && pulse_cookie="$HOME/.pulse-cookie"
 
 test -z "$pulse_cookie" -a -f "$HOME/.config/pulse/cookie" && pulse_cookie="$HOME/.config/pulse/cookie"
