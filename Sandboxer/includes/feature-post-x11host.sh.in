@@ -17,6 +17,8 @@ if [ ! -z "$x11host_pre_triggered" ]; then
   . "$includes_dir/channel-open.sh.in"
   exec_bg="true"
   exec_bg_pid=""
+  exec_args_cnt=1
+  exec_args=( "0" )
   exec_log_out="$basedir/x11util.stdout"
   exec_log_err="$basedir/x11util.stderr"
   . "$includes_dir/run-profile.sh.in"
