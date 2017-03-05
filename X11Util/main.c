@@ -28,7 +28,8 @@ static bool arg_is_numeric(const char* arg)
     return true;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     if (argc != 2 || !arg_is_numeric(argv[1]))
         show_usage();
     /*

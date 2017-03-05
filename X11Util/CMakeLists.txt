@@ -98,5 +98,10 @@ endif(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
 
 #x11util
 add_executable(x11util helper_macro.h main.c)
-target_link_libraries(x11util) # -lxcb -lX11 -lm -lrt
+target_link_libraries(x11util)
 install(TARGETS x11util DESTINATION "x11util")
+
+#mit-shm test utility. must be separated from main x11util, because there may be no x11 installed when running main x11util
+add_executable(xshm_test helper_macro.h xshm_test.c)
+target_link_libraries(xshm_test -lX11)
+install(TARGETS xshm_test DESTINATION "x11util")
