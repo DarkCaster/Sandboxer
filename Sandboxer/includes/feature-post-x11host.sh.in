@@ -1,11 +1,30 @@
 #!/bin/bash
 
 if [ ! -z "$x11host_pre_triggered" ]; then
-  x11util_dir=""
+  x11util_ok=0
   for hint in "$HOME/.cache/sandboxer/x11util-${cfg[defaults.features.x11util_build]}" "$script_dir/x11util" "$script_dir/../Build/x11util"
   do
-    test -z "$hint" -o ! -d "$hint" && continue
-    #cp "$hint" ...
-    #check_errors
+    test -z "$hint" -o ! -x "$hint/x11util" && continue
+    cp "$hint/x11util" "$basedir/extra"
+    check_errors
+    x11util_ok=1
+    break
   done
+
+  test "$x11util_ok" = "0" && log "x11util service utility not found!" && teardown 1
+  #execute dbus daemon in background
+  exec_profile="x11util"
+  . "$includes_dir/channel-open.sh.in"
+  exec_bg="true"
+  exec_bg_pid=""
+  exec_log_out="$basedir/x11util.stdout"
+  exec_log_err="$basedir/x11util.stderr"
+  . "$includes_dir/run-profile.sh.in"
+  wait "$exec_bg_pid"
+  if [ "$?" != "0" ]; then
+    log "x11util was failed! stderr output:"
+    cat "$basedir/x11util.stderr"
+    teardown 1
+  fi
+  rm "$basedir/extra/x11util"
 fi
