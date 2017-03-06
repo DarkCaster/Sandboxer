@@ -341,7 +341,7 @@ dbus={
 
 x11util={
   exec="/executor/extra/x11util",
-  path="/",
+  path="/executor/extra",
   term_signal=defaults.signals.SIGTERM,
   term_child_only=true,
   attach=true,
