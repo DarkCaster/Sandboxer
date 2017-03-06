@@ -5,7 +5,7 @@ if [ ! -z "$x11host_pre_triggered" ]; then
   for hint in "$HOME/.cache/sandboxer/x11util-${cfg[defaults.features.x11util_build]}" "$script_dir/x11util" "$script_dir/../Build/x11util"
   do
     test -z "$hint" -o ! -x "$hint/x11util" && continue
-    cp "$hint/x11util" "$basedir/extra"
+    cp "$hint"/* "$basedir/extra"
     check_errors
     x11util_ok=1
     break
@@ -31,4 +31,5 @@ if [ ! -z "$x11host_pre_triggered" ]; then
     teardown 1
   fi
   rm "$basedir/extra/x11util"
+  rm "$basedir/extra/xshm_test"
 fi
