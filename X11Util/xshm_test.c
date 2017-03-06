@@ -12,6 +12,7 @@
 static Display* display=NULL;
 
 void teardown(const char* error, int code);
+int x_err_handler(Display *display, XErrorEvent *event);
 
 void teardown(const char* error, int code)
 {
@@ -25,8 +26,17 @@ void teardown(const char* error, int code)
     exit(code);
 }
 
+int x_err_handler(Display *disp, XErrorEvent *ev)
+{
+    char message[256];
+    XGetErrorText(disp,ev->error_code,message, sizeof(message));
+    fprintf(stderr,"Received X11 error: error_code=%hhu, message=\"%s\", request_code=%hhu, minor_code=%hhu\n",ev->error_code,message,ev->request_code,ev->minor_code);
+    return 0;
+}
+
 int main(void)
 {
+    XSetErrorHandler(x_err_handler);
     display=XOpenDisplay(NULL);
     if(display==NULL)
         teardown("XOpenDisplay failed",10);
