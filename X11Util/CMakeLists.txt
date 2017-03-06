@@ -73,6 +73,7 @@ check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(errno.h HAVE_ERRNO_H)
 check_include_file(sys/ipc.h HAVE_SYSIPC_H)
 check_include_file(sys/shm.h HAVE_SYSSHM_H)
+check_include_file(X11/Xlib.h HAVE_XLIB_H)
 
 if(NOT(HAVE_UNISTD_H))
   message(FATAL_ERROR "C header file unistd.h not found, or not available for yout platform. Cannot proceed.")
@@ -86,7 +87,9 @@ endif()
 if(NOT(HAVE_SYSSHM_H))
   message(FATAL_ERROR "C header file sys/shm.h not found, or not available for yout platform. Cannot proceed.")
 endif()
-
+if(NOT(HAVE_XLIB_H))
+  message(FATAL_ERROR "C header file X11/Xlib.h not found, or not available for yout platform (check libx11-dev and libxext-dev packages). Cannot proceed.")
+endif()
 
 #save module configuration to config.h
 configure_file(config.h.in config.h)
