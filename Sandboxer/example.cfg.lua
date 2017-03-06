@@ -228,10 +228,6 @@ sandbox={
       -- for entries with equal priorities - same order is not guaranteed even if it defined in correct order
       prio=50,
 
-      -- optional string with entry tag. used primary by entries defined at "defaults" tale.
-      -- needed to deny applying of conflicting entries - if there are more than one entries with same tag - config verification will fail
-      tag="test",
-
       -- mandatory fields below.
       -- this parameters will be applied to bwap in order of appearence.
 
