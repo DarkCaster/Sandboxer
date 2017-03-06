@@ -9,8 +9,11 @@ rm -f "${cfg[defaults.features.pulse_dir]}/socket"
 
 echo "autospawn=no" > "${cfg[defaults.features.pulse_dir]}/client.conf"
 check_errors
-echo "enable-shm=no" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
-check_errors
+if ! check_lua_export "sandbox.tags.devshm"; then
+  log "warning: /dev/shm not mounted (no active \"defaults.mounts.devshm_mount\" option detected), disabling shm support for pulseaudio."
+  echo "enable-shm=no" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
+  check_errors
+fi
 echo "default-server=unix:/etc/pulse/socket" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
 check_errors
 
