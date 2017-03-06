@@ -2,6 +2,8 @@
 
 #build executor\commander binaries for local-user installation
 
+build="$1"
+
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
 function check_error {
@@ -70,8 +72,13 @@ rm -rf "$curdir/Build/fixups/fakeroot"/*
 mkdir -p "$curdir/Build/Fakeroot-UserNS-build" && cd "$curdir/Build/Fakeroot-UserNS-build"
 check_error
 
-"$curdir/External/Fakeroot-UserNS/configure" --prefix=/fixups/fakeroot-host --bindir=/fixups/fakeroot-host --libdir=/fixups/fakeroot-host --mandir=/fixups/fakeroot-host/man --with-ipc=tcp
-check_error
+if [ -z "$build" ]; then
+  "$curdir/External/Fakeroot-UserNS/configure" --prefix="/fixups/fakeroot-host" --bindir="/fixups/fakeroot-host" --libdir="/fixups/fakeroot-host" --mandir="/fixups/fakeroot-host/man" --with-ipc=tcp
+  check_error
+else
+  "$curdir/External/Fakeroot-UserNS/configure" --prefix="/fixups/fakeroot-$build" --bindir="/fixups/fakeroot-$build" --libdir="/fixups/fakeroot-$build" --mandir="/fixups/fakeroot-$build/man" --with-ipc=tcp
+  check_error
+fi
 
 make
 check_error
