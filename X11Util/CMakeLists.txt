@@ -106,5 +106,5 @@ install(TARGETS x11util DESTINATION "x11util")
 
 #mit-shm test utility. must be separated from main x11util, because there may be no x11 installed when running main x11util
 add_executable(xshm_test helper_macro.h xshm_test.c)
-target_link_libraries(xshm_test -lX11)
+target_link_libraries(xshm_test -lX11 -lXext)
 install(TARGETS xshm_test DESTINATION "x11util")
