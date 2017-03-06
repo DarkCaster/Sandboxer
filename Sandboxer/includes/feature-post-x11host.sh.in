@@ -18,7 +18,12 @@ if [ ! -z "$x11host_pre_triggered" ]; then
   exec_bg="true"
   exec_bg_pid=""
   exec_args_cnt=1
-  exec_args=( "0" )
+  if check_lua_export "sandbox.tags.unshare-ipc"; then
+    log "warning: unshare-ipc option is active, it may lead to problems with x11 applications!"
+    exec_args=( "1" )
+  else
+    exec_args=( "0" )
+  fi
   exec_log_out="$basedir/x11util.stdout"
   exec_log_err="$basedir/x11util.stderr"
   . "$includes_dir/run-profile.sh.in"
