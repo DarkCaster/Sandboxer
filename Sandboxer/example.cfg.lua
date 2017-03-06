@@ -200,7 +200,7 @@ sandbox={
       defaults.mounts.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
       -- TODO: add mounts only to some parts of sys directory only needed for particular apps to work
       defaults.mounts.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
-      defaults.mounts.devshm_mount, -- mount /dev/shm. may be needed for some applications. insecure, do not use it for running untrusted apps.
+      defaults.mounts.devshm_mount, -- mount /dev/shm. if mounted - disables posix-shm isolation (not to be confused with sys.v-shm). may be needed for some applications to work. unsecure - exposes shared memory buffers from other host applications to sandbox.
       defaults.mounts.host_bin_mount, -- readonly mount host /bin directory
       defaults.mounts.host_usr_mount, -- readonly mount host /usr directory
       defaults.mounts.host_lib_mount, -- readonly mount host /lib directory
