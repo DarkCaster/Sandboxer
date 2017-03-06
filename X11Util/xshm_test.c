@@ -76,5 +76,6 @@ int main(void)
     if(shmctl(si->shmid,IPC_RMID,NULL)==-1)
         teardown("shmctl failed",20);
     free(si);
+    fputs("test complete\n",stderr);
     teardown(NULL,0);
 }
