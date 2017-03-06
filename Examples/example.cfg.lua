@@ -85,6 +85,7 @@
 -- defaults.features.gvfs_fix_search_locations
 -- defaults.features.gvfs_fix_mounts
 -- defaults.features.x11util_build
+-- defaults.features.x11util_enable
 
 -- if you changed ANY of tunable defaults (above), you MUST run defaults.recalculate() function here,
 -- this will update and recalculate all deps used by other defaults definitions and setup commands.
