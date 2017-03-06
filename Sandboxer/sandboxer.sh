@@ -63,7 +63,7 @@ test -z "$source_checksum" && log "failed to read correct source_checksum from c
 
 # find executor binary
 executor=""
-for hint in "$HOME/.cache/sandboxer-${cfg[sandbox.setup.executor_build]}-$source_checksum" "$script_dir/executor" "$script_dir/../Build/executor"
+for hint in "$HOME/.cache/sandboxer/executor-${cfg[sandbox.setup.executor_build]}-$source_checksum" "$script_dir/executor" "$script_dir/../Build/executor"
 do
   if [ -x "$hint/executor" ]; then
     executor="$hint/executor"
