@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
 
 #define MAXARGLEN 4095
 
@@ -57,23 +58,23 @@ int main(int argc, char* argv[])
             fprintf(stderr, "shmget overflow. ID: %d\n", seg);
         if(seg == -1)
         {
-            perror("shmget reports error:");
+            perror("shmget reports error");
             continue;
         }
         last_seg = seg;
         const void* ptr = shmat(seg, NULL, 0);
         if(ptr == (void*)-1)
         {
-            perror("shmat reports error:");
+            perror("shmat reports error");
             continue;
         }
         if(shmctl(seg, IPC_RMID, NULL) == -1)
         {
-            perror("shmctl reports error:");
+            perror("shmctl reports error");
             continue;
         }
         if(shmdt(ptr) == -1)
-            perror("shmdt reports error:");
+            perror("shmdt reports error");
     }
     int mode=(int)strtol(argv[1], NULL, 10);
     if(mode>1)
@@ -86,8 +87,39 @@ int main(int argc, char* argv[])
 
 int mode_0(void)
 {
-    //TODO: varoius x11 tests
-    return 0;
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        perror("fork failed");
+        return 5;
+    }
+    if(pid==0)
+    {
+        char cwd[4096];
+        char* cwd_res=getcwd(cwd,4096);
+        if(cwd_res==NULL)
+        {
+            perror("getcwd failed");
+            exit(4);
+        }
+        char run[4096];
+        sprintf(run,"%s/xshm_test",cwd_res);
+        char * const args[2]=
+        {
+            run,
+            NULL,
+        };
+        execv(run,args);
+        perror("execv failed");
+        exit(3);
+    }
+    siginfo_t siginfo;
+    if(waitid(P_PID,(id_t)pid,&siginfo,WEXITED)!=0)
+    {
+        perror("waitid failed");
+        exit(1);
+    }
+    return siginfo.si_status;
 }
 
 int mode_1(void)
