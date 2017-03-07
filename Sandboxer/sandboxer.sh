@@ -41,6 +41,8 @@ shift $#
 
 test "${#cfg[@]}" = "0" && echo "can't find config storage variable populated by bash_lua_helper. bash_lua_helper failed!" && exit 1
 
+#echo "$cfg_list"
+
 log () {
   echo "[ $@ ]"
 }
@@ -164,11 +166,18 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
         local fold_cnt=1
         while `check_lua_export "$list.$top_cnt.$fold_cnt"`
         do
+          # TODO: convert to new check_lua_export logic
+          if [ -z "${cfg[$list.$top_cnt.$fold_cnt]}" ]; then
+            log "skipping empty command $list.$top_cnt.$fold_cnt"
+            fold_cnt=$((fold_cnt+1))
+            continue
+          fi
           exec_cmd "$list.$top_cnt.$fold_cnt"
           err_code="$?"
           test "$err_code" != "0" && exec_bg_pid_error="$list.$top_cnt.$fold_cnt" && break
           fold_cnt=$((fold_cnt+1))
         done
+        test "$fold_cnt" -eq 1 -a -z "$exec_bg_pid_error" && log "skipping empty command $list.$top_cnt"
       else
         exec_cmd "$list.$top_cnt"
         err_code="$?"
