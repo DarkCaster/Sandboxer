@@ -1045,9 +1045,15 @@ static uint8_t operation_250(void)
         log_message(logger,LOG_ERROR,"Operation is disabled for slave executor");
         return 20;
     }
-    pid_lock();
-    uint32_t count=(uint32_t)_master_get_orphans_count();
-    pid_unlock();
+    uint32_t count=0;
+    if(terminate_orphans)
+    {
+        pid_lock();
+        count=(uint32_t)_master_get_orphans_count();
+        pid_unlock();
+    }
+    else
+        log_message(logger,LOG_WARNING,"Requesting orpahs count without running in pid-namespace or pseudo-init mode - will return 0");
     //send response
     CMDHDR response;
     response.cmd_type=0;
