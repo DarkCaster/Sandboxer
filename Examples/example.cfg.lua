@@ -249,7 +249,7 @@ sandbox={
     -- (do not forget to run defaults.recalculate() function (see top of config file for more info)
 
     defaults.bwrap.unshare_user,
-    defaults.bwrap.unshare_ipc,
+    defaults.bwrap.unshare_ipc, -- use IPC namespace inside sandbox. May break X11 applications when using x11host feature (x11xpra feature should work).
     defaults.bwrap.unshare_pid,
     -- defaults.bwrap.unshare_net,
     defaults.bwrap.unshare_uts,
