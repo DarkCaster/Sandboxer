@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 static Display* display=NULL;
+static volatile bool x_err_received=false;
 
 void teardown(const char* error, int code);
 int x_err_handler(Display *display, XErrorEvent *event);
@@ -31,6 +32,7 @@ int x_err_handler(Display *disp, XErrorEvent *ev)
     char message[256];
     XGetErrorText(disp,ev->error_code,message, sizeof(message));
     fprintf(stderr,"Received X11 error: error_code=%hhu, message=\"%s\", request_code=%hhu, minor_code=%hhu\n",ev->error_code,message,ev->request_code,ev->minor_code);
+    x_err_received=true;
     return 0;
 }
 
@@ -87,5 +89,10 @@ int main(void)
         teardown("shmctl failed",20);
     free(si);
     fputs("test complete\n",stderr);
+    if(x_err_received)
+    {
+        fputs("there was x11-error received during test, exiting with error code 50\n",stderr);
+        teardown(NULL,50);
+    }
     teardown(NULL,0);
 }
