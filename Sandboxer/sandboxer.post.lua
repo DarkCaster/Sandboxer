@@ -71,15 +71,19 @@ function loader.transform_env_unset_list(target, name)
   local result={}
   if type(target)=="table" then
     if target.enabled==false then return nil end
-    for i1,f1 in ipairs(target) do
-      assert(type(f1)=="table" or type(f1)=="string", name.."[" .. i1 .. "] subtable is incorrect")
-      if type(f1)=="table" then
-        for i2,f2 in ipairs(f1) do
-          assert(type(f2)=="string", name.."["..i1.."]["..i2.."] value is incorrect")
-          table.insert(result,f2)
+    for i1,f1 in pairs(target) do
+      if(type(i1)=="number") then
+        assert(type(f1)=="table" or type(f1)=="string", name.."[" .. i1 .. "] subtable is incorrect")
+        if type(f1)=="table" then
+          for i2,f2 in ipairs(f1) do
+            assert(type(f2)=="string", name.."["..i1.."]["..i2.."] value is incorrect")
+            table.insert(result,f2)
+          end
+        else
+          table.insert(result,f1)
         end
       else
-        table.insert(result,f1)
+        if(tostring(i1)~="enabled") then print("config: skipping value of "..name.."["..tostring(i1).."]") end
       end
     end
     return result
