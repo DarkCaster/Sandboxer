@@ -97,25 +97,29 @@ function loader.transform_env_set_list(target, name)
   local result={}
   if type(target)=="table" then -- main container
     if target.enabled==false then return nil end
-    for i1,f1 in ipairs(target) do  -- f1 is a container top-level element
-      assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
-      local top_level_is_target=false
-      for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
-        assert(type(f2)=="table" or type(f2)=="string" , name.."["..i1.."]["..i2.."] value is incorrect (it should be a table or string)")
-        if type(f2)=="table" and top_level_is_target==false then
-          assert(#f2==2 or #f2==0, name.."["..i1.."]["..i2.."] has incorrect strings count")
-          for i3,f3 in ipairs(f2) do -- f3 is a 3rd level container, may contain only strings
-            assert(type(f3)=="string", name.."["..i1.."]["..i2.."]["..i3.."] value is incorrect")
+    for i1,f1 in pairs(target) do  -- f1 is a container top-level element
+      if(type(i1)=="number") then
+        assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
+        local top_level_is_target=false
+        for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
+          assert(type(f2)=="table" or type(f2)=="string" , name.."["..i1.."]["..i2.."] value is incorrect (it should be a table or string)")
+          if type(f2)=="table" and top_level_is_target==false then
+            assert(#f2==2 or #f2==0, name.."["..i1.."]["..i2.."] has incorrect strings count")
+            for i3,f3 in ipairs(f2) do -- f3 is a 3rd level container, may contain only strings
+              assert(type(f3)=="string", name.."["..i1.."]["..i2.."]["..i3.."] value is incorrect")
+            end
+            if #f2==2 then table.insert(result,f2) end
+          else
+            top_level_is_target=true
+            assert(type(f2)=="string", name.."["..i1.."]["..i2.."] value is incorrect")
           end
-          if #f2==2 then table.insert(result,f2) end
-        else
-          top_level_is_target=true
-          assert(type(f2)=="string", name.."["..i1.."]["..i2.."] value is incorrect")
+        end -- for 2nd-level
+        if top_level_is_target==true then
+          assert(#f1==2 or #f1==0, name.."["..i1.."] has incorrect strings count, expected count==2, actual count=="..#f1)
+          if #f1==2 then table.insert(result,f1) end
         end
-      end -- for 2nd-level
-      if top_level_is_target==true then
-        assert(#f1==2 or #f1==0, name.."["..i1.."] has incorrect strings count, expected count==2, actual count=="..#f1)
-        if #f1==2 then table.insert(result,f1) end
+      else
+        if(tostring(i1)~="enabled") then print("config: skipping value of "..name.."["..tostring(i1).."]") end
       end
     end
     return result
