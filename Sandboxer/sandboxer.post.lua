@@ -154,20 +154,24 @@ end
 
 function loader.transform_bwrap_list(target, name, result)
   assert(type(target)=="table", name.." table is incorrect or missing")
-  for i1,f1 in ipairs(target) do  -- f1 is a container top-level element
-    assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
-    for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
-      assert(type(f2)=="table" or type(f2)=="string" , name.."["..i1.."]["..i2.."] value is incorrect (it should be a table or string)")
-      if type(f2)=="table" then
-        loader.check_bwrap_entry(f2,name.."["..i1.."]["..i2.."]")
-        if #f2>0 then table.insert(result,f2) end
-      else
-        assert(i2==1,name.."["..i1.."]["..i2.."] value cannot be string, because previous value in this container is also a table!")
-        loader.check_bwrap_entry(f1,name.."["..i1.."]")
-        table.insert(result,f1)
-        break
-      end
-    end -- for 2nd-level
+  for i1,f1 in pairs(target) do  -- f1 is a container top-level element
+    if(type(i1)=="number") then
+      assert(type(f1)=="table", name.."["..i1.."] subtable is incorrect")
+      for i2,f2 in ipairs(f1) do -- f2 is a container 2nd-level element
+        assert(type(f2)=="table" or type(f2)=="string" , name.."["..i1.."]["..i2.."] value is incorrect (it should be a table or string)")
+        if type(f2)=="table" then
+          loader.check_bwrap_entry(f2,name.."["..i1.."]["..i2.."]")
+          if #f2>0 then table.insert(result,f2) end
+        else
+          assert(i2==1,name.."["..i1.."]["..i2.."] value cannot be string, because previous value in this container is also a table!")
+          loader.check_bwrap_entry(f1,name.."["..i1.."]")
+          table.insert(result,f1)
+          break
+        end
+      end -- for 2nd-level
+    else
+      print("config: skipping value of "..name.."["..tostring(i1).."]")
+    end -- type(i1)=="number"
   end -- for 1nd-level
 end
 
