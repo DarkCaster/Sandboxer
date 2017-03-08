@@ -5,7 +5,7 @@
 check_errors
 
 #set pwd
-if check_lua_export $exec_profile.path ; then
+if check_lua_export "$exec_profile.path" ; then
  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 6 "${cfg[$exec_profile.path]}"
  check_errors
 fi
@@ -49,7 +49,7 @@ cnt_min=`get_lua_table_start "$exec_profile.env_set"`
 cnt_max=`get_lua_table_end "$exec_profile.env_set"`
 for ((cnt=cnt_min;cnt<cnt_max;++cnt))
 do
- if check_lua_export $exec_profile.env_set.$cnt.1 && check_lua_export $exec_profile.env_set.$cnt.2 ; then
+ if check_lua_export "$exec_profile.env_set.$cnt.1" && check_lua_export "$exec_profile.env_set.$cnt.2" ; then
   2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 3 "${cfg[$exec_profile.env_set.$cnt.1]}" "${cfg[$exec_profile.env_set.$cnt.2]}"
   check_errors
  fi
@@ -62,7 +62,7 @@ do
 done
 
 #set signal
-if check_lua_export $exec_profile.term_signal ; then
+if check_lua_export "$exec_profile.term_signal" ; then
  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 5 "${cfg[$exec_profile.term_signal]}"
  check_errors
 fi
