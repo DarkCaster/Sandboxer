@@ -13,6 +13,7 @@ defaults.recalculate()
 sandbox={
   features={
     "rootfixups",
+    "x11host", -- to run synaptic, if you need it. you may safely remove unsecure x11 integration from this temporary "setup" config if you need.
   },
   setup={
     executor_build="default",
