@@ -142,8 +142,12 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     #protect caller's variables
     local list
     local top_cnt
+    local top_start
+    local top_limit
     local err_code
     local fold_cnt
+    local fold_start
+    local fold_limit
     #debug
     #log "exec: ${cfg[$cmd_path]}"
     eval "${cfg[$cmd_path]}"
@@ -157,34 +161,37 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     #cleanup some important defines when running custom commands to prevent possible problems
     unset -f exec_cmd_list_in_bg wait_for_cmd_list check_errors teardown lock_exit lock_enter
     unset lock_entered basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid
-    local top_cnt=1
+    local top_cnt=0
     local err_code=0
     local exec_bg_pid_error=""
-    while `check_lua_export "$list.$top_cnt"`
+    local top_start=`get_lua_table_start "$list"`
+    local top_limit=`get_lua_table_end "$list"`
+    for ((top_cnt=top_start;top_cnt<top_limit;++top_cnt))
     do
+      if ! check_lua_export "$list.$top_cnt"; then
+        log "skipping empty command $list.$top_cnt"
+        continue
+      fi
       if [ -z "${cfg[$list.$top_cnt]}" ]; then
-        local fold_cnt=1
-        while `check_lua_export "$list.$top_cnt.$fold_cnt"`
+        local fold_cnt=0
+        local fold_start=`get_lua_table_start "$list.$top_cnt"`
+        local fold_limit=`get_lua_table_end "$list.$top_cnt"`
+        for ((fold_cnt=fold_start;fold_cnt<fold_limit;++fold_cnt))
         do
-          # TODO: convert to new check_lua_export logic
-          if [ -z "${cfg[$list.$top_cnt.$fold_cnt]}" ]; then
+          if ! check_lua_export "$list.$top_cnt.$fold_cnt"; then
             log "skipping empty command $list.$top_cnt.$fold_cnt"
-            fold_cnt=$((fold_cnt+1))
             continue
           fi
           exec_cmd "$list.$top_cnt.$fold_cnt"
           err_code="$?"
           test "$err_code" != "0" && exec_bg_pid_error="$list.$top_cnt.$fold_cnt" && break
-          fold_cnt=$((fold_cnt+1))
         done
-        test "$fold_cnt" -eq 1 -a -z "$exec_bg_pid_error" && log "skipping empty command $list.$top_cnt"
       else
         exec_cmd "$list.$top_cnt"
         err_code="$?"
         test "$err_code" != "0" && exec_bg_pid_error="$list.$top_cnt"
       fi
       test "$err_code" != "0" && break
-      top_cnt=$((top_cnt+1))
     done
     if [ "$err_code" != "0" ]; then
       log "command $exec_bg_pid_error complete with error code $err_code"
