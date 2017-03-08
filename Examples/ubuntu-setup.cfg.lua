@@ -25,7 +25,6 @@ sandbox={
       {'test ! -x "usr/sbin/policy-rc.d" && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
       {'rm -f "etc_orig/resolv.conf"', 'cp "/etc/resolv.conf" "etc_orig/resolv.conf"'},
-      defaults.commands.x11,
     },
     env_blacklist={
       defaults.env.blacklist_main,
@@ -41,7 +40,6 @@ sandbox={
     env_set={
       {"PATH","/usr/sbin:/sbin:/usr/bin:/bin:/usr/bin/X11"},
       defaults.env.set_xdg_runtime,
-      defaults.env.set_x11,
       defaults.env.set_home, --equialent to:
       --[[{"HOME","/root"},
       {"USER",defaults.user},
@@ -56,7 +54,6 @@ sandbox={
       defaults.mounts.lib_rw_mount,
       defaults.mounts.lib64_rw_mount,
       defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
-      defaults.mounts.x11_mount, -- optional for root usage, may be used to run synaptic
       {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc_orig"),"/etc"},
       {prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
       {prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
