@@ -2,11 +2,11 @@
 
 #find gvfs location
 gvfs_src=""
-
-gvfs_cnt=1
-while `check_lua_export "defaults.features.gvfs_fix_search_locations.$gvfs_cnt"`
+gvfs_min=`get_lua_table_start "defaults.features.gvfs_fix_search_locations"`
+gvfs_max=`get_lua_table_end "defaults.features.gvfs_fix_search_locations"`
+for ((gvfs_cnt=gvfs_min;gvfs_cnt<gvfs_max;++gvfs_cnt))
 do
- test -z "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}" -o ! -d "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts" && gvfs_cnt=$((gvfs_cnt+1)) && continue
+ test -z "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}" -o ! -d "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts" && continue
  gvfs_src="${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}"
  break
 done
@@ -18,11 +18,11 @@ if [ ! -z "$gvfs_src" ]; then
  check_errors
  mkdir -p "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
  check_errors
- gvfs_mount_cnt=1
- while `check_lua_export "defaults.features.gvfs_fix_mounts.$gvfs_mount_cnt"`
+ gvfs_min=`get_lua_table_start "defaults.features.gvfs_fix_mounts"`
+ gvfs_max=`get_lua_table_end "defaults.features.gvfs_fix_mounts"`
+ for ((gvfs_mount_cnt=gvfs_min;gvfs_mount_cnt<gvfs_max;++gvfs_mount_cnt))
  do
   2>/dev/null cp "$gvfs_src/mounts/${cfg[defaults.features.gvfs_fix_mounts.$gvfs_mount_cnt]}" "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
-  gvfs_mount_cnt=$((gvfs_mount_cnt+1))
  done
  #TODO: remote-volume-monitors
  sandbox_bind_ro "${cfg[defaults.features.gvfs_fix_dir]}/mounts" "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts"
