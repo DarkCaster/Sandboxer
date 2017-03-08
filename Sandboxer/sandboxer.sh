@@ -240,20 +240,22 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
     #process env_whitelist from lua config file and fillup initial env_unset list
     find_env_whitelist_match () {
       local test_val="$1"
-      local top_cnt=1
-      while `check_lua_export "sandbox.setup.env_whitelist.$top_cnt"`
+      local top_cnt=0
+      local top_cnt_min=`get_lua_table_start "sandbox.setup.env_whitelist"`
+      local top_cnt_max=`get_lua_table_end "sandbox.setup.env_whitelist"`
+      for ((top_cnt=top_cnt_min;top_cnt<top_cnt_max;++top_cnt))
       do
         if [ -z "${cfg[sandbox.setup.env_whitelist.$top_cnt]}" ]; then
-          local fld_cnt=1
-          while `check_lua_export "sandbox.setup.env_whitelist.$top_cnt.$fld_cnt"`
+          local fld_cnt=0
+          local fld_cnt_min=`get_lua_table_start "sandbox.setup.env_whitelist.$top_cnt"`
+          local fld_cnt_max=`get_lua_table_end "sandbox.setup.env_whitelist.$top_cnt"`
+          for ((fld_cnt=fld_cnt_min;fld_cnt<fld_cnt_max;++fld_cnt))
           do
             test "$test_val" = "${cfg[sandbox.setup.env_whitelist.$top_cnt.$fld_cnt]}" && return 0
-            fld_cnt=$((fld_cnt+1))
           done
         else
           test "$test_val" = "${cfg[sandbox.setup.env_whitelist.$top_cnt]}" && return 0
         fi
-        top_cnt=$((top_cnt+1))
       done
       return 1
     }
@@ -284,14 +286,14 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   sandbox_bind_ro "$basedir/extra" "/executor/extra"
 
   #pre-launch features
-  feature_cnt=1
-  while `check_lua_export "sandbox.features.$feature_cnt"`
+  feature_cnt_min=`get_lua_table_start "sandbox.features"`
+  feature_cnt_max=`get_lua_table_end "sandbox.features"`
+  for ((feature_cnt=feature_cnt_min;feature_cnt<feature_cnt_max;++feature_cnt))
   do
     if [ -f "$includes_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
       log "preparing ${cfg[sandbox.features.$feature_cnt]} feature"
       . "$includes_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in"
     fi
-    feature_cnt=$((feature_cnt+1))
   done
 
   #we must wait here for completion of background command list procssing if any
@@ -340,14 +342,14 @@ extra_env_unset_add() {
 
 #post-launch features
 
-feature_cnt=1
-while `check_lua_export "sandbox.features.$feature_cnt"`
+feature_cnt_min=`get_lua_table_start "sandbox.features"`
+feature_cnt_max=`get_lua_table_end "sandbox.features"`
+for ((feature_cnt=feature_cnt_min;feature_cnt<feature_cnt_max;++feature_cnt))
 do
   if [ -f "$includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
     log "activating ${cfg[sandbox.features.$feature_cnt]} feature"
     . "$includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in"
   fi
-  feature_cnt=$((feature_cnt+1))
 done
 
 #create new executor's sub-session inside sandbox and get new control channel name
