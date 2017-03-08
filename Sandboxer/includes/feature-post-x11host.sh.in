@@ -29,7 +29,10 @@ if [ ! -z "$x11host_pre_triggered" ] && [ "${cfg[defaults.features.x11util_enabl
   . "$includes_dir/run-profile.sh.in"
   wait "$exec_bg_pid"
   x11util_ec="$?"
-  if [ "$x11util_ec" != "0" ]; then
+  if [ "$x11util_ec" = "127" ]; then
+    log "x11util was failed to execute xshm_test, this is not fatal. error code=$x11util_ec, stderr output:"
+    cat "$basedir/x11util.stderr"
+  elif [ "$x11util_ec" != "0" ]; then
     log "x11util was failed! error code=$x11util_ec, stderr output:"
     cat "$basedir/x11util.stderr"
     # TODO: perform shutdown of currently running master executor and other sessions
