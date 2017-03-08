@@ -149,35 +149,23 @@ bwrap_add_param() {
   bwrap_param_cnt=$((bwrap_param_cnt+1))
 }
 
-bwrap_process_list_contents() {
-  local list="$1"
-  local top_cnt=1
-  while `check_lua_export "$list.$top_cnt"`
-  do
-    if [ "$top_cnt" = "1" ]; then
-      bwrap_add_param "--${cfg[$list.$top_cnt]}"
-    else
-      bwrap_add_param "${cfg[$list.$top_cnt]}"
-    fi
-    top_cnt=$((top_cnt+1))
-  done
-}
-
-bwrap_process_list() {
-  local list="$1"
-  local cnt=1
-  while `check_lua_export "$list.$cnt"`
-  do
-    bwrap_process_list_contents "$list.$cnt"
-    cnt=$((cnt+1))
-  done
-}
-
 # for now enforce --new-session parameter
 bwrap_add_param "--new-session"
 
 sandbox_init() {
-  bwrap_process_list "sandbox.bwrap"
+  local cnt=1
+  local cnt_min=`get_lua_table_start "sandbox.bwrap"`
+  local cnt_max=`get_lua_table_end "sandbox.bwrap"`
+  for ((cnt=cnt_min;cnt<cnt_max;++cnt))
+  do
+    local fld_cnt=1
+    local fld_cnt_min=`get_lua_table_start "sandbox.bwrap.$cnt"`
+    local fld_cnt_max=`get_lua_table_end "sandbox.bwrap.$cnt"`
+    for ((fld_cnt=fld_cnt_min;fld_cnt<fld_cnt_max;++fld_cnt))
+    do
+      test "$fld_cnt" -eq 1 && bwrap_add_param "--${cfg[sandbox.bwrap.$cnt.$fld_cnt]}" || bwrap_add_param "${cfg[sandbox.bwrap.$cnt.$fld_cnt]}"
+    done
+  done
 }
 
 sandbox_bind_ro() {
