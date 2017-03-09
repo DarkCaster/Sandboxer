@@ -240,7 +240,18 @@ function defaults.recalculate()
 
   defaults.commands.passwd={
     'mkdir -p "'..etc..'"',
-    loader.path.combine(config.tools_dir,"pwdgen_simple.sh")..' '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
+    '"'..loader.path.combine(config.tools_dir,"pwdgen_simple.sh")..'" '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
+  }
+
+  defaults.commands.machineid={
+    'mkdir -p "'..etc..'"',
+    'echo "'..config.sandbox_uid..'" > "'..defaults.basedir..'/sandbox_uid"',
+    '"'..loader.path.combine(config.tools_dir,"machineidgen.sh")..'" "'..defaults.basedir..'" "'..etc..'/machine-id" "/etc/machine-id" "'..defaults.basedir..'/sandbox_uid"',
+  }
+
+  defaults.commands.machineid_host_etc={
+    'echo "'..config.sandbox_uid..'" > "'..defaults.basedir..'/sandbox_uid"',
+    'if [ ! -f "'..etchost_path..'/machine-id" ]; then "'..loader.path.combine(config.tools_dir,"machineidgen.sh")..'" "'..defaults.basedir..'" "'..etchost_path..'/machine-id" "'..defaults.basedir..'/sandbox_uid"; else true; fi',
   }
 
   defaults.commands.home={

@@ -144,6 +144,8 @@ sandbox={
       defaults.commands.passwd, -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
       defaults.commands.home, -- create userdata/home at this config file directory, if missing
       defaults.commands.home_gui_config, -- copy and process supported gui-toolkits configuration from host env. this command must go after defaults.commands.home.
+      defaults.commands.machineid, -- generate machine id for sandbox, and place it to constructed etc dir.
+      -- defaults.commands.machineid_host_etc, -- generate machine id for sandbox if not exist already, and place it to host etc dir specified by defaults.etchost_path tubalble parameter, useful when working with sandbox based on custom rootfs.
       defaults.commands.var_cache, -- create userdata/cache at this config file directory, if missing
       defaults.commands.var_tmp, -- create userdata/tmp at this config file directory, if missing
     },
