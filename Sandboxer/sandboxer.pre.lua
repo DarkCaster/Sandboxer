@@ -24,7 +24,6 @@ defaults.user="sandboxer"
 defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
 defaults.etcdir_name="etc"
 defaults.etchost_path="/etc"
-defaults.fixupsdir_name="fixups"
 
 -- signals list
 defaults.signals={
@@ -180,6 +179,8 @@ defaults.mounts.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","
 defaults.mounts.devshm_mount={prio=20,tag="devshm","bind","/dev/shm","/dev/shm"}
 
 -- various tunables for features
+defaults.features.fixupsdir_name="fixups"
+
 defaults.features.dbus_search_prefix="/"
 
 defaults.features.gvfs_fix_search_prefix="/"
@@ -325,7 +326,7 @@ function defaults.recalculate()
 
   defaults.features.pulse_dir=loader.path.combine(defaults.chrootdir,"pulse_dyn_config")
 
-  defaults.features.fixups_dir=loader.path.combine(defaults.chrootdir,defaults.fixupsdir_name)
+  defaults.features.fixups_dir=loader.path.combine(defaults.chrootdir,defaults.features.fixupsdir_name)
 
   defaults.features.envfix_home=chroot_home
 
