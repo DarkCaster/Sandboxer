@@ -193,7 +193,8 @@ sandbox={
       defaults.mounts.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
       defaults.mounts.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
       -- defaults.mounts.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-      -- defaults.mounts.host_etc_mount, -- readonly mount host etc directory
+      -- defaults.mounts.host_etc_mount, -- readonly mount host etc directory, may be overriden by changing defaults.etchost_path tunable
+      -- defaults.mounts.passwd_mount, -- readonly mount passwd and group files automatically generated with defaults.commands.passwd. for use with host etc mount entry above, not needed when using commands for dynamically generate etc directory.
       -- other mounts, also essential for normal operation
       -- defaults.mounts.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
       defaults.mounts.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
