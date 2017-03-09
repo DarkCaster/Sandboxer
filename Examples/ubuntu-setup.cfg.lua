@@ -7,7 +7,8 @@ defaults.user="root"
 defaults.uid=0
 defaults.gid=0
 defaults.etcdir_name="etc_orig"
-
+-- use different build of x11 util, if you experience problems, for example:
+-- defaults.features.x11util_build="ubuntu-12.04"
 defaults.recalculate()
 
 sandbox={
@@ -27,6 +28,7 @@ sandbox={
       --copy file with dns configuration from host env
       {'rm -f "etc_orig/resolv.conf"', 'cp "/etc/resolv.conf" "etc_orig/resolv.conf"'},
     },
+    -- will be ignored if using env_whitelist. it is just for reference here
     env_blacklist={
       defaults.env.blacklist_main,
       defaults.env.blacklist_audio,
