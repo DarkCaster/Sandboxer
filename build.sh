@@ -1,7 +1,12 @@
 #!/bin/bash
 
-#build executor\commander binaries for local-user installation
+# Build all needed binaries for local-user homedir installation, or for direct execution from source directory (for debug and develop purposes)
+# Build includes: executor, commander and x11util binaries, also download and build fakeroot-userns binaries from external repo.
+# Root priveleges is not required for this script.
+# Bwrap utility must be installed separately. It can be compiled and installed with build-bwrap.sh script, or may be installed from your distro's package management service.
 
+# This script can also used to create downloadable binary packages of selected utilities for use with sandboxer-download-extra.sh script
+# Pass (optional) parameter with build name, it will be used when compiling fakeroot
 build="$1"
 
 curdir="$( cd "$( dirname "$0" )" && pwd )"
