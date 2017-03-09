@@ -6,8 +6,8 @@ gvfs_min=`get_lua_table_start "defaults.features.gvfs_fix_search_locations"`
 gvfs_max=`get_lua_table_end "defaults.features.gvfs_fix_search_locations"`
 for ((gvfs_cnt=gvfs_min;gvfs_cnt<gvfs_max;++gvfs_cnt))
 do
- test -z "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}" -o ! -d "${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts" && continue
- gvfs_src="${cfg[defaults.features.gvfs_fix_search_prefix]}${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}"
+ test -z "${cfg[defaults.features.gvfs_fix_search_prefix]}/${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}" -o ! -d "${cfg[defaults.features.gvfs_fix_search_prefix]}/${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts" && continue
+ gvfs_src="${cfg[defaults.features.gvfs_fix_search_prefix]}/${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}"
  break
 done
 
