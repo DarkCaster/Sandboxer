@@ -10,8 +10,13 @@ if [ ! -p "$basedir/control/dbus.in" ] || [ ! -p "$basedir/control/dbus.out" ]; 
   #execute dbus daemon in background
   exec_profile="dbus"
   if [ "${cfg[$exec_profile.exec]}" == "placeholder" ]; then
-    cfg[$exec_profile.exec]=`2>/dev/null which "dbus-daemon"`
-    test -z "${cfg[$exec_profile.exec]}" && log "dbus-daemon binary is not found!" && teardown 1
+    cfg[$exec_profile.exec]=""
+    for hint in "/usr/bin" "/bin" "/usr/local/bin" "/usr/sbin" "/sbin"
+    do
+      test -x "${cfg[defaults.features.dbus_search_prefix]}$hint/dbus-daemon" && cfg[$exec_profile.exec]="$hint/dbus-daemon" && break
+      # log "no dbus-daemon binary at ${cfg[defaults.features.dbus_search_prefix]}$hint" # debug
+    done
+    test -z "${cfg[$exec_profile.exec]}" && log "dbus-daemon binary not found!" && teardown 1
   fi
   . "$includes_dir/channel-open.sh.in"
   exec_bg="true"
