@@ -172,8 +172,6 @@ defaults.mounts.host_essentials_group={
   defaults.mounts.host_lib64_mount,
 }
 
-defaults.mounts.host_etc_mount={prio=10,tag="etc","ro-bind","/etc","/etc"}
-
 -- service mounts
 defaults.mounts.dbus_system_mount={prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
 defaults.mounts.devsnd_mount={prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
@@ -299,6 +297,13 @@ function defaults.recalculate()
   defaults.mounts.etc_ro_mount={prio=10,tag="etc","ro-bind",etc,"/etc"}
 
   defaults.mounts.etc_rw_mount={prio=10,tag="etc","bind",etc,"/etc"}
+
+  defaults.mounts.host_etc_mount={prio=10,tag="etc","ro-bind",loader.path.combine(defaults.etchost_path),"/etc"}
+
+  defaults.mounts.passwd_mount={
+    {prio=20,tag="etcpasswd","ro-bind",loader.path.combine(etc,"passwd"),"/etc/passwd"},
+    {prio=20,tag="etcgroup","ro-bind",loader.path.combine(etc,"group"),"/etc/group"},
+  }
 
   defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",defaults.uid)}
 
