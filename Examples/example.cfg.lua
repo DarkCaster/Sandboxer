@@ -81,6 +81,7 @@
 
 -- TODO: add descriptions for features tunables:
 -- defaults.fixupsdir_name="fixups"
+-- defaults.features.dbus_search_prefix
 -- defaults.features.gvfs_fix_search_prefix
 -- defaults.features.gvfs_fix_search_locations
 -- defaults.features.gvfs_fix_mounts

@@ -180,6 +180,8 @@ defaults.mounts.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","
 defaults.mounts.devshm_mount={prio=20,tag="devshm","bind","/dev/shm","/dev/shm"}
 
 -- various tunables for features
+defaults.features.dbus_search_prefix="/"
+
 defaults.features.gvfs_fix_search_prefix="/"
 
 defaults.features.gvfs_fix_search_locations={

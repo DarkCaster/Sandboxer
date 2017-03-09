@@ -1,6 +1,7 @@
 defaults.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
 defaults.etcdir_name="etc_sandbox"
 defaults.etchost_path=loader.path.combine(defaults.chrootdir,"etc_orig")
+defaults.features.dbus_search_prefix=defaults.chrootdir
 defaults.features.gvfs_fix_search_prefix=defaults.chrootdir
 -- use different build of x11 util, if you experience problems, for example:
 -- defaults.features.x11util_build="ubuntu-12.04"
