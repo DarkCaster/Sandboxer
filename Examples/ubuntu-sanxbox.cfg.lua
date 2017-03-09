@@ -23,9 +23,6 @@ sandbox={
     --executor_build="ubuntu-12.04",
     --executor_build="ubuntu-16.10",
     commands={
-      -- update resolv.conf in chroot/etc directory.
-      {'rm -f "etc_orig/resolv.conf"', 'cp "/etc/resolv.conf" "etc_orig/resolv.conf"'},
-
       -- usually, when creating sandbox from host env, it is recommended to dynamically construct etc dir for sandbox.
       -- construction is needed to filter some sensitive system configuration info
       -- (and also prevent host /etc from possible damage, but, anyway it should not be possible without real root privs).
@@ -40,9 +37,16 @@ sandbox={
       --2. or, instead, copy full config
       --defaults.commands.etc_full, -- copy full /etc to to defaults.chrootdir, may remove existing
 
-      --3. or, just mount chroot config later with defaults.mounts.host_etc_mount and defaults.mounts.passwd_mount
-      --but we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
-      {'mkdir -p "'..defaults.etchost_path..'/pulse"'},
+      --3. or, work directly with etc directory of our external chroot, and mount it later with defaults.mounts.host_etc_mount.
+      -- this directory is specified by defaults.etchost_path tunable at the top of this config file.
+      -- we should also mount dynamically created /etc/passwd and /etc/group config files with defaults.mounts.passwd_mount.
+      -- (but we can just overwrite this files inside etc directory of chroot, but it may break ubuntu-setup.cfg.lua startup)
+      -- also, we need to perform some minor configuration for our chroot etc dir.
+      {'mkdir -p "'..defaults.etchost_path..'/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
+      {'rm -f "'..defaults.etchost_path..'/resolv.conf"', 'cp "/etc/resolv.conf" "'..defaults.etchost_path..'/resolv.conf"'}, -- update resolv.conf in chroot/etc directory.
+      defaults.commands.machineid_host_etc, -- create machine-id file if not exist
+
+      -- remaining commands, used for any etc management option choosen above.
 
       -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
       -- will be placed to "etc_sandbox" directory and will not overwrite files inside "etc_orig" directory managed by ubuntu-setup.cfg.lua
