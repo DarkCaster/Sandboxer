@@ -90,3 +90,10 @@ check_error
 
 make install DESTDIR="$curdir/Build"
 check_error
+
+cd "$curdir"
+
+if [ ! -f "$curdir/BashLuaHelper/lua-helper.bash.in" ]; then
+  git submodule update --init
+  check_error
+fi
