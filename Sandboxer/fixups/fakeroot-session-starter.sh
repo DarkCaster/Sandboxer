@@ -12,7 +12,7 @@ show_usage() {
   exit 1
 }
 
-[[ -z $fakeroot_build || -z $command ]] && show_usage
+test -z "$fakeroot_build" -o -z "$command" && show_usage
 
 fakeroot=""
 echo "fakeroot-session-starter: trying to detect requested build '$fakeroot_build' of fakeroot utility"
@@ -27,7 +27,7 @@ do
   fi
 done
 
-[[ -z $fakeroot ]] && echo "fakeroot binaries not found! cannot proceed." && exit 1
+test -z "$fakeroot" && echo "fakeroot binaries not found! cannot proceed." && exit 1
 
 "$fakeroot" -- "$command" "$@"
 
