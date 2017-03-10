@@ -11,45 +11,45 @@ passwd_out="$7"
 group_out="$8"
 
 check_errors () {
- local status="$?"
- local msg="$@"
- if [ "$status" != "0" ]; then
-  echo "pwdgen.sh: operation finished with error code $status"
-  test ! -z "$msg" && echo "$msg"
-  exit "$status"
- fi
+  local status="$?"
+  local msg="$@"
+  if [[ $status != 0 ]]; then
+    echo "pwdgen.sh: operation finished with error code $status"
+    [[ ! -z $msg ]] && echo "$msg"
+    exit "$status"
+  fi
 }
 
 nobody_uid=`id -u nobody`
-test ! -z "$nobody_uid" || check_errors "failed to detect uid for 'nobody' user"
+[[ ! -z $nobody_uid ]] || check_errors "failed to detect uid for 'nobody' user"
 
 nobody_gid=`id -g nobody`
-test ! -z "$nobody_gid" || check_errors "failed to detect gid for 'nobody' user"
+[[ ! -z $nobody_gid ]] || check_errors "failed to detect gid for 'nobody' user"
 
-test "$tgt_name" != "root" || check_errors "target user name 'root' is not allowed"
-test "$tgt_name" != "nobody" || check_errors "target user name 'nobody' is not allowed"
+[[ $tgt_name != root ]] || check_errors "target user name 'root' is not allowed"
+[[ $tgt_name != nobody ]] || check_errors "target user name 'nobody' is not allowed"
 
-test "$src_uid" != "0" || check_errors "it is not allowed to start this script as uid 0 user"
-test "$src_uid" != "$nobody_uid" || check_errors "it is not allowed to start this script as 'nobody' user"
+[[ $src_uid != 0 ]] || check_errors "it is not allowed to start this script as uid 0 user"
+[[ $src_uid != $nobody_uid ]] || check_errors "it is not allowed to start this script as 'nobody' user"
 
-test "$tgt_uid" != "0" || check_errors "target uid 0 is not allowed"
-test "$tgt_uid" != "$nobody_uid" || check_errors "target uid $nobody_uid is not allowed"
+[[ $tgt_uid != 0 ]] || check_errors "target uid 0 is not allowed"
+[[ $tgt_uid != $nobody_uid ]] || check_errors "target uid $nobody_uid is not allowed"
 
-test "$src_gid" != "0" || check_errors "it is not allowed to start this script as gid 0 user"
-test "$src_gid" != "$nobody_gid" || check_errors "target gid $nobody_gid is not allowed"
+[[ $src_gid != 0 ]] || check_errors "it is not allowed to start this script as gid 0 user"
+[[ $src_gid != $nobody_gid ]] || check_errors "target gid $nobody_gid is not allowed"
 
-test "$tgt_gid" != "0" || check_errors "target gid 0 is not allowed"
-test "$tgt_gid" != "$nobody_gid" || check_errors "target gid $nobody_gid is not allowed"
+[[ $tgt_gid != 0 ]] || check_errors "target gid 0 is not allowed"
+[[ $tgt_gid != $nobody_gid ]] || check_errors "target gid $nobody_gid is not allowed"
 
-test "$tgt_home" != "/root" || check_errors "target home dir '/root' is not allowed"
+[[ $tgt_home != /root ]] || check_errors "target home dir '/root' is not allowed"
 
 #cache for processed gids and uids
 declare -A g_cache
 
 cache_add() {
- test ! -z "${g_cache[$1]}" && return 1
- g_cache[$1]=1
- return 0
+  [[ ! -z ${g_cache[$1]} ]] && return 1
+  g_cache[$1]=1
+  return 0
 }
 
 echo -n "" > "$passwd_out"
@@ -58,7 +58,7 @@ echo -n "" > "$group_out"
 check_errors
 
 false_bin=`2>/dev/null which "false"`
-test ! -z "$false_bin" || check_errors "'false' binary detection failed"
+[[ ! -z $false_bin ]] || check_errors "'false' binary detection failed"
 
 login_shell=`getent passwd $USER | cut -d':' -f7`
 
@@ -86,30 +86,30 @@ check_errors
 
 #try to manually add "nobody" group if it exist and not already added
 nobody_gr_name=`2>/dev/null getent group nobody | cut -f1 -d":"`
-if [ ! -z "$nobody_gr_name" ]; then
- nobody_gr_gid=`2>/dev/null getent group nobody | cut -f3 -d":"`
- cache_add "$nobody_gr_gid" && echo "$nobody_gr_name:x:$nobody_gr_gid:" >> "$group_out"
+if [[ ! -z $nobody_gr_name ]]; then
+  nobody_gr_gid=`2>/dev/null getent group nobody | cut -f3 -d":"`
+  cache_add "$nobody_gr_gid" && echo "$nobody_gr_name:x:$nobody_gr_gid:" >> "$group_out"
 fi
 
 #try to manually add "nogroup" group if it exist and not already added
 nogroup_gr_name=`2>/dev/null getent group nogroup | cut -f1 -d":"`
-if [ ! -z "$nogroup_gr_name" ]; then
- nogroup_gr_gid=`2>/dev/null getent group nogroup | cut -f3 -d":"`
- cache_add "$nogroup_gr_gid" && echo "$nogroup_gr_name:x:$nogroup_gr_gid:" >> "$group_out"
+if [[ ! -z $nogroup_gr_name ]]; then
+  nogroup_gr_gid=`2>/dev/null getent group nogroup | cut -f3 -d":"`
+  cache_add "$nogroup_gr_gid" && echo "$nogroup_gr_name:x:$nogroup_gr_gid:" >> "$group_out"
 fi
 
 add_secondary_group() {
- local sgid="$1"
- local tgid="$2"
- local uname="$3"
- cache_add "$tgid" || return 0
- local gname=`2>/dev/null getent group $sgid | cut -f1 -d":"`
- echo "$gname:x:$tgid:$uname" >> "$group_out"
- check_errors
- return 0
+  local sgid="$1"
+  local tgid="$2"
+  local uname="$3"
+  cache_add "$tgid" || return 0
+  local gname=`2>/dev/null getent group $sgid | cut -f1 -d":"`
+  echo "$gname:x:$tgid:$uname" >> "$group_out"
+  check_errors
+  return 0
 }
 
 for group in `id -G "$src_uid"`
 do
- test "$group" == "$src_gid" && add_secondary_group "$group" "$tgt_gid" "$tgt_name" || add_secondary_group "$group" "$group" "$tgt_name"
+  [[ $group = $src_gid ]] && add_secondary_group "$group" "$tgt_gid" "$tgt_name" || add_secondary_group "$group" "$group" "$tgt_name"
 done
