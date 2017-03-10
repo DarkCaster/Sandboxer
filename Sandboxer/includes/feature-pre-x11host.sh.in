@@ -2,7 +2,7 @@
 
 # prepare host x11 passthrough to sandbox
 
-if [ -d "${cfg[defaults.features.x11host_target_dir]}" ] && [ -f "$HOME/.Xauthority" ]; then
+if [[ -d ${cfg[defaults.features.x11host_target_dir]} && -f $HOME/.Xauthority ]]; then
   # copy .Xauthority to user's home dir inside sandbox
   cp "$HOME/.Xauthority" "${cfg[defaults.features.x11host_target_dir]}"
 else
@@ -14,7 +14,7 @@ fi
 env_set_add "DISPLAY" "$DISPLAY"
 
 # export XCURSOR_THEME
-test ! -z "$XCURSOR_THEME" && env_set_add "XCURSOR_THEME" "$XCURSOR_THEME"
+[[ ! -z $XCURSOR_THEME ]] && env_set_add "XCURSOR_THEME" "$XCURSOR_THEME"
 
 # bind socket
 sandbox_bind_rw "/tmp/.X11-unix" "/tmp/.X11-unix"

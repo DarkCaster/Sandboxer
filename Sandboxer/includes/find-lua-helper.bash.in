@@ -4,11 +4,11 @@ bash_lua_helper=""
 
 for hint in "$@"
 do
- #debug
- #echo "probing $hint"
- test -f "$hint/lua-helper.bash.in" && bash_lua_helper="$hint/lua-helper.bash.in" && break
+  #debug
+  #echo "probing $hint"
+  [[ -f $hint/lua-helper.bash.in ]] && bash_lua_helper="$hint/lua-helper.bash.in" && break
 done
 
-test -z "$bash_lua_helper" && echo "lua-helper.bash.in not found!" && exit 1
+[[ -z $bash_lua_helper ]] && echo "lua-helper.bash.in not found!" && exit 1
 
 bash_lua_helper=`realpath "$bash_lua_helper"`

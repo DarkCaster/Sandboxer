@@ -34,11 +34,11 @@ env_set_add_list() {
 env_set_find() {
   local variable="$1"
   local cnt=0
-  while [ "$cnt" -lt "$bwrap_env_set_cnt" ]
+  while [[ $cnt -lt $bwrap_env_set_cnt ]]
   do
-    if [ "${bwrap_env_set[$cnt]}" == "--setenv" ]; then
+    if [[ ${bwrap_env_set[$cnt]} = --setenv ]]; then
       cnt=$((cnt+1))
-      if [ "${bwrap_env_set[$cnt]}" == "$variable" ]; then
+      if [[ ${bwrap_env_set[$cnt]} = $variable ]]; then
         return 0
       else
         cnt=$((cnt+2))
@@ -55,11 +55,11 @@ env_set_find() {
 env_set_readval() {
   local variable="$1"
   local cnt=0
-  while [ "$cnt" -lt "$bwrap_env_set_cnt" ]
+  while [[ $cnt -lt $bwrap_env_set_cnt ]]
   do
-    if [ "${bwrap_env_set[$cnt]}" == "--setenv" ]; then
+    if [[ ${bwrap_env_set[$cnt]} = --setenv ]]; then
       cnt=$((cnt+1))
-      if [ "${bwrap_env_set[$cnt]}" == "$variable" ]; then
+      if [[ ${bwrap_env_set[$cnt]} = $variable ]]; then
         cnt=$((cnt+1))
         echo "${bwrap_env_set[$cnt]}"
         cnt=$((cnt+1))
@@ -75,9 +75,9 @@ env_set_readval() {
 
 env_set_get_names() {
   local cnt=0
-  while [ "$cnt" -lt "$bwrap_env_set_cnt" ]
+  while [[ $cnt -lt $bwrap_env_set_cnt ]]
   do
-    if [ "${bwrap_env_set[$cnt]}" == "--setenv" ]; then
+    if [[ ${bwrap_env_set[$cnt]} = --setenv ]]; then
       cnt=$((cnt+1))
       echo "${bwrap_env_set[$cnt]}"
       cnt=$((cnt+2))
@@ -110,11 +110,11 @@ env_unset_add_list() {
 env_unset_find() {
   local variable="$1"
   local cnt=0
-  while [ "$cnt" -lt "$bwrap_env_unset_cnt" ]
+  while [[ $cnt -lt $bwrap_env_unset_cnt ]]
   do
-    if [ "${bwrap_env_unset[$cnt]}" == "--unsetenv" ]; then
+    if [[ ${bwrap_env_unset[$cnt]} = --unsetenv ]]; then
       cnt=$((cnt+1))
-      test "${bwrap_env_unset[$cnt]}" == "$variable" && return 0
+      [[ ${bwrap_env_unset[$cnt]} = $variable ]] && return 0
       cnt=$((cnt+1))
     else
       log "error detected at bwrap_env_unset list!"
@@ -126,9 +126,9 @@ env_unset_find() {
 
 env_unset_get_names() {
   local cnt=0
-  while [ "$cnt" -lt "$bwrap_env_unset_cnt" ]
+  while [[ $cnt -lt $bwrap_env_unset_cnt ]]
   do
-    if [ "${bwrap_env_unset[$cnt]}" == "--unsetenv" ]; then
+    if [[ ${bwrap_env_unset[$cnt]} = --unsetenv ]]; then
       cnt=$((cnt+1))
       echo "${bwrap_env_unset[$cnt]}"
       cnt=$((cnt+1))
@@ -163,7 +163,7 @@ sandbox_init() {
     local fld_cnt_max=`get_lua_table_end "sandbox.bwrap.$cnt"`
     for ((fld_cnt=fld_cnt_min;fld_cnt<fld_cnt_max;++fld_cnt))
     do
-      test "$fld_cnt" -eq 1 && bwrap_add_param "--${cfg[sandbox.bwrap.$cnt.$fld_cnt]}" || bwrap_add_param "${cfg[sandbox.bwrap.$cnt.$fld_cnt]}"
+      [[ $fld_cnt = 1 ]] && bwrap_add_param "--${cfg[sandbox.bwrap.$cnt.$fld_cnt]}" || bwrap_add_param "${cfg[sandbox.bwrap.$cnt.$fld_cnt]}"
     done
   done
 }
@@ -187,13 +187,13 @@ sandbox_start() {
   &>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}"
 
   #below is a cleanup-on-exit logic that may be activated when bwrap is complete
-  test "${cfg[sandbox.setup.cleanup_on_exit]}" != "true" && exit 0
+  [[ ${cfg[sandbox.setup.cleanup_on_exit]} != true ]] && exit 0
 
   #we are forked from main script, set this service variable to default state
   lock_entered="false"
 
   function check_sessions() {
-    test `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | wc -l` != "0" && return 0
+    [[ `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | wc -l` != 0 ]] && return 0
     return 1
   }
 
@@ -221,7 +221,7 @@ sandbox_start() {
 
     for el in *
     do
-      test "$el" = "$lock_dirname" && continue
+      [[ $el = $lock_dirname ]] && continue
       rm -rf "$el"
     done
 

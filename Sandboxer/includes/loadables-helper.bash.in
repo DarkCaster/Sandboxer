@@ -8,16 +8,16 @@ loadables_dir=""
 #find loadables_dir
 for target in "/lib64/bash/$bash_version" "/usr/lib64/bash/$bash_version" "/lib/bash/$bash_version" "/usr/lib/bash/$bash_version"
 do
- test -d "$target" && loadables_dir="$target" && break
+  [[ -d $target ]] && loadables_dir="$target" && break
 done
 
-if [ ! -z "$loadables_dir" ]; then
- for loadable in "cut" "sleep" "mkdir" "rmdir" "ln" "id"
- do
-  #debug
-  #echo "enabling $loadable loadable"
-  2>/dev/null enable -f "$loadables_dir/$loadable.so" "$loadable"
- done
+if [[ ! -z $loadables_dir ]]; then
+  for loadable in "cut" "sleep" "mkdir" "rmdir" "ln" "id"
+  do
+    #debug
+    #echo "enabling $loadable loadable"
+    2>/dev/null enable -f "$loadables_dir/$loadable.so" "$loadable"
+  done
 fi
 
 unset loadables_dir

@@ -3,9 +3,9 @@
 fixups_srcdir="$script_dir/fixups"
 
 fixups_srcdir_extra="$script_dir/../Build/fixups"
-test ! -d "$fixups_srcdir_extra" && fixups_srcdir_extra=""
+[[ ! -d $fixups_srcdir_extra ]] && fixups_srcdir_extra=""
 
-if [ ! -z "$fixups_srcdir" ]; then
+if [[ ! -z $fixups_srcdir ]]; then
   fixups_srcdir=`realpath "$fixups_srcdir"`
   # construct directory, that will be mounted
   rm -rf "${cfg[defaults.features.fixups_dir]}"
@@ -16,10 +16,10 @@ if [ ! -z "$fixups_srcdir" ]; then
   cp -rf "$fixups_srcdir"/* "${cfg[defaults.features.fixups_dir]}"
   check_errors
   # populate with extra directory contents
-  if [ ! -z "$fixups_srcdir_extra" ]; then
+  if [[ ! -z $fixups_srcdir_extra ]]; then
     for extra_dir in "$fixups_srcdir_extra"/*
     do
-      test -z "$extra_dir" -o ! -d "$extra_dir" && continue
+      [[ -z $extra_dir || ! -d $extra_dir ]] && continue
       cp -rf "$extra_dir" "${cfg[defaults.features.fixups_dir]}"
       check_errors
     done
@@ -27,7 +27,7 @@ if [ ! -z "$fixups_srcdir" ]; then
   # populate with downloaded prebuilt fakeroot packages for different distributions
   for fakeroot_dir in "$HOME/.cache/sandboxer"/fakeroot*
   do
-    test -z "$fakeroot_dir" -o ! -d "$fakeroot_dir" && continue
+    [[ -z $fakeroot_dir || ! -d $fakeroot_dir ]] && continue
     cp -rf "$fakeroot_dir" "${cfg[defaults.features.fixups_dir]}"
     check_errors
   done

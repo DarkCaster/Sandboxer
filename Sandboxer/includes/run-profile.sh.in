@@ -6,8 +6,8 @@ check_errors
 
 #set pwd
 if check_lua_export "$exec_profile.path" ; then
- 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 6 "${cfg[$exec_profile.path]}"
- check_errors
+  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 6 "${cfg[$exec_profile.path]}"
+  check_errors
 fi
 
 #set args
@@ -20,11 +20,11 @@ do
 done
 
 #set extra args
-test -z "$exec_args_cnt" && exec_args_cnt=0
+[[ -z $exec_args_cnt ]] && exec_args_cnt=0
 for ((cnt=0;cnt<exec_args_cnt;++cnt))
 do
- 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 2 "${exec_args[$cnt]}"
- check_errors
+  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 2 "${exec_args[$cnt]}"
+  check_errors
 done
 exec_args=()
 exec_args_cnt=0
@@ -34,14 +34,14 @@ cnt_min=`get_lua_table_start "$exec_profile.env_unset"`
 cnt_max=`get_lua_table_end "$exec_profile.env_unset"`
 for ((cnt=cnt_min;cnt<cnt_max;++cnt))
 do
- 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 4 "${cfg[$exec_profile.env_unset.$cnt]}"
- check_errors
+  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 4 "${cfg[$exec_profile.env_unset.$cnt]}"
+  check_errors
 done
 
 for ((cnt=0;cnt<extra_env_unset_cnt;++cnt))
 do
- 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 4 "${extra_env_unset[$cnt]}"
- check_errors
+  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 4 "${extra_env_unset[$cnt]}"
+  check_errors
 done
 
 #set env_set list
@@ -49,38 +49,38 @@ cnt_min=`get_lua_table_start "$exec_profile.env_set"`
 cnt_max=`get_lua_table_end "$exec_profile.env_set"`
 for ((cnt=cnt_min;cnt<cnt_max;++cnt))
 do
- if check_lua_export "$exec_profile.env_set.$cnt.1" && check_lua_export "$exec_profile.env_set.$cnt.2" ; then
-  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 3 "${cfg[$exec_profile.env_set.$cnt.1]}" "${cfg[$exec_profile.env_set.$cnt.2]}"
-  check_errors
- fi
+  if check_lua_export "$exec_profile.env_set.$cnt.1" && check_lua_export "$exec_profile.env_set.$cnt.2" ; then
+    2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 3 "${cfg[$exec_profile.env_set.$cnt.1]}" "${cfg[$exec_profile.env_set.$cnt.2]}"
+    check_errors
+  fi
 done
 
 for ((cnt=0;cnt<extra_env_set_cnt;++cnt))
 do
- 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 3 "${extra_env_set_name[$cnt]}" "${extra_env_set_value[$cnt]}"
- check_errors
+  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 3 "${extra_env_set_name[$cnt]}" "${extra_env_set_value[$cnt]}"
+  check_errors
 done
 
 #set signal
 if check_lua_export "$exec_profile.term_signal" ; then
- 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 5 "${cfg[$exec_profile.term_signal]}"
- check_errors
+  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 5 "${cfg[$exec_profile.term_signal]}"
+  check_errors
 fi
 
 if [ "${cfg[$exec_profile.term_child_only]}" = "true" ]; then
- 2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 7 1
- check_errors
+  2>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" 7 1
+  check_errors
 fi
 
 #wait for any running background command-list exec task to complete
 wait_for_cmd_list
 
 #run
-if [ "$exec_bg" != "true" ]; then
- "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}" "$exec_log_out" "$exec_log_err"
+if [[ $exec_bg != true ]]; then
+  "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}" "$exec_log_out" "$exec_log_err"
 else
- &>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}" "$exec_log_out" "$exec_log_err" &
- exec_bg_pid="$!"
+  &>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}" "$exec_log_out" "$exec_log_err" &
+  exec_bg_pid="$!"
 fi
 
 exec_bg=""
