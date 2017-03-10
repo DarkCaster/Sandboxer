@@ -34,7 +34,7 @@ gid=`id -g`
 tmp_dir="$TMPDIR"
 test -z "$tmp_dir" -o ! -d "$tmp_dir" && tmp_dir="/tmp"
 
-. "$includes_dir/find-lua-helper.bash.in" "$includes_dir" "$script_dir/../BashLuaHelper"
+. "$includes_dir/find-lua-helper.bash.in" "$script_dir/BashLuaHelper" "$script_dir/../BashLuaHelper"
 . "$bash_lua_helper" "$config" -e defaults.basedir -e defaults.chrootdir -e defaults.features -e sandbox -e profile -e dbus -e x11util -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "$tmp_dir" -o "$tmp_dir/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
