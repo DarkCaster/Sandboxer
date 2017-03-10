@@ -86,3 +86,13 @@ do
   cp "$example" "$target/examples"
   check_error
 done
+
+echo "Creating symlinks"
+
+test ! -d "$HOME/bin" && mkdir -p "$HOME/bin"
+
+rm -f "$HOME/bin/sandboxer.sh"
+check_error
+
+ln -s "$target/bin/sandboxer.sh" "$HOME/bin/sandboxer.sh"
+check_error
