@@ -74,7 +74,7 @@ echo "Installing examples"
 
 for example in "$target/examples"/*.cfg.lua
 do
-  test ! -f "$example" && continue
+  [[ ! -f $example ]] && continue
   echo "Moving existing example config $example to $example.bak"
   mv "$example" "$example.bak"
   check_error
@@ -82,14 +82,14 @@ done
 
 for example in "$curdir/Examples"/*.cfg.lua
 do
-  test ! -f "$example" && continue
+  [[ ! -f $example ]] && continue
   cp "$example" "$target/examples"
   check_error
 done
 
 echo "Creating symlinks"
 
-test ! -d "$HOME/bin" && mkdir -p "$HOME/bin"
+[[ ! -d $HOME/bin ]] && mkdir -p "$HOME/bin"
 
 rm -f "$HOME/bin/sandboxer.sh"
 check_error
