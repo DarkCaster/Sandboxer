@@ -1,17 +1,17 @@
 #!/bin/bash
 
-if [ ! -z "$x11host_pre_triggered" ] && [ "${cfg[defaults.features.x11util_enable]}" = "true" ]; then
+if [[ ! -z $x11host_pre_triggered && ${cfg[defaults.features.x11util_enable]} = true ]]; then
   x11util_ok=0
   for hint in "$HOME/.cache/sandboxer/x11util-${cfg[defaults.features.x11util_build]}" "$script_dir/x11util" "$script_dir/../Build/x11util"
   do
-    test -z "$hint" -o ! -x "$hint/x11util" && continue
+    [[ -z $hint || ! -x $hint/x11util ]] && continue
     cp "$hint"/* "$basedir/extra"
     check_errors
     x11util_ok=1
     break
   done
 
-  test "$x11util_ok" = "0" && log "x11util service utility not found!" && teardown 1
+  [[ $x11util_ok = 0 ]] && log "x11util service utility not found!" && teardown 1
   #execute dbus daemon in background
   exec_profile="x11util"
   . "$includes_dir/channel-open.sh.in"
@@ -29,10 +29,10 @@ if [ ! -z "$x11host_pre_triggered" ] && [ "${cfg[defaults.features.x11util_enabl
   . "$includes_dir/run-profile.sh.in"
   wait "$exec_bg_pid"
   x11util_ec="$?"
-  if [ "$x11util_ec" = "127" ]; then
+  if [[ $x11util_ec = 127 ]]; then
     log "x11util was failed to execute xshm_test, this is not fatal. error code=$x11util_ec, stderr output:"
     cat "$basedir/x11util.stderr"
-  elif [ "$x11util_ec" != "0" ]; then
+  elif [[ $x11util_ec != 0 ]]; then
     log "x11util was failed! error code=$x11util_ec, stderr output:"
     cat "$basedir/x11util.stderr"
     # TODO: perform shutdown of currently running master executor and other sessions
