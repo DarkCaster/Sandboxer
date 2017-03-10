@@ -19,84 +19,81 @@ check_errors
 
 pulse_server="$PULSE_SERVER"
 
-test -z "$pulse_server" && pulse_server=`2>/dev/null xprop -root | grep -E "^PULSE_SERVER.*" | sed -n "s|^PULSE_SERVER(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
+[[ -z $pulse_server ]] && pulse_server=`2>/dev/null xprop -root | grep -E "^PULSE_SERVER.*" | sed -n "s|^PULSE_SERVER(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
 
 # TODO: detect and use alternative methods of communication
 pulse_socket=`echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'`
 
 # detect pulse socket location, abort if not found
 # TODO: add more complex parsing, for now it only read simple string without spaces or other special symbols
-test -z "$pulse_socket" && pulse_socket=`2>/dev/null pacmd dump | grep "module-native-protocol-unix" | sed -n 's|^.*\(socket=\)\([a-Z0-9/._-+]*\).*$|\2|p'`
+[[ -z $pulse_socket ]] && pulse_socket=`2>/dev/null pacmd dump | grep "module-native-protocol-unix" | sed -n 's|^.*\(socket=\)\([a-Z0-9/._-+]*\).*$|\2|p'`
 
-test -z "$pulse_socket" -a -S "$XDG_RUNTIME_DIR/pulse/native" && pulse_socket="$XDG_RUNTIME_DIR/pulse/native"
+[[ -z $pulse_socket && -S $XDG_RUNTIME_DIR/pulse/native ]] && pulse_socket="$XDG_RUNTIME_DIR/pulse/native"
 
-test -z "$pulse_socket" -a -S "/run/user/$uid/pulse/native" && pulse_socket="/run/user/$uid/pulse/native"
+[[ -z $pulse_socket && -S /run/user/$uid/pulse/native ]] && pulse_socket="/run/user/$uid/pulse/native"
 
-test ! -z "$pulse_socket" -a -S "$pulse_socket" && pulse_server_is_socket="true"
+[[ ! -z $pulse_socket && -S $pulse_socket ]] && pulse_server_is_socket="true"
 
 # skip futher procesing if using unsuported communication method (or failed to detect)
-if [ "$pulse_server_is_socket" = "true" ] || [ ! -z "$pulse_server" ]; then
+if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
 
-# export default env from defaults.features.pulse_env
-env_set_add_list "defaults.features.pulse_env"
+  # export default env from defaults.features.pulse_env
+  env_set_add_list "defaults.features.pulse_env"
 
-# if using socket try to hardlink socket
-test "$pulse_server_is_socket" = "true" && 2>/dev/null ln "$pulse_socket" "${cfg[defaults.features.pulse_dir]}/socket"
+  # if using socket try to hardlink socket
+  [[ $pulse_server_is_socket = true ]] && 2>/dev/null ln "$pulse_socket" "${cfg[defaults.features.pulse_dir]}/socket"
 
-# export socket location env inside sandbox, depending on what communication method is used now
-if [ "$pulse_server_is_socket" = "true" ]; then
-  env_set_add "PULSE_SERVER" "unix:/etc/pulse/socket"
+  # export socket location env inside sandbox, depending on what communication method is used now
+  if [[ $pulse_server_is_socket = true ]]; then
+    env_set_add "PULSE_SERVER" "unix:/etc/pulse/socket"
+  else
+    # TODO: alternative methods of communication
+    env_set_add "PULSE_SERVER" "$pulse_server"
+  fi
+
+  if [[ ! -z ${cfg[defaults.features.pulse_env_alsa_config]} ]]; then
+    # export defaults.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
+    env_set_add "ALSA_CONFIG_PATH" "${cfg[defaults.features.pulse_env_alsa_config]}"
+  elif [[ -z ${cfg[defaults.features.pulse_env_alsa_config]} && ! -z $ALSA_CONFIG_PATH ]]; then
+    env_set_add "ALSA_CONFIG_PATH" "$ALSA_CONFIG_PATH"
+  fi
+
+  # detect - do we use cookie, and where it is located
+  pulse_cookie="$PULSE_COOKIE"
+
+  [[ -z $pulse_cookie ]] && pulse_cookie=`2>/dev/null xprop -root | grep -E "^PULSE_COOKIE.*" | sed -n "s|^PULSE_COOKIE(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
+
+  if [[ ! -z $pulse_cookie ]]; then
+    echo "$pulse_cookie" | xxd -r -p - "$basedir/pulse-cookie-from-x11"
+    [[ ${PIPESTATUS[*]} = "0 0" ]] && pulse_cookie="$basedir/pulse-cookie-from-x11"
+  fi
+
+  [[ -z $pulse_cookie && -f $HOME/.pulse-cookie ]] && pulse_cookie="$HOME/.pulse-cookie"
+
+  [[ -z $pulse_cookie && -f $HOME/.config/pulse/cookie ]] && pulse_cookie="$HOME/.config/pulse/cookie"
+
+  # copy cookie if exist, set env
+  if [[ ! -z $pulse_cookie && -f $pulse_cookie ]]; then
+    cp "$pulse_cookie" "${cfg[defaults.features.pulse_dir]}/cookie"
+    check_errors
+    chmod 600 "${cfg[defaults.features.pulse_dir]}/cookie"
+    env_set_add "PULSE_COOKIE" "/etc/pulse/cookie"
+  else
+    [[ ! -z $pulse_cookie ]] && log "warning: cannot copy pulse cookie, debug: pulse_cookie=$pulse_cookie"
+  fi
+
+  if [[ $pulse_server_is_socket = true && -S ${cfg[defaults.features.pulse_dir]}/socket ]]; then
+    # add rw-mount define for constructed pulse_dir to /etc/pulse
+    sandbox_bind_rw "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
+  else
+    # add ro-mount define for constructed pulse_dir to /etc/pulse
+    sandbox_bind_ro "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
+    if [ "$pulse_server_is_socket" = "true" ]; then
+      touch "${cfg[defaults.features.pulse_dir]}/socket"
+      check_errors
+      sandbox_bind_rw "$pulse_socket" "/etc/pulse/socket"
+    fi
+  fi
 else
-  # TODO: alternative methods of communication
-  env_set_add "PULSE_SERVER" "$pulse_server"
-fi
-
-if [ ! -z "${cfg[defaults.features.pulse_env_alsa_config]}" ]; then
- # export defaults.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
- env_set_add "ALSA_CONFIG_PATH" "${cfg[defaults.features.pulse_env_alsa_config]}"
-elif [ -z "${cfg[defaults.features.pulse_env_alsa_config]}" ] && [ ! -z "$ALSA_CONFIG_PATH" ]; then
- env_set_add "ALSA_CONFIG_PATH" "$ALSA_CONFIG_PATH"
-fi
-
-# detect - do we use cookie, and where it is located
-pulse_cookie="$PULSE_COOKIE"
-
-test -z "$pulse_cookie" && pulse_cookie=`2>/dev/null xprop -root | grep -E "^PULSE_COOKIE.*" | sed -n "s|^PULSE_COOKIE(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
-
-if [ ! -z "$pulse_cookie" ]; then
-  echo "$pulse_cookie" | xxd -r -p - "$basedir/pulse-cookie-from-x11"
-  test "${PIPESTATUS[*]}" = "0 0" && pulse_cookie="$basedir/pulse-cookie-from-x11"
-fi
-
-test -z "$pulse_cookie" -a -f "$HOME/.pulse-cookie" && pulse_cookie="$HOME/.pulse-cookie"
-
-test -z "$pulse_cookie" -a -f "$HOME/.config/pulse/cookie" && pulse_cookie="$HOME/.config/pulse/cookie"
-
-# copy cookie if exist, set env
-if [ ! -z "$pulse_cookie" ] && [ -f "$pulse_cookie" ]; then
- cp "$pulse_cookie" "${cfg[defaults.features.pulse_dir]}/cookie"
- check_errors
- chmod 600 "${cfg[defaults.features.pulse_dir]}/cookie"
- env_set_add "PULSE_COOKIE" "/etc/pulse/cookie"
-else
-  test ! -z "$pulse_cookie" && log "warning: cannot copy pulse cookie, debug: pulse_cookie=$pulse_cookie"
-fi
-
-if [ "$pulse_server_is_socket" = "true" ] && [ -S "${cfg[defaults.features.pulse_dir]}/socket" ]; then
- # add rw-mount define for constructed pulse_dir to /etc/pulse
- sandbox_bind_rw "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
-else
- # add ro-mount define for constructed pulse_dir to /etc/pulse
- sandbox_bind_ro "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
- if [ "$pulse_server_is_socket" = "true" ]; then
-  touch "${cfg[defaults.features.pulse_dir]}/socket"
-  check_errors
-  sandbox_bind_rw "$pulse_socket" "/etc/pulse/socket"
- fi
-fi
-
-else
-
-log "pulseaudio not running or current configuration is not supported, skipping feature activation"
-
+  log "pulseaudio not running or current configuration is not supported, skipping feature activation"
 fi
