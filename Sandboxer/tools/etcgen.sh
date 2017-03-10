@@ -9,18 +9,18 @@
 source_dir="$1"
 target_dir="$2"
 
-test -z "$target_dir" && echo "target_dir is empty!" && exit 1
+[[ -z $target_dir ]] && echo "target_dir is empty!" && exit 1
 
 mkdir -p "$target_dir"
 
 copy_file () {
- 2>/dev/null \
- cp "$source_dir/$1" "$target_dir/$1"
+  2>/dev/null \
+  cp "$source_dir/$1" "$target_dir/$1"
 }
 
 copy_glob () {
- 2>/dev/null \
- cp -rf "$source_dir/$1"* "$target_dir"
+  2>/dev/null \
+  cp -rf "$source_dir/$1"* "$target_dir"
 }
 
 copy_glob "alternatives"

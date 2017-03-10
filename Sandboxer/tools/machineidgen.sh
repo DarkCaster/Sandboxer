@@ -3,9 +3,9 @@
 check_errors () {
   local status="$?"
   local msg="$@"
-  if [ "$status" != "0" ]; then
+  if [[ $status != 0 ]]; then
     echo "machineidgen.sh: operation finished with error code $status"
-    test ! -z "$msg" && echo "$msg"
+    [[ ! -z $msg ]] && echo "$msg"
     exit "$status"
   fi
 }
