@@ -4,6 +4,7 @@ assert(config.profile~="dbus" and
   config.profile~="config" and
   config.profile~="defaults" and
   config.profile~="x11util" and
+  config.profile~="tunables" and
   config.profile~="control",
   "cannot use service table name as profile: "..config.profile)
 
