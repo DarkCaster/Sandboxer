@@ -4,16 +4,16 @@
 curdir="$PWD"
 script_dir="$( cd "$( dirname "$0" )" && pwd )"
 self=`basename "$0"`
-test ! -e "$script_dir/$self" && echo "script_dir detection failed. cannot proceed!" && exit 1
+[[ ! -e $script_dir/$self ]] && echo "script_dir detection failed. cannot proceed!" && exit 1
 script_file=`readlink "$script_dir/$self"`
-test ! -z "$script_file" && script_dir=`realpath \`dirname "$script_file"\``
+[[ ! -z $script_file ]] && script_dir=`realpath \`dirname "$script_file"\``
 
 #load parameters
 config="$1"
-test -z "$config" && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
+[[ -z $config ]] && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
 shift 1
 profile="$1"
-test -z "$profile" && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
+[[ -z $profile ]] && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
 shift 1
 
 #includes dir
@@ -23,7 +23,7 @@ includes_dir="$script_dir/includes"
 . "$includes_dir/loadables-helper.bash.in"
 
 #generate uid for given config file
-test ! -e "$config" && echo "config file not found: $config" && exit 1
+[[ ! -e $config ]] && echo "config file not found: $config" && exit 1
 config_uid=`realpath -s "$config" | md5sum -t | cut -f1 -d" "`
 
 #user id and group id
@@ -32,14 +32,14 @@ gid=`id -g`
 
 #temp directory
 tmp_dir="$TMPDIR"
-test -z "$tmp_dir" -o ! -d "$tmp_dir" && tmp_dir="/tmp"
+[[ -z $tmp_dir || ! -d $tmp_dir ]] && tmp_dir="/tmp"
 
 . "$includes_dir/find-lua-helper.bash.in" "$script_dir/BashLuaHelper" "$script_dir/../BashLuaHelper"
 . "$bash_lua_helper" "$config" -e defaults.basedir -e defaults.chrootdir -e defaults.features -e sandbox -e profile -e dbus -e x11util -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "$tmp_dir" -o "$tmp_dir/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
 
-test "${#cfg[@]}" = "0" && echo "can't find config storage variable populated by bash_lua_helper. bash_lua_helper failed!" && exit 1
+[[ "${#cfg[@]}" = 0 ]] && echo "can't find config storage variable populated by bash_lua_helper. bash_lua_helper failed!" && exit 1
 
 #echo "$cfg_list"
 
@@ -51,35 +51,35 @@ log () {
 commander=""
 for hint in "$script_dir/commander" "$script_dir/../Build/commander"
 do
-  if [ -x "$hint/commander" ]; then
+  if [[ -x $hint/commander ]]; then
     commander="$hint/commander"
     break
   fi
 done
 
-test -z "$commander" && log "commander binary not found!" && exit 1
+[[ -z $commander ]] && log "commander binary not found!" && exit 1
 
 # get source-checksum
 source_checksum=`2>/dev/null "$commander"`
-test -z "$source_checksum" && log "failed to read correct source_checksum from commander!" && exit 1
+[[ -z $source_checksum ]] && log "failed to read correct source_checksum from commander!" && exit 1
 
 # find executor binary
 executor=""
 for hint in "$HOME/.cache/sandboxer/executor-${cfg[sandbox.setup.executor_build]}-$source_checksum" "$script_dir/executor" "$script_dir/../Build/executor"
 do
-  if [ -x "$hint/executor" ]; then
+  if [[ -x $hint/executor ]]; then
     executor="$hint/executor"
     break
   fi
 done
 
-test -z "$executor" && log "executor binary not found!" && exit 1
+[[ -z $executor ]] && log "executor binary not found!" && exit 1
 
 basedir="${cfg[defaults.basedir]}"
 
 #construct control directory if not exist, needed for lock
 mkdir -p "$basedir"
-test "$?" != "0" && log "error creating basedir at $basedir" && exit 1
+[[ $? != 0 ]] && log "error creating basedir at $basedir" && exit 1
 
 lock_entered="false"
 lock_dirname="control.lock"
@@ -91,7 +91,7 @@ lock_enter() {
     lock_entered="true"
     return 0
   else
-    test ! -z "$nowait" && return 1
+    [[ ! -z $nowait ]] && return 1
     log "awaiting lock release"
     while ! lock_enter "nowait"; do
       sleep 1
@@ -102,7 +102,7 @@ lock_enter() {
 }
 
 lock_exit() {
-  if [ "$lock_entered" = "true" ]; then
+  if [[ $lock_entered = true ]]; then
     rmdir "$lock_path" 2>/dev/null
     lock_entered="false"
   fi
@@ -118,9 +118,9 @@ teardown() {
 check_errors () {
   local status="$?"
   local msg="$@"
-  if [ "$status" != "0" ]; then
+  if [[ $status != 0 ]]; then
     log "ERROR: operation finished with error code $status"
-    test ! -z "$msg" && log "$msg"
+    [[ ! -z $msg ]] && log "$msg"
     teardown "$status"
   fi
 }
@@ -133,7 +133,7 @@ lock_enter
 
 #check that executor is running
 ###############################
-if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]; then
+if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; then
 
   cmd_list_bg_pid=0
 
@@ -172,7 +172,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
         log "skipping empty command $list.$top_cnt"
         continue
       fi
-      if [ -z "${cfg[$list.$top_cnt]}" ]; then
+      if [[ -z ${cfg[$list.$top_cnt]} ]]; then
         local fold_cnt=0
         local fold_start=`get_lua_table_start "$list.$top_cnt"`
         local fold_limit=`get_lua_table_end "$list.$top_cnt"`
@@ -184,16 +184,16 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
           fi
           exec_cmd "$list.$top_cnt.$fold_cnt"
           err_code="$?"
-          test "$err_code" != "0" && exec_bg_pid_error="$list.$top_cnt.$fold_cnt" && break
+          [[ $err_code != 0 ]] && exec_bg_pid_error="$list.$top_cnt.$fold_cnt" && break
         done
       else
         exec_cmd "$list.$top_cnt"
         err_code="$?"
-        test "$err_code" != "0" && exec_bg_pid_error="$list.$top_cnt"
+        [[ $err_code != 0 ]] && exec_bg_pid_error="$list.$top_cnt"
       fi
-      test "$err_code" != "0" && break
+      [[ $err_code != 0 ]] && break
     done
-    if [ "$err_code" != "0" ]; then
+    if [[ $err_code != 0 ]]; then
       log "command $exec_bg_pid_error complete with error code $err_code"
       exit "$err_code"
     else
@@ -204,7 +204,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   }
 
   wait_for_cmd_list() {
-    if [ "$cmd_list_bg_pid" != "0" ]; then
+    if [[ $cmd_list_bg_pid != 0 ]]; then
       wait $cmd_list_bg_pid
       check_errors "command list execute failed!"
       cmd_list_bg_pid=0
@@ -251,10 +251,10 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
           local fld_cnt_max=`get_lua_table_end "sandbox.setup.env_whitelist.$top_cnt"`
           for ((fld_cnt=fld_cnt_min;fld_cnt<fld_cnt_max;++fld_cnt))
           do
-            test "$test_val" = "${cfg[sandbox.setup.env_whitelist.$top_cnt.$fld_cnt]}" && return 0
+            [[ $test_val = ${cfg[sandbox.setup.env_whitelist.$top_cnt.$fld_cnt]} ]] && return 0
           done
         else
-          test "$test_val" = "${cfg[sandbox.setup.env_whitelist.$top_cnt]}" && return 0
+          [[ $test_val = ${cfg[sandbox.setup.env_whitelist.$top_cnt]} ]] && return 0
         fi
       done
       return 1
@@ -290,7 +290,7 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   feature_cnt_max=`get_lua_table_end "sandbox.features"`
   for ((feature_cnt=feature_cnt_min;feature_cnt<feature_cnt_max;++feature_cnt))
   do
-    if [ -f "$includes_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
+    if [[ -f $includes_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in ]]; then
       log "preparing ${cfg[sandbox.features.$feature_cnt]} feature"
       . "$includes_dir/feature-pre-${cfg[sandbox.features.$feature_cnt]}.sh.in"
     fi
@@ -306,9 +306,9 @@ if [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.ou
   log "waiting for control comm-channels to appear"
 
   comm_wait=400
-  while [ ! -p "$basedir/control/control.in" ] || [ ! -p "$basedir/control/control.out" ]
+  while [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]
   do
-    if [ $comm_wait -lt 1 ]; then
+    if [[ $comm_wait < 1 ]]; then
       log "timeout while waiting control channels"
       teardown 1
     fi
@@ -346,7 +346,7 @@ feature_cnt_min=`get_lua_table_start "sandbox.features"`
 feature_cnt_max=`get_lua_table_end "sandbox.features"`
 for ((feature_cnt=feature_cnt_min;feature_cnt<feature_cnt_max;++feature_cnt))
 do
-  if [ -f "$includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in" ]; then
+  if [[ -f $includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in ]]; then
     log "activating ${cfg[sandbox.features.$feature_cnt]} feature"
     . "$includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in"
   fi
