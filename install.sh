@@ -4,8 +4,8 @@
 # You must build all required binaries before running this script: run build.sh and build-bwrap.sh (optionally).
 
 target="$1"
-test -z "$target" && target="$HOME/sandboxer"
-test "$target" = "$HOME" && echo "will not proceed install to home directory directly, try $HOME/sandboxer sub-directory instead"
+[[ -z $target ]] && target="$HOME/sandboxer"
+[[ $target = $HOME ]] && echo "will not proceed install to home directory directly, try $HOME/sandboxer sub-directory instead"
 
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 

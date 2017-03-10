@@ -24,7 +24,7 @@ sandbox={
     commands={
       --disable automatic services startup on package installing
       --(or else dpkg configure stage will fail, becase there is no running init daemon inside sandbox)
-      {'test ! -x "usr/sbin/policy-rc.d" && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
+      {'[[ ! -x usr/sbin/policy-rc.d ]] && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
       {'rm -f "etc_orig/resolv.conf"', 'cp "/etc/resolv.conf" "etc_orig/resolv.conf"'},
     },
