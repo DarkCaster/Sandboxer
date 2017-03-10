@@ -13,8 +13,8 @@ if [[ ! -p $basedir/control/dbus.in || ! -p $basedir/control/dbus.out ]]; then
     cfg[$exec_profile.exec]=""
     for hint in "/usr/bin" "/bin" "/usr/local/bin" "/usr/sbin" "/sbin"
     do
-      [[ -x ${cfg[defaults.features.dbus_search_prefix]}$hint/dbus-daemon ]] && cfg[$exec_profile.exec]="$hint/dbus-daemon" && break
-      # log "no dbus-daemon binary at ${cfg[defaults.features.dbus_search_prefix]}$hint" # debug
+      [[ -x ${cfg[tunables.features.dbus_search_prefix]}$hint/dbus-daemon ]] && cfg[$exec_profile.exec]="$hint/dbus-daemon" && break
+      # log "no dbus-daemon binary at ${cfg[tunables.features.dbus_search_prefix]}$hint" # debug
     done
     [[ -z ${cfg[$exec_profile.exec]} ]] && log "dbus-daemon binary not found!" && teardown 1
   fi

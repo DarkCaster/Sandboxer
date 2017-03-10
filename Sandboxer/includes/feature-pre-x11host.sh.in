@@ -2,9 +2,9 @@
 
 # prepare host x11 passthrough to sandbox
 
-if [[ -d ${cfg[defaults.features.x11host_target_dir]} && -f $HOME/.Xauthority ]]; then
+if [[ -d ${cfg[tunables.features.x11host_target_dir]} && -f $HOME/.Xauthority ]]; then
   # copy .Xauthority to user's home dir inside sandbox
-  cp "$HOME/.Xauthority" "${cfg[defaults.features.x11host_target_dir]}"
+  cp "$HOME/.Xauthority" "${cfg[tunables.features.x11host_target_dir]}"
 else
   # or allow access to x11 with xhost utility
   &>/dev/null xhost "+si:localuser:$USER"

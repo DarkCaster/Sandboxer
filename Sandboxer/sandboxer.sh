@@ -75,7 +75,7 @@ done
 
 [[ -z $executor ]] && log "executor binary not found!" && exit 1
 
-basedir="${cfg[defaults.basedir]}"
+basedir="${cfg[tunables.basedir]}"
 
 #construct control directory if not exist, needed for lock
 mkdir -p "$basedir"
@@ -217,7 +217,7 @@ if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; 
   log "creating sandbox"
 
   #chroot dir
-  mkdir -p "${cfg[defaults.chrootdir]}"
+  mkdir -p "${cfg[tunables.chrootdir]}"
   check_errors
 
   mkdir -p "$basedir/control"
@@ -230,7 +230,7 @@ if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; 
   cp "$executor" "$basedir/executor"
 
   #execute custom chroot construction commands
-  cd "${cfg[defaults.chrootdir]}"
+  cd "${cfg[tunables.chrootdir]}"
   check_errors
 
   #this will start commands execution in subshell and in background

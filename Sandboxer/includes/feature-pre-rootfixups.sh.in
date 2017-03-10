@@ -8,19 +8,19 @@ fixups_srcdir_extra="$script_dir/../Build/fixups"
 if [[ ! -z $fixups_srcdir ]]; then
   fixups_srcdir=`realpath "$fixups_srcdir"`
   # construct directory, that will be mounted
-  rm -rf "${cfg[defaults.features.fixups_dir]}"
+  rm -rf "${cfg[tunables.features.fixups_dir]}"
   check_errors
-  mkdir "${cfg[defaults.features.fixups_dir]}"
+  mkdir "${cfg[tunables.features.fixups_dir]}"
   check_errors
   # populate with main directory contents
-  cp -rf "$fixups_srcdir"/* "${cfg[defaults.features.fixups_dir]}"
+  cp -rf "$fixups_srcdir"/* "${cfg[tunables.features.fixups_dir]}"
   check_errors
   # populate with extra directory contents
   if [[ ! -z $fixups_srcdir_extra ]]; then
     for extra_dir in "$fixups_srcdir_extra"/*
     do
       [[ -z $extra_dir || ! -d $extra_dir ]] && continue
-      cp -rf "$extra_dir" "${cfg[defaults.features.fixups_dir]}"
+      cp -rf "$extra_dir" "${cfg[tunables.features.fixups_dir]}"
       check_errors
     done
   fi
@@ -28,11 +28,11 @@ if [[ ! -z $fixups_srcdir ]]; then
   for fakeroot_dir in "$HOME/.cache/sandboxer"/fakeroot*
   do
     [[ -z $fakeroot_dir || ! -d $fakeroot_dir ]] && continue
-    cp -rf "$fakeroot_dir" "${cfg[defaults.features.fixups_dir]}"
+    cp -rf "$fakeroot_dir" "${cfg[tunables.features.fixups_dir]}"
     check_errors
   done
   # add mounts entries for fixups directory
-  sandbox_bind_ro "${cfg[defaults.features.fixups_dir]}" "/fixups"
+  sandbox_bind_ro "${cfg[tunables.features.fixups_dir]}" "/fixups"
 else
   log "fixups directory not found, skipping feature activation"
 fi

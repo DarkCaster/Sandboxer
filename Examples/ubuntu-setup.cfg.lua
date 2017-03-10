@@ -1,14 +1,14 @@
-defaults.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
+tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
 
 -- special tweaks applied to some of "defaults" entries when using "root" username
 -- use "root" username for sandbox only if you want to get pseudo-superuser session
 -- do not set it for regular sandbox usage
-defaults.user="root"
-defaults.uid=0
-defaults.gid=0
-defaults.etcdir_name="etc_orig"
+tunables.user="root"
+tunables.uid=0
+tunables.gid=0
+tunables.etcdir_name="etc_orig"
 -- use different build of x11 util, if you experience problems, for example:
--- defaults.features.x11util_build="ubuntu-12.04"
+-- tunables.features.x11util_build="ubuntu-12.04"
 defaults.recalculate()
 
 sandbox={
@@ -45,8 +45,8 @@ sandbox={
       defaults.env.set_xdg_runtime,
       defaults.env.set_home, --equialent to:
       --[[{"HOME","/root"},
-      {"USER",defaults.user},
-      {"LOGNAME",defaults.user},]]--
+      {"USER",tunables.user},
+      {"LOGNAME",tunables.user},]]--
     },
     mounts={
       defaults.mounts.proc_mount,
@@ -57,16 +57,16 @@ sandbox={
       defaults.mounts.lib_rw_mount,
       defaults.mounts.lib64_rw_mount,
       defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"etc_orig"),"/etc"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"boot"),"/boot"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"root"),"/root"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"run"),"/run"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"sbin"),"/sbin"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"srv"),"/srv"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"opt"),"/opt"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"tmp"),"/tmp"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"var"),"/var"},
-      {prio=10,"bind",loader.path.combine(defaults.chrootdir,"home"),"/home"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"etc_orig"),"/etc"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"boot"),"/boot"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"root"),"/root"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"run"),"/run"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"sbin"),"/sbin"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"srv"),"/srv"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"opt"),"/opt"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"tmp"),"/tmp"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"var"),"/var"},
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"home"),"/home"},
     }
   },
   bwrap={

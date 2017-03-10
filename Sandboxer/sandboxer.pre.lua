@@ -13,19 +13,22 @@ config.tools_dir=loader.path.combine(config.sandboxer_dir,"tools") -- tools dire
 -- define some defaults to use inside user-sandbox config files, to make them more portable and simple
 -- TODO: make different defaults-sets optimized for different linux-distributions (maintain it in different config files, included there)
 
-defaults={}
+tunables={}
 
 -- default values for tunables. do not forget to run defaults.recalculate() if you change them
-defaults.basedir=config.ctldir
-defaults.chrootdir=loader.path.combine(defaults.basedir,"chroot")
-defaults.uid=config.uid
-defaults.gid=config.gid
-defaults.user="sandboxer"
-defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
-defaults.etcdir_name="etc"
-defaults.etchost_path="/etc"
+tunables.basedir=config.ctldir
+tunables.chrootdir=loader.path.combine(tunables.basedir,"chroot")
+tunables.uid=config.uid
+tunables.gid=config.gid
+tunables.user="sandboxer"
+tunables.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
+tunables.etcdir_name="etc"
+tunables.etchost_path="/etc"
 
--- signals list
+defaults={}
+
+-- supported signals enumeration for use with profiles
+-- TODO: cleanup
 defaults.signals={
   SIGHUP=1,SIGINT=2,SIGQUIT=3,SIGILL=4,SIGTRAP=5,SIGABRT=6,SIGIOT=6,SIGBUS=7,SIGFPE=8,SIGKILL=9,SIGUSR1=10,SIGSEGV=11,SIGUSR2=12,SIGPIPE=13,SIGALRM=14,SIGTERM=15,SIGSTKFLT=16,
   SIGCHLD=17,SIGCONT=18,SIGSTOP=19,SIGTSTP=20,SIGTTIN=21,SIGTTOU=22,SIGURG=23,SIGXCPU=24,SIGXFSZ=25,SIGVTALRM=26,SIGPROF=27,SIGWINCH=28,SIGIO=29,SIGPWR=30,SIGSYS=31,
@@ -35,7 +38,7 @@ defaults.signals={
 defaults.commands={}
 
 -- container for commands and other configurable stuff for various include scripts. not for direct use in config.
-defaults.features={}
+tunables.features={}
 
 -- standard mount entries, intended for use inside main config files at sandbox.mounts table
 defaults.mounts={}
@@ -179,17 +182,17 @@ defaults.mounts.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","
 defaults.mounts.devshm_mount={prio=20,tag="devshm","bind","/dev/shm","/dev/shm"}
 
 -- various tunables for features
-defaults.features.fixupsdir_name="fixups"
+tunables.features.fixupsdir_name="fixups"
 
-defaults.features.dbus_search_prefix="/"
+tunables.features.dbus_search_prefix="/"
 
-defaults.features.gvfs_fix_search_prefix="/"
+tunables.features.gvfs_fix_search_prefix="/"
 
-defaults.features.gvfs_fix_search_locations={
+tunables.features.gvfs_fix_search_locations={
   '/usr/share/gvfs',
 }
 
-defaults.features.gvfs_fix_mounts={
+tunables.features.gvfs_fix_mounts={
   'archive.mount',
   'cdda.mount',
   'computer.mount',
@@ -198,31 +201,31 @@ defaults.features.gvfs_fix_mounts={
   'trash.mount',
 }
 
-defaults.features.pulse_env={
+tunables.features.pulse_env={
   {"AUDIODRIVER","pulseaudio"},
   {"QEMU_AUDIO_DRV","pa"},
   {"SDL_AUDIODRIVER","pulse"},
 }
 
-defaults.features.pulse_env_alsa_config=""
+tunables.features.pulse_env_alsa_config=""
 
-defaults.features.x11util_build="default"
-defaults.features.x11util_enable=true
+tunables.features.x11util_build="default"
+tunables.features.x11util_enable=true
 
 -- (re)create tables that rely on tunable parameters
 function defaults.recalculate()
 
-  local etchost_path=loader.path.combine(defaults.etchost_path)
-  local home=loader.path.combine(defaults.datadir,"home")
-  if defaults.user=="root" then home=tostring(defaults.chrootdir) end
+  local etchost_path=loader.path.combine(tunables.etchost_path)
+  local home=loader.path.combine(tunables.datadir,"home")
+  if tunables.user=="root" then home=tostring(tunables.chrootdir) end
 
-  local cache=loader.path.combine(defaults.datadir,"cache")
-  local tmp=loader.path.combine(defaults.datadir,"tmp")
-  local user=loader.path.combine(home,defaults.user)
-  local etc=loader.path.combine(defaults.chrootdir,defaults.etcdir_name)
+  local cache=loader.path.combine(tunables.datadir,"cache")
+  local tmp=loader.path.combine(tunables.datadir,"tmp")
+  local user=loader.path.combine(home,tunables.user)
+  local etc=loader.path.combine(tunables.chrootdir,tunables.etcdir_name)
 
-  local chroot_home=loader.path.combine("/home",defaults.user)
-  if defaults.user=="root" then chroot_home=loader.path.combine("/","root") end
+  local chroot_home=loader.path.combine("/home",tunables.user)
+  if tunables.user=="root" then chroot_home=loader.path.combine("/","root") end
 
   defaults.commands.etc_min={ loader.path.combine(config.tools_dir,"etcgen.sh")..' "'..etchost_path..'" "'..etc..'"' }
 
@@ -240,18 +243,18 @@ function defaults.recalculate()
 
   defaults.commands.passwd={
     'mkdir -p "'..etc..'"',
-    '"'..loader.path.combine(config.tools_dir,"pwdgen_simple.sh")..'" '..defaults.user..' '..config.uid..' '..defaults.uid..' '..config.gid..' '..defaults.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
+    '"'..loader.path.combine(config.tools_dir,"pwdgen_simple.sh")..'" '..tunables.user..' '..config.uid..' '..tunables.uid..' '..config.gid..' '..tunables.gid..' "'..chroot_home..'" "'..loader.path.combine(etc,"passwd")..'" "'..loader.path.combine(etc,"group")..'"',
   }
 
   defaults.commands.machineid={
     'mkdir -p "'..etc..'"',
-    'echo "'..config.sandbox_uid..'" > "'..defaults.basedir..'/sandbox_uid"',
-    '"'..loader.path.combine(config.tools_dir,"machineidgen.sh")..'" "'..defaults.basedir..'" "'..etc..'/machine-id" "/etc/machine-id" "'..defaults.basedir..'/sandbox_uid"',
+    'echo "'..config.sandbox_uid..'" > "'..tunables.basedir..'/sandbox_uid"',
+    '"'..loader.path.combine(config.tools_dir,"machineidgen.sh")..'" "'..tunables.basedir..'" "'..etc..'/machine-id" "/etc/machine-id" "'..tunables.basedir..'/sandbox_uid"',
   }
 
   defaults.commands.machineid_host_etc={
-    'echo "'..config.sandbox_uid..'" > "'..defaults.basedir..'/sandbox_uid"',
-    'if [[ ! -f "'..etchost_path..'/machine-id" ]]; then "'..loader.path.combine(config.tools_dir,"machineidgen.sh")..'" "'..defaults.basedir..'" "'..etchost_path..'/machine-id" "'..defaults.basedir..'/sandbox_uid"; else true; fi',
+    'echo "'..config.sandbox_uid..'" > "'..tunables.basedir..'/sandbox_uid"',
+    'if [[ ! -f "'..etchost_path..'/machine-id" ]]; then "'..loader.path.combine(config.tools_dir,"machineidgen.sh")..'" "'..tunables.basedir..'" "'..etchost_path..'/machine-id" "'..tunables.basedir..'/sandbox_uid"; else true; fi',
   }
 
   defaults.commands.home={
@@ -261,7 +264,7 @@ function defaults.recalculate()
 
   defaults.commands.home_gui_config={
     'mkdir -p "'..home..'"',
-    'if [[ -d "'..user..'" ]]; then "'..loader.path.combine(config.tools_dir,"gui_toolkits_conf_copy.sh")..'" "'..defaults.user..'" "'..chroot_home..'" "'..user..'"; fi'
+    'if [[ -d "'..user..'" ]]; then "'..loader.path.combine(config.tools_dir,"gui_toolkits_conf_copy.sh")..'" "'..tunables.user..'" "'..chroot_home..'" "'..user..'"; fi'
   }
 
   defaults.commands.var_cache={ 'mkdir -p "'..cache..'"' }
@@ -270,19 +273,19 @@ function defaults.recalculate()
 
   defaults.env.set_home={
     {"HOME",chroot_home},
-    {"USER",defaults.user},
-    {"LOGNAME",defaults.user}
+    {"USER",tunables.user},
+    {"LOGNAME",tunables.user}
   }
 
-  defaults.env.set_xdg_runtime={ {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",defaults.uid)} }
+  defaults.env.set_xdg_runtime={ {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",tunables.uid)} }
 
-  defaults.mounts.bin_ro_mount={prio=10,tag="bin","ro-bind",loader.path.combine(defaults.chrootdir,"/bin"),"/bin"}
+  defaults.mounts.bin_ro_mount={prio=10,tag="bin","ro-bind",loader.path.combine(tunables.chrootdir,"/bin"),"/bin"}
 
-  defaults.mounts.usr_ro_mount={prio=10,tag="usr","ro-bind",loader.path.combine(defaults.chrootdir,"/usr"),"/usr"}
+  defaults.mounts.usr_ro_mount={prio=10,tag="usr","ro-bind",loader.path.combine(tunables.chrootdir,"/usr"),"/usr"}
 
-  defaults.mounts.lib_ro_mount={prio=10,tag="lib","ro-bind",loader.path.combine(defaults.chrootdir,"/lib"),"/lib"}
+  defaults.mounts.lib_ro_mount={prio=10,tag="lib","ro-bind",loader.path.combine(tunables.chrootdir,"/lib"),"/lib"}
 
-  defaults.mounts.lib64_ro_mount={prio=10,tag="lib64","ro-bind",loader.path.combine(defaults.chrootdir,"/lib64"),"/lib64"}
+  defaults.mounts.lib64_ro_mount={prio=10,tag="lib64","ro-bind",loader.path.combine(tunables.chrootdir,"/lib64"),"/lib64"}
 
   defaults.mounts.chroot_ro_essentials_group={
     prio=10,
@@ -312,14 +315,14 @@ function defaults.recalculate()
 
   defaults.mounts.etc_rw_mount={prio=10,tag="etc","bind",etc,"/etc"}
 
-  defaults.mounts.host_etc_mount={prio=10,tag="etc","ro-bind",loader.path.combine(defaults.etchost_path),"/etc"}
+  defaults.mounts.host_etc_mount={prio=10,tag="etc","ro-bind",loader.path.combine(tunables.etchost_path),"/etc"}
 
   defaults.mounts.passwd_mount={
     {prio=20,tag="etcpasswd","ro-bind",loader.path.combine(etc,"passwd"),"/etc/passwd"},
     {prio=20,tag="etcgroup","ro-bind",loader.path.combine(etc,"group"),"/etc/group"},
   }
 
-  defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",defaults.uid)}
+  defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",tunables.uid)}
 
   defaults.mounts.home_mount={prio=20,tag="home","bind",home,"/home"}
 
@@ -327,21 +330,21 @@ function defaults.recalculate()
 
   defaults.mounts.var_tmp_mount={prio=20,tag="vartmp","bind",tmp,"/var/tmp"}
 
-  defaults.mounts.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(defaults.chrootdir,"pulse"),"/etc/pulse"}
+  defaults.mounts.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(tunables.chrootdir,"pulse"),"/etc/pulse"}
 
-  if config.uid~=defaults.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",defaults.uid} else defaults.bwrap.uid={} end
+  if config.uid~=tunables.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",tunables.uid} else defaults.bwrap.uid={} end
 
-  if config.gid~=defaults.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",defaults.gid} else defaults.bwrap.gid={} end
+  if config.gid~=tunables.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",tunables.gid} else defaults.bwrap.gid={} end
 
-  defaults.features.gvfs_fix_dir=loader.path.combine(defaults.chrootdir,"gvfs_fix")
+  tunables.features.gvfs_fix_dir=loader.path.combine(tunables.chrootdir,"gvfs_fix")
 
-  defaults.features.pulse_dir=loader.path.combine(defaults.chrootdir,"pulse_dyn_config")
+  tunables.features.pulse_dir=loader.path.combine(tunables.chrootdir,"pulse_dyn_config")
 
-  defaults.features.fixups_dir=loader.path.combine(defaults.chrootdir,defaults.features.fixupsdir_name)
+  tunables.features.fixups_dir=loader.path.combine(tunables.chrootdir,tunables.features.fixupsdir_name)
 
-  defaults.features.envfix_home=chroot_home
+  tunables.features.envfix_home=chroot_home
 
-  defaults.features.x11host_target_dir=user
+  tunables.features.x11host_target_dir=user
 end
 
 defaults.recalculate()

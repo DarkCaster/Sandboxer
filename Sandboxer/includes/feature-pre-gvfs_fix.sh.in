@@ -2,31 +2,31 @@
 
 #find gvfs location
 gvfs_src=""
-gvfs_min=`get_lua_table_start "defaults.features.gvfs_fix_search_locations"`
-gvfs_max=`get_lua_table_end "defaults.features.gvfs_fix_search_locations"`
+gvfs_min=`get_lua_table_start "tunables.features.gvfs_fix_search_locations"`
+gvfs_max=`get_lua_table_end "tunables.features.gvfs_fix_search_locations"`
 for ((gvfs_cnt=gvfs_min;gvfs_cnt<gvfs_max;++gvfs_cnt))
 do
-  [[ -z ${cfg[defaults.features.gvfs_fix_search_prefix]}/${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]} || ! -d ${cfg[defaults.features.gvfs_fix_search_prefix]}/${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts ]] && continue
-  gvfs_src="${cfg[defaults.features.gvfs_fix_search_prefix]}/${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}"
+  [[ -z ${cfg[tunables.features.gvfs_fix_search_prefix]}/${cfg[tunables.features.gvfs_fix_search_locations.$gvfs_cnt]} || ! -d ${cfg[tunables.features.gvfs_fix_search_prefix]}/${cfg[tunables.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts ]] && continue
+  gvfs_src="${cfg[tunables.features.gvfs_fix_search_prefix]}/${cfg[tunables.features.gvfs_fix_search_locations.$gvfs_cnt]}"
   break
 done
 
 if [[ ! -z $gvfs_src ]]; then
-  mkdir -p "${cfg[defaults.features.gvfs_fix_dir]}"
+  mkdir -p "${cfg[tunables.features.gvfs_fix_dir]}"
   check_errors
-  mkdir -p "${cfg[defaults.features.gvfs_fix_dir]}/remote-volume-monitors"
+  mkdir -p "${cfg[tunables.features.gvfs_fix_dir]}/remote-volume-monitors"
   check_errors
-  mkdir -p "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
+  mkdir -p "${cfg[tunables.features.gvfs_fix_dir]}/mounts"
   check_errors
-  gvfs_min=`get_lua_table_start "defaults.features.gvfs_fix_mounts"`
-  gvfs_max=`get_lua_table_end "defaults.features.gvfs_fix_mounts"`
+  gvfs_min=`get_lua_table_start "tunables.features.gvfs_fix_mounts"`
+  gvfs_max=`get_lua_table_end "tunables.features.gvfs_fix_mounts"`
   for ((gvfs_mount_cnt=gvfs_min;gvfs_mount_cnt<gvfs_max;++gvfs_mount_cnt))
   do
-    2>/dev/null cp "$gvfs_src/mounts/${cfg[defaults.features.gvfs_fix_mounts.$gvfs_mount_cnt]}" "${cfg[defaults.features.gvfs_fix_dir]}/mounts"
+    2>/dev/null cp "$gvfs_src/mounts/${cfg[tunables.features.gvfs_fix_mounts.$gvfs_mount_cnt]}" "${cfg[tunables.features.gvfs_fix_dir]}/mounts"
   done
   #TODO: remote-volume-monitors
-  sandbox_bind_ro "${cfg[defaults.features.gvfs_fix_dir]}/mounts" "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts"
-  sandbox_bind_ro "${cfg[defaults.features.gvfs_fix_dir]}/remote-volume-monitors" "${cfg[defaults.features.gvfs_fix_search_locations.$gvfs_cnt]}/remote-volume-monitors"
+  sandbox_bind_ro "${cfg[tunables.features.gvfs_fix_dir]}/mounts" "${cfg[tunables.features.gvfs_fix_search_locations.$gvfs_cnt]}/mounts"
+  sandbox_bind_ro "${cfg[tunables.features.gvfs_fix_dir]}/remote-volume-monitors" "${cfg[tunables.features.gvfs_fix_search_locations.$gvfs_cnt]}/remote-volume-monitors"
 else
   log "gvfs location not found, skipping"
 fi

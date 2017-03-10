@@ -8,7 +8,7 @@ assert(config.profile~="dbus" and
   config.profile~="control",
   "cannot use service table name as profile: "..config.profile)
 
-assert(type(defaults.basedir)=="string" and defaults.basedir~="", "defaults.basedir param incorrect")
+assert(type(tunables.basedir)=="string" and tunables.basedir~="", "tunables.basedir param incorrect")
 
 -- load profile
 if loader.lua_version.num>=5002000 then

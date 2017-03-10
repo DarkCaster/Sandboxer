@@ -1,20 +1,20 @@
 #!/bin/bash
 
-mkdir -p "${cfg[defaults.features.pulse_dir]}"
+mkdir -p "${cfg[tunables.features.pulse_dir]}"
 check_errors
 
-rm -f "${cfg[defaults.features.pulse_dir]}/client.conf"
-rm -f "${cfg[defaults.features.pulse_dir]}/cookie"
-rm -f "${cfg[defaults.features.pulse_dir]}/socket"
+rm -f "${cfg[tunables.features.pulse_dir]}/client.conf"
+rm -f "${cfg[tunables.features.pulse_dir]}/cookie"
+rm -f "${cfg[tunables.features.pulse_dir]}/socket"
 
-echo "autospawn=no" > "${cfg[defaults.features.pulse_dir]}/client.conf"
+echo "autospawn=no" > "${cfg[tunables.features.pulse_dir]}/client.conf"
 check_errors
 if ! check_lua_export "sandbox.tags.devshm"; then
   log "warning: /dev/shm not mounted (no active \"defaults.mounts.devshm_mount\" option detected), disabling shm support for pulseaudio."
-  echo "enable-shm=no" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
+  echo "enable-shm=no" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
   check_errors
 fi
-echo "default-server=unix:/etc/pulse/socket" >> "${cfg[defaults.features.pulse_dir]}/client.conf"
+echo "default-server=unix:/etc/pulse/socket" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
 check_errors
 
 pulse_server="$PULSE_SERVER"
@@ -37,11 +37,11 @@ pulse_socket=`echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'`
 # skip futher procesing if using unsuported communication method (or failed to detect)
 if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
 
-  # export default env from defaults.features.pulse_env
-  env_set_add_list "defaults.features.pulse_env"
+  # export default env from tunables.features.pulse_env
+  env_set_add_list "tunables.features.pulse_env"
 
   # if using socket try to hardlink socket
-  [[ $pulse_server_is_socket = true ]] && 2>/dev/null ln "$pulse_socket" "${cfg[defaults.features.pulse_dir]}/socket"
+  [[ $pulse_server_is_socket = true ]] && 2>/dev/null ln "$pulse_socket" "${cfg[tunables.features.pulse_dir]}/socket"
 
   # export socket location env inside sandbox, depending on what communication method is used now
   if [[ $pulse_server_is_socket = true ]]; then
@@ -51,10 +51,10 @@ if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
     env_set_add "PULSE_SERVER" "$pulse_server"
   fi
 
-  if [[ ! -z ${cfg[defaults.features.pulse_env_alsa_config]} ]]; then
-    # export defaults.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
-    env_set_add "ALSA_CONFIG_PATH" "${cfg[defaults.features.pulse_env_alsa_config]}"
-  elif [[ -z ${cfg[defaults.features.pulse_env_alsa_config]} && ! -z $ALSA_CONFIG_PATH ]]; then
+  if [[ ! -z ${cfg[tunables.features.pulse_env_alsa_config]} ]]; then
+    # export tunables.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
+    env_set_add "ALSA_CONFIG_PATH" "${cfg[tunables.features.pulse_env_alsa_config]}"
+  elif [[ -z ${cfg[tunables.features.pulse_env_alsa_config]} && ! -z $ALSA_CONFIG_PATH ]]; then
     env_set_add "ALSA_CONFIG_PATH" "$ALSA_CONFIG_PATH"
   fi
 
@@ -74,22 +74,22 @@ if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
 
   # copy cookie if exist, set env
   if [[ ! -z $pulse_cookie && -f $pulse_cookie ]]; then
-    cp "$pulse_cookie" "${cfg[defaults.features.pulse_dir]}/cookie"
+    cp "$pulse_cookie" "${cfg[tunables.features.pulse_dir]}/cookie"
     check_errors
-    chmod 600 "${cfg[defaults.features.pulse_dir]}/cookie"
+    chmod 600 "${cfg[tunables.features.pulse_dir]}/cookie"
     env_set_add "PULSE_COOKIE" "/etc/pulse/cookie"
   else
     [[ ! -z $pulse_cookie ]] && log "warning: cannot copy pulse cookie, debug: pulse_cookie=$pulse_cookie"
   fi
 
-  if [[ $pulse_server_is_socket = true && -S ${cfg[defaults.features.pulse_dir]}/socket ]]; then
+  if [[ $pulse_server_is_socket = true && -S ${cfg[tunables.features.pulse_dir]}/socket ]]; then
     # add rw-mount define for constructed pulse_dir to /etc/pulse
-    sandbox_bind_rw "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
+    sandbox_bind_rw "${cfg[tunables.features.pulse_dir]}" "/etc/pulse"
   else
     # add ro-mount define for constructed pulse_dir to /etc/pulse
-    sandbox_bind_ro "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
+    sandbox_bind_ro "${cfg[tunables.features.pulse_dir]}" "/etc/pulse"
     if [[ $pulse_server_is_socket = true ]]; then
-      touch "${cfg[defaults.features.pulse_dir]}/socket"
+      touch "${cfg[tunables.features.pulse_dir]}/socket"
       check_errors
       sandbox_bind_rw "$pulse_socket" "/etc/pulse/socket"
     fi

@@ -1,10 +1,10 @@
-defaults.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
-defaults.etcdir_name="etc_sandbox"
-defaults.etchost_path=loader.path.combine(defaults.chrootdir,"etc_orig")
-defaults.features.dbus_search_prefix=defaults.chrootdir
-defaults.features.gvfs_fix_search_prefix=defaults.chrootdir
+tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
+tunables.etcdir_name="etc_sandbox"
+tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc_orig")
+tunables.features.dbus_search_prefix=tunables.chrootdir
+tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
 -- use different build of x11 util, if you experience problems, for example:
--- defaults.features.x11util_build="ubuntu-12.04"
+-- tunables.features.x11util_build="ubuntu-12.04"
 defaults.recalculate()
 
 sandbox={
@@ -35,15 +35,15 @@ sandbox={
       defaults.commands.etc_udev,]]--
 
       --2. or, instead, copy full config
-      --defaults.commands.etc_full, -- copy full /etc to to defaults.chrootdir, may remove existing
+      --defaults.commands.etc_full, -- copy full /etc to to tunables.chrootdir, may remove existing
 
       --3. or, work directly with etc directory of our external chroot, and mount it later with defaults.mounts.host_etc_mount.
-      -- this directory is specified by defaults.etchost_path tunable at the top of this config file.
+      -- this directory is specified by tunables.etchost_path tunable at the top of this config file.
       -- we should also mount dynamically created /etc/passwd and /etc/group config files with defaults.mounts.passwd_mount.
       -- (but we can just overwrite this files inside etc directory of chroot, but it may break ubuntu-setup.cfg.lua startup)
       -- also, we need to perform some minor configuration for our chroot etc dir.
-      {'mkdir -p "'..defaults.etchost_path..'/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
-      {'rm -f "'..defaults.etchost_path..'/resolv.conf"', 'cp "/etc/resolv.conf" "'..defaults.etchost_path..'/resolv.conf"'}, -- update resolv.conf in chroot/etc directory.
+      {'mkdir -p "'..tunables.etchost_path..'/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
+      {'rm -f "'..tunables.etchost_path..'/resolv.conf"', 'cp "/etc/resolv.conf" "'..tunables.etchost_path..'/resolv.conf"'}, -- update resolv.conf in chroot/etc directory.
       defaults.commands.machineid_host_etc, -- create machine-id file if not exist
 
       -- remaining commands, used for any etc management option choosen above.
@@ -83,9 +83,9 @@ sandbox={
       defaults.mounts.usr_ro_mount,
       defaults.mounts.lib_ro_mount,
       defaults.mounts.lib64_ro_mount,
-      {prio=10,"ro-bind",loader.path.combine(defaults.chrootdir,"sbin"),"/sbin"},
-      {prio=10,"ro-bind",loader.path.combine(defaults.chrootdir,"srv"),"/srv"},
-      {prio=10,"ro-bind",loader.path.combine(defaults.chrootdir,"opt"),"/opt"},
+      {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"sbin"),"/sbin"},
+      {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"srv"),"/srv"},
+      {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"opt"),"/opt"},
 
       -- if we are using option 3 when constructing etc for our sandbox.
       -- see "commands" section above for more details.
@@ -110,7 +110,7 @@ sandbox={
     defaults.bwrap.unshare_uts,
     -- defaults.bwrap.unshare_cgroup,
 
-    -- optional, if you do not touch defaults.uid and defaults.gid tunable parameters
+    -- optional, if you do not touch tunables.uid and tunables.gid tunable parameters
     defaults.bwrap.uid,
     defaults.bwrap.gid,
   }

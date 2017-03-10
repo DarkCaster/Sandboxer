@@ -13,7 +13,7 @@
 
 -- some tunable defaults:
 
--- base directory: defaults.basedir
+-- base directory: tunables.basedir
 -- you may change this in case of debug.
 -- default value is config.ctldir - automatically generated sandbox directory unique to config file, located in /tmp (or $TMPDIR if set).
 -- base directory for all internal sandbox control stuff, used by sandboxer system,
@@ -21,72 +21,72 @@
 -- this directory MUST be unique for each sandbox config file, and should be placed on tmpfs.
 -- this directry may be automatically cleaned up on sandbox shutdown, so do not store any persistent stuff here.
 -- example:
--- defaults.basedir=config.ctldir -- default
--- defaults.basedir=loader.path.combine(loader.workdir,"basedir-"..config.sandbox_uid)
+-- tunables.basedir=config.ctldir -- default
+-- tunables.basedir=loader.path.combine(loader.workdir,"basedir-"..config.sandbox_uid)
 
--- chroot construction dir: defaults.chrootdir
+-- chroot construction dir: tunables.chrootdir
 -- used by builtin defaults.commands and default.bwrap defines.
 -- this directory is set (chdir) before running sandbox.setup.commands blocks, and when applying some features.
--- this directory may be deleted on sandbox shutdown, if it is located inside defaults.basedir (default).
+-- this directory may be deleted on sandbox shutdown, if it is located inside tunables.basedir (default).
 -- you can change this parameter if you want to generate your own persistent\non-standard chroot
 -- and also want to use some builtin commands to perform some dynamic setup on each run.
 -- example:
--- defaults.chrootdir=loader.path.combine(defaults.basedir,"chroot") -- default
--- defaults.chrootdir=loader.path.combine(loader.workdir,"chroot-"..config.sandbox_uid)
+-- tunables.chrootdir=loader.path.combine(tunables.basedir,"chroot") -- default
+-- tunables.chrootdir=loader.path.combine(loader.workdir,"chroot-"..config.sandbox_uid)
 
--- user id: defaults.uid
+-- user id: tunables.uid
 -- numeric user id, used in various sandbox.setup.commands and when applying some features
 -- may be used when launching bwrap with custom uid\gid option
 -- default value - user id of user launched sandboxer.sh script
 -- example:
--- defaults.uid=config.uid -- default
+-- tunables.uid=config.uid -- default
 
--- group id id: defaults.gid
+-- group id id: tunables.gid
 -- similiar to user id (above)
 -- default value - effective gid of user launched sandboxer.sh script
 -- example:
--- defaults.gid=config.gid -- default
+-- tunables.gid=config.gid -- default
 
--- username, used inside sandbox: defaults.user
+-- username, used inside sandbox: tunables.user
 -- username, string, used by some sandbox.setup.commands blocks (for example defaults.commands.pwd command)
 -- default value - sandboxer
 -- example:
--- defaults.user="sandboxer" -- default
+-- tunables.user="sandboxer" -- default
 
--- persistent directory for userdata: defaults.datadir
+-- persistent directory for userdata: tunables.datadir
 -- used by some sandbox.setup.commands and sandbox.bwrap blocks.
 -- stores user's home and configs, persistent cache, persistent tmp (/var/tmp)
 -- default value - unique directory based on config file name + it's fs location.
 -- this directory created by default in the same directory as current config file.
 -- example:
--- defaults.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid) -- default
--- defaults.datadir=loader.path.combine(os.getenv("HOME"),"sandboxer-"..config.sandbox_uid)
+-- tunables.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid) -- default
+-- tunables.datadir=loader.path.combine(os.getenv("HOME"),"sandboxer-"..config.sandbox_uid)
 
--- etc directory name inside chroot construction dir: defaults.etcdir_name
+-- etc directory name inside chroot construction dir: tunables.etcdir_name
 -- this dir-name used by various builtin commands for "/etc" generation (sandbox.setup.commands),
 -- and predefined "/etc" mount entries for bwrap (sandbox.bwrap).
--- you may override this directory name if you constructing your own "etc" directory inside defaults.chrootdir
+-- you may override this directory name if you constructing your own "etc" directory inside tunables.chrootdir
 -- and do not want accidentally overwrite your own stuff by standard chroot generation routines.
 -- this parameter do not affect name of "/etc" mount inside sandbox, but only "etc" directory name inside chroot construction dir.
 -- example:
--- defaults.etcdir_name="etc" -- default
--- defaults.etcdir_name="etc_auto"
+-- tunables.etcdir_name="etc" -- default
+-- tunables.etcdir_name="etc_auto"
 
 -- etc directory path that will a source path for some construction commands
 -- that used to dynamically build etc directory for sandbox.
 -- by default it is equal to host etc directory location (/etc).
 -- you may override this tunable parameter if you want to create dynamic etc directory for sandbox from your own source
 -- (separate extracted rootfs directory, for example)
--- defaults.etchost_path="/etc"
+-- tunables.etchost_path="/etc"
 
 -- TODO: add descriptions for features tunables:
--- defaults.features.fixupsdir_name="fixups"
--- defaults.features.dbus_search_prefix
--- defaults.features.gvfs_fix_search_prefix
--- defaults.features.gvfs_fix_search_locations
--- defaults.features.gvfs_fix_mounts
--- defaults.features.x11util_build
--- defaults.features.x11util_enable
+-- tunables.features.fixupsdir_name="fixups"
+-- tunables.features.dbus_search_prefix
+-- tunables.features.gvfs_fix_search_prefix
+-- tunables.features.gvfs_fix_search_locations
+-- tunables.features.gvfs_fix_mounts
+-- tunables.features.x11util_build
+-- tunables.features.x11util_enable
 
 -- if you changed ANY of tunable defaults (above), you MUST run defaults.recalculate() function here,
 -- this will update and recalculate all deps used by other defaults definitions and setup commands.
@@ -136,16 +136,16 @@ sandbox={
     commands={-- optional
       --user command example:
       -- {'mkdir -p "etc"', 'touch "hello"'}
-      defaults.commands.etc_min, -- copy minimal config to defaults.chrootdir, should not include system, kernel, and other machine stuff
-      defaults.commands.etc_dbus, -- copy dbus config to defaults.chrootdir
-      defaults.commands.etc_x11, -- copy x11 config to defaults.chrootdir
-      defaults.commands.etc_udev, -- copy /etc/udev config to defaults.chrootdir. may be needed for some apps, may leak some information about current hardware config
-      -- defaults.commands.etc_full, -- copy full /etc to to defaults.chrootdir
+      defaults.commands.etc_min, -- copy minimal config to tunables.chrootdir, should not include system, kernel, and other machine stuff
+      defaults.commands.etc_dbus, -- copy dbus config to tunables.chrootdir
+      defaults.commands.etc_x11, -- copy x11 config to tunables.chrootdir
+      defaults.commands.etc_udev, -- copy /etc/udev config to tunables.chrootdir. may be needed for some apps, may leak some information about current hardware config
+      -- defaults.commands.etc_full, -- copy full /etc to to tunables.chrootdir
       defaults.commands.passwd, -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
       defaults.commands.home, -- create userdata/home at this config file directory, if missing
       defaults.commands.home_gui_config, -- copy and process supported gui-toolkits configuration from host env. this command must go after defaults.commands.home.
       defaults.commands.machineid, -- generate machine id for sandbox, and place it to constructed etc dir.
-      -- defaults.commands.machineid_host_etc, -- generate machine id for sandbox if not exist already, and place it to host etc dir specified by defaults.etchost_path tubalble parameter, useful when working with sandbox based on custom rootfs.
+      -- defaults.commands.machineid_host_etc, -- generate machine id for sandbox if not exist already, and place it to host etc dir specified by tunables.etchost_path tubalble parameter, useful when working with sandbox based on custom rootfs.
       defaults.commands.var_cache, -- create userdata/cache at this config file directory, if missing
       defaults.commands.var_tmp, -- create userdata/tmp at this config file directory, if missing
     },
@@ -194,9 +194,9 @@ sandbox={
       defaults.mounts.home_mount, -- mount directory with persistent user-data to /home, created with "defaults.commands.home" (recommended)
       defaults.mounts.var_cache_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_cache" (recommended)
       defaults.mounts.var_tmp_mount, -- mount directory with persistent cache to /var/cache, created with "defaults.commands.var_tmp" (recommended)
-      defaults.mounts.etc_ro_mount, -- readonly mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-      -- defaults.mounts.etc_rw_mount, -- read-write mount etc directory from defaults.chrootdir, constructed with defaults.commands.etc_* commands or created manually
-      -- defaults.mounts.host_etc_mount, -- readonly mount host etc directory, may be overriden by changing defaults.etchost_path tunable
+      defaults.mounts.etc_ro_mount, -- readonly mount etc directory from tunables.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+      -- defaults.mounts.etc_rw_mount, -- read-write mount etc directory from tunables.chrootdir, constructed with defaults.commands.etc_* commands or created manually
+      -- defaults.mounts.host_etc_mount, -- readonly mount host etc directory, may be overriden by changing tunables.etchost_path tunable
       -- defaults.mounts.passwd_mount, -- readonly mount passwd and group files automatically generated with defaults.commands.passwd. for use with host etc mount entry above, not needed when using commands for dynamically generate etc directory.
       -- other mounts, also essential for normal operation
       -- defaults.mounts.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
@@ -210,14 +210,14 @@ sandbox={
       defaults.mounts.host_usr_mount, -- readonly mount host /usr directory
       defaults.mounts.host_lib_mount, -- readonly mount host /lib directory
       defaults.mounts.host_lib64_mount, -- readonly mount host /lib64 directory
-    -- defaults.mounts.bin_ro_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
-    -- defaults.mounts.usr_ro_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
-    -- defaults.mounts.lib_ro_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
-    -- defaults.mounts.lib64_ro_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
-    -- defaults.mounts.bin_rw_mount, -- readonly mount bin directory from defaults.chrootdir, constructed manually
-    -- defaults.mounts.usr_rw_mount, -- readonly mount usr directory from defaults.chrootdir, constructed manually
-    -- defaults.mounts.lib_rw_mount, -- readonly mount lib directory from defaults.chrootdir, constructed manually
-    -- defaults.mounts.lib64_rw_mount, -- readonly mount lib64 directory from defaults.chrootdir, constructed manually
+    -- defaults.mounts.bin_ro_mount, -- readonly mount bin directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.usr_ro_mount, -- readonly mount usr directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.lib_ro_mount, -- readonly mount lib directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.lib64_ro_mount, -- readonly mount lib64 directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.bin_rw_mount, -- readonly mount bin directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.usr_rw_mount, -- readonly mount usr directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.lib_rw_mount, -- readonly mount lib directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.lib64_rw_mount, -- readonly mount lib64 directory from tunables.chrootdir, constructed manually
     }
   },
 
@@ -258,8 +258,8 @@ sandbox={
     -- defaults.bwrap.unshare_net,
     defaults.bwrap.unshare_uts,
     -- defaults.bwrap.unshare_cgroup,
-    defaults.bwrap.uid, -- set uid inside sandbox according to defaults.uid setting. if you manually change defaults.uid - use of this entry is mandatory.
-    defaults.bwrap.gid, -- set gid inside sandbox according to defaults.gid setting. if you manually change defaults.gid - use of this entry is mandatory.
+    defaults.bwrap.uid, -- set uid inside sandbox according to tunables.uid setting. if you manually change tunables.uid - use of this entry is mandatory.
+    defaults.bwrap.gid, -- set gid inside sandbox according to tunables.gid setting. if you manually change tunables.gid - use of this entry is mandatory.
   }
 }
 

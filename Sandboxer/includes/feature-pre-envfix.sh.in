@@ -2,7 +2,7 @@
 
 # find "HOME" env define (and maybe others) from current sandbox env parameters
 envfix_home=`env_set_readval "HOME"`
-[[ -z $envfix_home ]] && envfix_home="${cfg[defaults.features.envfix_home]}"
+[[ -z $envfix_home ]] && envfix_home="${cfg[tunables.features.envfix_home]}"
 
 # do not proceed if not found
 if [[ ! -z $envfix_home ]]; then
