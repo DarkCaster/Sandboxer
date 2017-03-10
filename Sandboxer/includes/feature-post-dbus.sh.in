@@ -9,7 +9,7 @@ if [[ ! -p $basedir/control/dbus.in || ! -p $basedir/control/dbus.out ]]; then
   log "starting new dbus session"
   #execute dbus daemon in background
   exec_profile="dbus"
-  if [ "${cfg[$exec_profile.exec]}" == "placeholder" ]; then
+  if [[ ${cfg[$exec_profile.exec]} = placeholder ]]; then
     cfg[$exec_profile.exec]=""
     for hint in "/usr/bin" "/bin" "/usr/local/bin" "/usr/sbin" "/sbin"
     do

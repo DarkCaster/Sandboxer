@@ -10,7 +10,7 @@ target="$1"
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
 function check_error {
- if [ "$?" != "0" ]; then
+ if [[ $? != 0 ]]; then
   echo "Install ended with error !!!"
   cd "$curdir"
   exit 1

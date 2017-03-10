@@ -245,7 +245,7 @@ if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; 
       local top_cnt_max=`get_lua_table_end "sandbox.setup.env_whitelist"`
       for ((top_cnt=top_cnt_min;top_cnt<top_cnt_max;++top_cnt))
       do
-        if [ -z "${cfg[sandbox.setup.env_whitelist.$top_cnt]}" ]; then
+        if [[ -z ${cfg[sandbox.setup.env_whitelist.$top_cnt]} ]]; then
           local fld_cnt=0
           local fld_cnt_min=`get_lua_table_start "sandbox.setup.env_whitelist.$top_cnt"`
           local fld_cnt_max=`get_lua_table_end "sandbox.setup.env_whitelist.$top_cnt"`

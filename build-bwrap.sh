@@ -6,7 +6,7 @@
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
 function check_error {
-  if [ "$?" != "0" ]; then
+  if [[ $? != 0 ]]; then
     echo "Build ended with error !!!"
     cd "$curdir"
     exit 1
@@ -15,7 +15,7 @@ function check_error {
 
 cd "$curdir"
 
-if [ ! -d "$curdir/External/Bwrap" ]; then
+if [[ ! -d $curdir/External/Bwrap ]]; then
   git clone https://github.com/projectatomic/bubblewrap.git "$curdir/External/Bwrap"
   check_error
 fi

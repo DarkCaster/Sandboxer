@@ -5,7 +5,7 @@ script_dir="$( cd "$( dirname "$0" )" && pwd )"
 check_errors () {
   local status="$?"
   local msg="$@"
-  if [ "$status" != "0" ]; then
+  if [[ $status != 0 ]]; then
     echo "ERROR: operation finished with error code $status"
     [[ ! -z $msg ]] && echo "$msg"
     exit "$status"

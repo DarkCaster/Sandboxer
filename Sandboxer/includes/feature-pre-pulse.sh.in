@@ -88,7 +88,7 @@ if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
   else
     # add ro-mount define for constructed pulse_dir to /etc/pulse
     sandbox_bind_ro "${cfg[defaults.features.pulse_dir]}" "/etc/pulse"
-    if [ "$pulse_server_is_socket" = "true" ]; then
+    if [[ $pulse_server_is_socket = true ]]; then
       touch "${cfg[defaults.features.pulse_dir]}/socket"
       check_errors
       sandbox_bind_rw "$pulse_socket" "/etc/pulse/socket"

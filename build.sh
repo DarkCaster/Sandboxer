@@ -12,7 +12,7 @@ build="$1"
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
 function check_error {
- if [ "$?" != "0" ]; then
+ if [[ $? != 0 ]]; then
   echo "Build ended with error !!!"
   cd "$curdir"
   exit 1
@@ -58,7 +58,7 @@ check_error
 mkdir -p "$curdir/External"
 check_error
 
-if [ ! -d "$curdir/External/Fakeroot-UserNS" ]; then
+if [[ ! -d $curdir/External/Fakeroot-UserNS ]]; then
  git clone https://github.com/DarkCaster/Fakeroot-UserNS.git "$curdir/External/Fakeroot-UserNS"
  check_error
 fi
@@ -77,7 +77,7 @@ rm -rf "$curdir/Build/fixups/fakeroot"/*
 mkdir -p "$curdir/Build/Fakeroot-UserNS-build" && cd "$curdir/Build/Fakeroot-UserNS-build"
 check_error
 
-if [ -z "$build" ]; then
+if [[ -z $build ]]; then
   "$curdir/External/Fakeroot-UserNS/configure" --prefix="/fixups/fakeroot-host" --bindir="/fixups/fakeroot-host" --libdir="/fixups/fakeroot-host" --mandir="/fixups/fakeroot-host/man" --with-ipc=tcp
   check_error
 else
@@ -93,7 +93,7 @@ check_error
 
 cd "$curdir"
 
-if [ ! -f "$curdir/BashLuaHelper/lua-helper.bash.in" ]; then
+if [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in ]]; then
   git submodule update --init
   check_error
 fi
