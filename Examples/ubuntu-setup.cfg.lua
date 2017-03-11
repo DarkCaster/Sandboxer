@@ -56,12 +56,13 @@ sandbox={
       defaults.mounts.usr_rw_mount,
       defaults.mounts.lib_rw_mount,
       defaults.mounts.lib64_rw_mount,
+      defaults.mounts.sbin_rw_mount,
       defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages
+      -- in normal sandboxes, following directories contructed dynamically (see example.cfg.lua)
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"etc_orig"),"/etc"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"boot"),"/boot"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"root"),"/root"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"run"),"/run"},
-      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"sbin"),"/sbin"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"srv"),"/srv"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"opt"),"/opt"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"tmp"),"/tmp"},
