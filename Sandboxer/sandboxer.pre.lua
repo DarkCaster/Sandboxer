@@ -232,11 +232,11 @@ defaults.commands.machineid_host_etc={
   'if [[ ! -f "${cfg[tunables.etchost_path]}/machine-id" ]]; then "$tools_dir/machineidgen.sh" "${cfg[tunables.basedir]}" "${cfg[tunables.etchost_path]}/machine-id" "${cfg[tunables.basedir]}/sandbox_uid"; else true; fi',
 }
 defaults.commands.home={
-  'mkdir -p "${cfg[tunables.home_base]}"',
+  'mkdir -p "${cfg[tunables.home_base_path]}"',
   '[[ ! -d ${cfg[tunables.user_path]} ]] && 2>/dev/null cp -rf "${cfg[tunables.etchost_path]}/skel" "${cfg[tunables.user_path]}" || true'
 }
 defaults.commands.home_gui_config={
-  'mkdir -p "${cfg[tunables.home_base]}"',
+  'mkdir -p "${cfg[tunables.home_base_path]}"',
   'if [[ -d ${cfg[tunables.user_path]} ]]; then "$tools_dir/gui_toolkits_conf_copy.sh" "${cfg[tunables.user]}" "${cfg[tunables.chroot_home]}" "${cfg[tunables.user_path]}"; fi'
 }
 defaults.commands.var_cache={ 'mkdir -p "${cfg[tunables.cache]}"' }
@@ -247,11 +247,11 @@ function defaults.recalculate()
   -- remove possible trailing slash
   tunables.etchost_path=loader.path.combine(tunables.etchost_path)
   tunables.etc_path=loader.path.combine(tunables.chrootdir,tunables.etcdir_name)
-  tunables.home_base=loader.path.combine(tunables.datadir,"home")
-  if tunables.user=="root" then tunables.home_base=tostring(tunables.chrootdir) end
+  tunables.home_base_path=loader.path.combine(tunables.datadir,"home")
+  if tunables.user=="root" then tunables.home_base_path=tostring(tunables.chrootdir) end
   tunables.chroot_home=loader.path.combine("/home",tunables.user)
   if tunables.user=="root" then tunables.chroot_home=loader.path.combine("/","root") end
-  tunables.user_path=loader.path.combine(tunables.home_base,tunables.user)
+  tunables.user_path=loader.path.combine(tunables.home_base_path,tunables.user)
   tunables.cache=loader.path.combine(tunables.datadir,"cache")
   tunables.tmp=loader.path.combine(tunables.datadir,"tmp")
 
@@ -291,7 +291,7 @@ function defaults.recalculate()
     {prio=20,tag="etcgroup","ro-bind",loader.path.combine(tunables.etc_path,"group"),"/etc/group"},
   }
   defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",tunables.uid)}
-  defaults.mounts.home_mount={prio=20,tag="home","bind",tunables.home_base,"/home"}
+  defaults.mounts.home_mount={prio=20,tag="home","bind",tunables.home_base_path,"/home"}
   if tunables.user=="root" then defaults.mounts.home_mount={} end
   defaults.mounts.var_cache_mount={prio=20,tag="cache","bind",tunables.cache,"/var/cache"}
   defaults.mounts.var_tmp_mount={prio=20,tag="vartmp","bind",tunables.tmp,"/var/tmp"}
