@@ -19,6 +19,9 @@ shift 1
 #includes dir
 includes_dir="$script_dir/includes"
 
+#tools_dir
+tools_dir="$script_dir/tools"
+
 #activate some loadables
 . "$includes_dir/loadables-helper.bash.in"
 
