@@ -163,7 +163,7 @@ if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; 
     (
     #cleanup some important defines when running custom commands to prevent possible problems
     unset -f exec_cmd_list_in_bg wait_for_cmd_list check_errors teardown lock_exit lock_enter
-    unset lock_entered basedir curdir script_dir self script_file config profile config_uid uid gid bash_lua_helper cmd_list_bg_pid
+    unset lock_entered self script_file bash_lua_helper cmd_list_bg_pid
     local top_cnt=0
     local err_code=0
     local exec_bg_pid_error=""
