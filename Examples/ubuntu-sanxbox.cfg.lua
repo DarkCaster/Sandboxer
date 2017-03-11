@@ -72,11 +72,12 @@ sandbox={
     },
 
     mounts={
-      defaults.mounts.system_group, -- includes: proc, dev, constructed run, constructed var, constructed tmp
+      defaults.mounts.system_group, -- includes: proc, dev, empty /run dir, empty /var dir, empty /tmp
       defaults.mounts.xdg_runtime_dir,
       defaults.mounts.home_mount,
       defaults.mounts.var_cache_mount,
       defaults.mounts.var_tmp_mount,
+      defaults.mounts.var_lib_mount,
 
       -- other dirs from our external chroot
       defaults.mounts.bin_ro_mount,
