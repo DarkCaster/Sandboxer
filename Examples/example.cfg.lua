@@ -210,6 +210,7 @@ sandbox={
       defaults.mounts.host_usr_mount, -- readonly mount host /usr directory
       defaults.mounts.host_lib_mount, -- readonly mount host /lib directory
       defaults.mounts.host_lib64_mount, -- readonly mount host /lib64 directory
+      defaults.mounts.host_var_lib_mount, -- readonly mount host /var/lib directory. not required for most apps. may expose some system configuration.
     -- defaults.mounts.bin_ro_mount, -- readonly mount bin directory from tunables.chrootdir, constructed manually
     -- defaults.mounts.usr_ro_mount, -- readonly mount usr directory from tunables.chrootdir, constructed manually
     -- defaults.mounts.lib_ro_mount, -- readonly mount lib directory from tunables.chrootdir, constructed manually
