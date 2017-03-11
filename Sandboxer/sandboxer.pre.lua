@@ -216,11 +216,11 @@ defaults.commands.etc_x11 ={'mkdir -p "${cfg[tunables.etc_path]}"','cp -rf "${cf
 defaults.commands.etc_udev={'mkdir -p "${cfg[tunables.etc_path]}"','cp -rf "${cfg[tunables.etchost_path]}/udev" "${cfg[tunables.etc_path]}"'}
 defaults.commands.passwd={
   'mkdir -p "${cfg[tunables.etc_path]}"',
-  '"$tools_dir/pwdgen_simple.sh" "${cfg[tunables.user]}" "$uid" "${cfg[tunables.uid]}" "$gid" "${cfg[tunables.gid]}" "${cfg[tunables.chroot_home]}" "${cfg[tunables.etc_path]}/passwd" "${cfg[tunables.etc_path]}/group"',
+  '"$tools_dir/pwdgen_simple.sh" "${cfg[tunables.user]}" "$uid" "${cfg[tunables.uid]}" "$gid" "${cfg[tunables.gid]}" "${cfg[tunables.chroot_user_path]}" "${cfg[tunables.etc_path]}/passwd" "${cfg[tunables.etc_path]}/group"',
 }
 defaults.commands.passwd_extended={
   'mkdir -p "${cfg[tunables.etc_path]}"',
-  '"$tools_dir/pwdgen.sh" "${cfg[tunables.user]}" "$uid" "${cfg[tunables.uid]}" "$gid" "${cfg[tunables.gid]}" "${cfg[tunables.chroot_home]}" "${cfg[tunables.etc_path]}/passwd" "${cfg[tunables.etc_path]}/group"',
+  '"$tools_dir/pwdgen.sh" "${cfg[tunables.user]}" "$uid" "${cfg[tunables.uid]}" "$gid" "${cfg[tunables.gid]}" "${cfg[tunables.chroot_user_path]}" "${cfg[tunables.etc_path]}/passwd" "${cfg[tunables.etc_path]}/group"',
 }
 defaults.commands.machineid={
   'mkdir -p "${cfg[tunables.etc_path]}"',
@@ -237,10 +237,10 @@ defaults.commands.home={
 }
 defaults.commands.home_gui_config={
   'mkdir -p "${cfg[tunables.home_base_path]}"',
-  'if [[ -d ${cfg[tunables.user_path]} ]]; then "$tools_dir/gui_toolkits_conf_copy.sh" "${cfg[tunables.user]}" "${cfg[tunables.chroot_home]}" "${cfg[tunables.user_path]}"; fi'
+  'if [[ -d ${cfg[tunables.user_path]} ]]; then "$tools_dir/gui_toolkits_conf_copy.sh" "${cfg[tunables.user]}" "${cfg[tunables.chroot_user_path]}" "${cfg[tunables.user_path]}"; fi'
 }
-defaults.commands.var_cache={ 'mkdir -p "${cfg[tunables.cache]}"' }
-defaults.commands.var_tmp={ 'mkdir -p "${cfg[tunables.tmp]}"' }
+defaults.commands.var_cache={ 'mkdir -p "${cfg[tunables.varcache_path]}"' }
+defaults.commands.var_tmp={ 'mkdir -p "${cfg[tunables.vartmp_path]}"' }
 
 -- (re)create tables that rely on tunable parameters
 function defaults.recalculate()
@@ -249,14 +249,14 @@ function defaults.recalculate()
   tunables.etc_path=loader.path.combine(tunables.chrootdir,tunables.etcdir_name)
   tunables.home_base_path=loader.path.combine(tunables.datadir,"home")
   if tunables.user=="root" then tunables.home_base_path=tostring(tunables.chrootdir) end
-  tunables.chroot_home=loader.path.combine("/home",tunables.user)
-  if tunables.user=="root" then tunables.chroot_home=loader.path.combine("/","root") end
+  tunables.chroot_user_path=loader.path.combine("/home",tunables.user)
+  if tunables.user=="root" then tunables.chroot_user_path=loader.path.combine("/","root") end
   tunables.user_path=loader.path.combine(tunables.home_base_path,tunables.user)
-  tunables.cache=loader.path.combine(tunables.datadir,"cache")
-  tunables.tmp=loader.path.combine(tunables.datadir,"tmp")
+  tunables.varcache_path=loader.path.combine(tunables.datadir,"cache")
+  tunables.vartmp_path=loader.path.combine(tunables.datadir,"tmp")
 
   defaults.env.set_home={
-    {"HOME",tunables.chroot_home},
+    {"HOME",tunables.chroot_user_path},
     {"USER",tunables.user},
     {"LOGNAME",tunables.user}
   }
@@ -293,15 +293,15 @@ function defaults.recalculate()
   defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",tunables.uid)}
   defaults.mounts.home_mount={prio=20,tag="home","bind",tunables.home_base_path,"/home"}
   if tunables.user=="root" then defaults.mounts.home_mount={} end
-  defaults.mounts.var_cache_mount={prio=20,tag="cache","bind",tunables.cache,"/var/cache"}
-  defaults.mounts.var_tmp_mount={prio=20,tag="vartmp","bind",tunables.tmp,"/var/tmp"}
+  defaults.mounts.var_cache_mount={prio=20,tag="cache","bind",tunables.varcache_path,"/var/cache"}
+  defaults.mounts.var_tmp_mount={prio=20,tag="vartmp","bind",tunables.vartmp_path,"/var/tmp"}
   defaults.mounts.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(tunables.chrootdir,"pulse"),"/etc/pulse"}
   if config.uid~=tunables.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",tunables.uid} else defaults.bwrap.uid={} end
   if config.gid~=tunables.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",tunables.gid} else defaults.bwrap.gid={} end
   tunables.features.gvfs_fix_dir=loader.path.combine(tunables.chrootdir,"gvfs_fix")
   tunables.features.pulse_dir=loader.path.combine(tunables.chrootdir,"pulse_dyn_config")
   tunables.features.fixups_dir=loader.path.combine(tunables.chrootdir,tunables.features.fixupsdir_name)
-  tunables.features.envfix_home=tunables.chroot_home
+  tunables.features.envfix_home=tunables.chroot_user_path
   tunables.features.x11host_target_dir=tunables.user_path
 end
 
