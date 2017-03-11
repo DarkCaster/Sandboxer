@@ -207,18 +207,21 @@ sandbox={
       defaults.mounts.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
       defaults.mounts.devshm_mount, -- mount /dev/shm. if mounted - disables posix-shm isolation (not to be confused with sys.v-shm). may be needed for some applications to work. unsecure - exposes shared memory buffers from other host applications to sandbox.
       defaults.mounts.host_bin_mount, -- readonly mount host /bin directory
+      defaults.mounts.host_sbin_mount, -- readonly mount host /sbin directory
       defaults.mounts.host_usr_mount, -- readonly mount host /usr directory
       defaults.mounts.host_lib_mount, -- readonly mount host /lib directory
       defaults.mounts.host_lib64_mount, -- readonly mount host /lib64 directory
       defaults.mounts.host_var_lib_mount, -- readonly mount host /var/lib directory. not required for most apps. may expose some system configuration.
     -- defaults.mounts.bin_ro_mount, -- readonly mount bin directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.sbin_ro_mount, -- readonly mount sbin directory from tunables.chrootdir, constructed manually
     -- defaults.mounts.usr_ro_mount, -- readonly mount usr directory from tunables.chrootdir, constructed manually
     -- defaults.mounts.lib_ro_mount, -- readonly mount lib directory from tunables.chrootdir, constructed manually
     -- defaults.mounts.lib64_ro_mount, -- readonly mount lib64 directory from tunables.chrootdir, constructed manually
-    -- defaults.mounts.bin_rw_mount, -- readonly mount bin directory from tunables.chrootdir, constructed manually
-    -- defaults.mounts.usr_rw_mount, -- readonly mount usr directory from tunables.chrootdir, constructed manually
-    -- defaults.mounts.lib_rw_mount, -- readonly mount lib directory from tunables.chrootdir, constructed manually
-    -- defaults.mounts.lib64_rw_mount, -- readonly mount lib64 directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.bin_rw_mount, -- mount bin directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.sbin_rw_mount, -- mount sbin directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.usr_rw_mount, -- mount usr directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.lib_rw_mount, -- mount lib directory from tunables.chrootdir, constructed manually
+    -- defaults.mounts.lib64_rw_mount, -- mount lib64 directory from tunables.chrootdir, constructed manually
     }
   },
 
