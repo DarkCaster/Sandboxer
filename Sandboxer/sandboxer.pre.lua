@@ -173,6 +173,8 @@ defaults.mounts.host_essentials_group={
   defaults.mounts.host_lib64_mount,
 }
 
+defaults.mounts.host_var_lib_mount={prio=20,tag="varlib","ro-bind","/var/lib","/var/lib"}
+
 -- service mounts
 defaults.mounts.dbus_system_mount={prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
 defaults.mounts.devsnd_mount={prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
@@ -295,6 +297,7 @@ function defaults.recalculate()
   if tunables.user=="root" then defaults.mounts.home_mount={} end
   defaults.mounts.var_cache_mount={prio=20,tag="cache","bind",tunables.varcache_path,"/var/cache"}
   defaults.mounts.var_tmp_mount={prio=20,tag="vartmp","bind",tunables.vartmp_path,"/var/tmp"}
+  defaults.mounts.var_lib_mount={prio=20,tag="varlib","ro-bind",loader.path.combine(tunables.chrootdir,"var","lib"),"/var/lib"}
   defaults.mounts.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(tunables.chrootdir,"pulse"),"/etc/pulse"}
   if config.uid~=tunables.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",tunables.uid} else defaults.bwrap.uid={} end
   if config.gid~=tunables.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",tunables.gid} else defaults.bwrap.gid={} end
