@@ -173,6 +173,7 @@ defaults.mounts.host_essentials_group={
   defaults.mounts.host_lib64_mount,
 }
 
+defaults.mounts.host_sbin_mount={prio=10,tag="sbin","ro-bind","/sbin","/sbin"}
 defaults.mounts.host_var_lib_mount={prio=20,tag="varlib","ro-bind","/var/lib","/var/lib"}
 
 -- service mounts
@@ -264,6 +265,7 @@ function defaults.recalculate()
   }
   defaults.env.set_xdg_runtime={ {"XDG_RUNTIME_DIR",loader.path.combine("/run","user",tunables.uid)} }
   defaults.mounts.bin_ro_mount={prio=10,tag="bin","ro-bind",loader.path.combine(tunables.chrootdir,"/bin"),"/bin"}
+  defaults.mounts.sbin_ro_mount={prio=10,tag="sbin","ro-bind",loader.path.combine(tunables.chrootdir,"/sbin"),"/sbin"}
   defaults.mounts.usr_ro_mount={prio=10,tag="usr","ro-bind",loader.path.combine(tunables.chrootdir,"/usr"),"/usr"}
   defaults.mounts.lib_ro_mount={prio=10,tag="lib","ro-bind",loader.path.combine(tunables.chrootdir,"/lib"),"/lib"}
   defaults.mounts.lib64_ro_mount={prio=10,tag="lib64","ro-bind",loader.path.combine(tunables.chrootdir,"/lib64"),"/lib64"}
@@ -275,6 +277,7 @@ function defaults.recalculate()
     defaults.mounts.lib64_ro_mount,
   }
   defaults.mounts.bin_rw_mount={prio=10,tag="bin","bind",defaults.mounts.bin_ro_mount[2],"/bin"}
+  defaults.mounts.sbin_rw_mount={prio=10,tag="sbin","bind",defaults.mounts.sbin_ro_mount[2],"/sbin"}
   defaults.mounts.usr_rw_mount={prio=10,tag="usr","bind",defaults.mounts.usr_ro_mount[2],"/usr"}
   defaults.mounts.lib_rw_mount={prio=10,tag="lib","bind",defaults.mounts.lib_ro_mount[2],"/lib"}
   defaults.mounts.lib64_rw_mount={prio=10,tag="lib64","bind",defaults.mounts.lib64_ro_mount[2],"/lib64"}
