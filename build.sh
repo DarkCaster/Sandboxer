@@ -59,33 +59,21 @@ mkdir -p "$curdir/External"
 check_error
 
 if [[ ! -d $curdir/External/Fakeroot-UserNS ]]; then
- cd "$curdir/External"
- git clone https://github.com/DarkCaster/Fakeroot-UserNS.git
- check_error
- cd "$curdir/External/Fakeroot-UserNS"
- check_error
- patch -p1 -i ./debian/patches/eglibc-fts-without-LFS
- check_error
- patch -p1 -i ./debian/patches/glibc-xattr-types
- check_error
- patch -p1 -i ./debian/patches/fix-shell-in-fakeroot
- check_error
- patch -p1 -i ./debian/patches/hide-dlsym-error.patch
+  cd "$curdir/External"
+  git clone https://github.com/DarkCaster/Fakeroot-UserNS.git
+  check_error
+  cd "$curdir/External/Fakeroot-UserNS"
+  check_error
+  patch -p1 -i ./debian/patches/eglibc-fts-without-LFS
+  check_error
+  patch -p1 -i ./debian/patches/glibc-xattr-types
+  check_error
+  patch -p1 -i ./debian/patches/fix-shell-in-fakeroot
+  check_error
+  patch -p1 -i ./debian/patches/hide-dlsym-error.patch
+  ./preroll
+  check_error
 fi
-
-cd "$curdir/External/Fakeroot-UserNS"
-check_error
-
-&>/dev/null make distclean
-
-autoreconf -fiv
-check_error
-
-(cd doc && po4a -k 0 --rm-backups --variable "srcdir=../doc/" po4a/po4a.cfg)
-check_error
-
-rm -rf autom4te.cache build-aux
-check_error
 
 rm -rf "$curdir/Build/Fakeroot-UserNS-build"
 rm -rf "$curdir/Build/fixups/fakeroot"/*
