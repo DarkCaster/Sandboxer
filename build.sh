@@ -59,7 +59,8 @@ mkdir -p "$curdir/External"
 check_error
 
 if [[ ! -d $curdir/External/Fakeroot-UserNS ]]; then
- git clone https://github.com/DarkCaster/Fakeroot-UserNS.git "$curdir/External/Fakeroot-UserNS"
+ cd "$curdir/External"
+ git clone https://github.com/DarkCaster/Fakeroot-UserNS.git
  check_error
  cd "$curdir/External/Fakeroot-UserNS"
  check_error
@@ -77,7 +78,13 @@ check_error
 
 &>/dev/null make distclean
 
-./preroll
+autoreconf -fiv
+check_error
+
+(cd doc && po4a -k 0 --rm-backups --variable "srcdir=../doc/" po4a/po4a.cfg)
+check_error
+
+rm -rf autom4te.cache build-aux
 check_error
 
 rm -rf "$curdir/Build/Fakeroot-UserNS-build"
