@@ -61,6 +61,15 @@ check_error
 if [[ ! -d $curdir/External/Fakeroot-UserNS ]]; then
  git clone https://github.com/DarkCaster/Fakeroot-UserNS.git "$curdir/External/Fakeroot-UserNS"
  check_error
+ cd "$curdir/External/Fakeroot-UserNS"
+ check_error
+ patch -p1 -i ./debian/patches/eglibc-fts-without-LFS
+ check_error
+ patch -p1 -i ./debian/patches/glibc-xattr-types
+ check_error
+ patch -p1 -i ./debian/patches/fix-shell-in-fakeroot
+ check_error
+ patch -p1 -i ./debian/patches/hide-dlsym-error.patch
 fi
 
 cd "$curdir/External/Fakeroot-UserNS"
