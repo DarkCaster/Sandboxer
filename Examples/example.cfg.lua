@@ -87,6 +87,7 @@
 -- tunables.features.gvfs_fix_mounts
 -- tunables.features.x11util_build
 -- tunables.features.x11util_enable
+-- tunables.features.pulse_force_disable_shm -- see this bug (at the end, it is a bug with pid namespaces): https://bugs.freedesktop.org/show_bug.cgi?id=92141
 
 -- if you changed ANY of tunable defaults (above), you MUST run defaults.recalculate() function here,
 -- this will update and recalculate all deps used by other defaults definitions and setup commands.
