@@ -1,22 +1,5 @@
 #!/bin/bash
 
-mkdir -p "${cfg[tunables.features.pulse_dir]}"
-check_errors
-
-rm -f "${cfg[tunables.features.pulse_dir]}/client.conf"
-rm -f "${cfg[tunables.features.pulse_dir]}/cookie"
-rm -f "${cfg[tunables.features.pulse_dir]}/socket"
-
-echo "autospawn=no" > "${cfg[tunables.features.pulse_dir]}/client.conf"
-check_errors
-if ! check_lua_export "sandbox.tags.devshm"; then
-  log "warning: /dev/shm not mounted (no active \"defaults.mounts.devshm_mount\" option detected), disabling shm support for pulseaudio."
-  echo "enable-shm=no" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
-  check_errors
-fi
-echo "default-server=unix:/etc/pulse/socket" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
-check_errors
-
 pulse_server="$PULSE_SERVER"
 
 [[ -z $pulse_server ]] && pulse_server=`2>/dev/null xprop -root | grep -E "^PULSE_SERVER.*" | sed -n "s|^PULSE_SERVER(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
@@ -24,9 +7,19 @@ pulse_server="$PULSE_SERVER"
 # TODO: detect and use alternative methods of communication
 pulse_socket=`echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'`
 
+pulse_socket_parse() {
+  pulse_socket=`echo "$@" | grep -m 1 "module-native-protocol-unix" | sed -n 's|^.*\(socket=\)\([a-Z0-9/._-+]*\).*$|\2|p'`
+}
+
 # detect pulse socket location, abort if not found
 # TODO: add more complex parsing, for now it only read simple string without spaces or other special symbols
-[[ -z $pulse_socket ]] && pulse_socket=`2>/dev/null pacmd dump | grep "module-native-protocol-unix" | sed -n 's|^.*\(socket=\)\([a-Z0-9/._-+]*\).*$|\2|p'`
+[[ -z $pulse_socket && -f /etc/pulse/default.pa ]] && pulse_socket_parse `cat "/etc/pulse/default.pa"`
+
+[[ -z $pulse_socket && -f $HOME/.config/pulse/default.pa ]] && pulse_socket_parse `cat "$HOME/.config/pulse/default.pa"`
+
+[[ -z $pulse_socket && -f /etc/pulse/system.pa ]] && pulse_socket_parse `cat "/etc/pulse/system.pa"`
+
+[[ -z $pulse_socket ]] && pulse_socket_parse `2>/dev/null pacmd dump`
 
 [[ -z $pulse_socket && -S $XDG_RUNTIME_DIR/pulse/native ]] && pulse_socket="$XDG_RUNTIME_DIR/pulse/native"
 
@@ -36,6 +29,28 @@ pulse_socket=`echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'`
 
 # skip futher procesing if using unsuported communication method (or failed to detect)
 if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
+
+# create configuration dir
+mkdir -p "${cfg[tunables.features.pulse_dir]}"
+check_errors
+
+# remove old configs
+rm -f "${cfg[tunables.features.pulse_dir]}/client.conf"
+rm -f "${cfg[tunables.features.pulse_dir]}/cookie"
+rm -f "${cfg[tunables.features.pulse_dir]}/socket"
+rm -f "${cfg[tunables.features.pulse_dir]}/daemon.conf"
+rm -f "${cfg[tunables.features.pulse_dir]}/default.pa"
+
+# create client config
+echo "autospawn=no" > "${cfg[tunables.features.pulse_dir]}/client.conf"
+check_errors
+if ! check_lua_export "sandbox.tags.devshm" || [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true ]]; then
+  [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true ]] && log "disabling shm support for pulseaudio" || log "warning: /dev/shm not mounted (no active \"defaults.mounts.devshm_mount\" option detected), disabling shm support for pulseaudio."
+  echo "enable-shm=no" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
+  check_errors
+fi
+echo "default-server=unix:/etc/pulse/socket" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
+check_errors
 
   # export default env from tunables.features.pulse_env
   env_set_add_list "tunables.features.pulse_env"
