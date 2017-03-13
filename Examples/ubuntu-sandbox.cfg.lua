@@ -42,8 +42,8 @@ sandbox={
       -- we should also mount dynamically created /etc/passwd and /etc/group config files with defaults.mounts.passwd_mount.
       -- (but we can just overwrite this files inside etc directory of chroot, but it may break ubuntu-setup.cfg.lua startup)
       -- also, we need to perform some minor configuration for our chroot etc dir.
-      {'mkdir -p "'..tunables.etchost_path..'/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
-      {'rm -f "'..tunables.etchost_path..'/resolv.conf"', 'cp "/etc/resolv.conf" "'..tunables.etchost_path..'/resolv.conf"'}, -- update resolv.conf in chroot/etc directory.
+      {'mkdir -p "${cfg[tunables.etchost_path]}/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
+      {'rm -f "${cfg[tunables.etchost_path]}/resolv.conf"', 'cp "/etc/resolv.conf" "${cfg[tunables.etchost_path]}/resolv.conf"'}, -- update resolv.conf in chroot/etc directory.
       defaults.commands.machineid_host_etc, -- create machine-id file if not exist
 
       -- remaining commands, used for any etc management option choosen above.
@@ -66,7 +66,7 @@ sandbox={
     },
     -- construct some essential env variables
     env_set={
-      {"PATH","/usr/bin:/bin:/usr/bin/X11"},
+      {"PATH","/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"},
       defaults.env.set_xdg_runtime,
       defaults.env.set_home,
     },
@@ -84,7 +84,7 @@ sandbox={
       defaults.mounts.usr_ro_mount,
       defaults.mounts.lib_ro_mount,
       defaults.mounts.lib64_ro_mount,
-      {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"sbin"),"/sbin"},
+      defaults.mounts.sbin_ro_mount,
       {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"srv"),"/srv"},
       {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"opt"),"/opt"},
 
