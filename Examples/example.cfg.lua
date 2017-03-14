@@ -290,9 +290,23 @@ shell={
     name = "Shell for example sandbox",
     comment = "shell for sandbox uid "..config.sandbox_uid,
     icon = "terminal",
-    --mimetype = "text/x-something",
+    --mimetype = "text/x-sandboxer-test",
     terminal = true,
     startupnotify = false,
+    -- optional info about mime xml package file deploy. for use with desktop file creator
+    mime =
+    {
+      -- for each string it will create <stringname>.xml file at ~/.local/share/mime and run update-mime-database
+      test='<?xml version="1.0" encoding="UTF-8"?>\
+      <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">\
+      <mime-type type="text/x-sandboxer-test">\
+      <comment>Sandboxer Test File</comment>\
+      <icon name="Text"/>\
+      <glob-deleteall/>\
+      <glob pattern="*.sandboxer.test"/>\
+      </mime-type>\
+      </mime-info>'
+    },
   },
 }
 
