@@ -48,8 +48,12 @@ if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
     env_set_add "PULSE_SERVER" "$pulse_server"
   fi
   if [[ ! -z ${cfg[tunables.features.pulse_env_alsa_config]} ]]; then
-    # export tunables.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
-    env_set_add "ALSA_CONFIG_PATH" "${cfg[tunables.features.pulse_env_alsa_config]}"
+    if [[ ${cfg[tunables.features.pulse_env_alsa_config]} = unset ]]; then
+      env_unset_add "ALSA_CONFIG_PATH"
+    elif [[ ${cfg[tunables.features.pulse_env_alsa_config]} != skip ]]; then
+      # export tunables.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
+      env_set_add "ALSA_CONFIG_PATH" "${cfg[tunables.features.pulse_env_alsa_config]}"
+    fi
   elif [[ -z ${cfg[tunables.features.pulse_env_alsa_config]} && ! -z $ALSA_CONFIG_PATH ]]; then
     env_set_add "ALSA_CONFIG_PATH" "$ALSA_CONFIG_PATH"
   fi
