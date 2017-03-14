@@ -182,6 +182,7 @@ sandbox_bind_rw() {
 
 sandbox_start() {
 (
+  trap "{ log \"sandbox_start: trap triggered, ignoring\"; }" SIGINT SIGHUP
 
   #run bwrap, start master executor
   &>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}"

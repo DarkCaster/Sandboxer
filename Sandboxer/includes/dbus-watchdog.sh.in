@@ -1,5 +1,7 @@
 #!/bin/bash
 
+trap "{ log \"dbus-watchdog: trap triggered, ignoring\"; }" SIGINT SIGHUP
+
 #we are forked from main script, set this service variable to default state
 lock_entered="false"
 
