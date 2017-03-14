@@ -231,3 +231,34 @@ end
 loader.check_profile(profile,config.profile)
 loader.check_profile(dbus,"dbus")
 loader.check_profile(x11util,"x11util")
+
+assert(type(profile.desktop)=="nil" or type(profile.desktop)=="table", "\"desktop\" subtable is not a table type")
+if type(profile.desktop)=="table" then
+  assert(type(profile.desktop.name)=="string","profile.desktop.name value is incorrect")
+  assert(type(profile.desktop.comment)=="nil" or type(profile.desktop.comment)=="string","profile.desktop.comment value is incorrect")
+  assert(type(profile.desktop.icon)=="nil" or type(profile.desktop.icon)=="string","profile.desktop.icon value is incorrect")
+  assert(type(profile.desktop.categories)=="nil" or type(profile.desktop.categories)=="string","profile.desktop.categories value is incorrect")
+  assert(type(profile.desktop.mimetype)=="nil" or type(profile.desktop.mimetype)=="string","profile.desktop.mimetype value is incorrect")
+  assert(type(profile.desktop.terminal)=="nil" or type(profile.desktop.terminal)=="boolean","profile.desktop.terminal value is incorrect")
+  assert(type(profile.desktop.startupnotify)=="nil" or type(profile.desktop.startupnotify)=="boolean","profile.desktop.startupnotify value is incorrect")
+  if type(profile.desktop.comment)=="nil" then profile.desktop.comment="Sandboxer profile for " .. profile.desktop.name end
+  if type(profile.desktop.icon)=="nil" then profile.desktop.icon="application" end
+  if type(profile.desktop.categories)=="nil" then profile.desktop.categories="Application;" end
+  if type(profile.desktop.mimetype)=="nil" then profile.desktop.mimetype="" end
+  if type(profile.desktop.terminal)=="nil" then profile.desktop.terminal=false end
+  if type(profile.desktop.startupnotify)=="nil" then profile.desktop.startupnotify=false end
+  profile.desktop.filename="sandboxer-profile-"..config.sandbox_uid..".desktop"
+  assert(type(profile.desktop.mime)=="nil" or type(profile.desktop.mime)=="table", "\"mime\" subtable is not a table type")
+  if type(profile.desktop.mime)=="table" then
+    --create list of files to install
+    profile.desktop.mime_list=""
+    for key,value in pairs(profile.desktop.mime) do
+      assert(type(value)=="string", "prefix.mime." .. key .. " must be a string")
+      if profile.desktop.mime_list == "" then
+        profile.desktop.mime_list=string.format("%s",key)
+      else
+        profile.desktop.mime_list=string.format("%s %s", profile.desktop.mime_list, key)
+      end
+    end
+  end
+end
