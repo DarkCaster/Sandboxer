@@ -75,15 +75,15 @@ check_error
 
 echo "Installing examples"
 
-for example in "$target/examples"/*.cfg.lua
+for example in "$target/examples"/*.cfg.lua "$target/examples"/*.sh
 do
   [[ ! -f $example ]] && continue
-  echo "Moving existing example config $example to $example.bak"
+  echo "Moving existing example $example to $example.bak"
   mv "$example" "$example.bak"
   check_error
 done
 
-for example in "$curdir/Examples"/*.cfg.lua
+for example in "$curdir/Examples"/*.cfg.lua "$curdir/Examples"/*.sh
 do
   [[ ! -f $example ]] && continue
   cp "$example" "$target/examples"
@@ -105,4 +105,3 @@ check_error
 
 ln -s "$target/bin/sandboxer-desktop-file-creator.sh" "$HOME/bin/sandboxer-desktop-file-creator.sh"
 check_error
-
