@@ -99,3 +99,10 @@ check_error
 
 ln -s "$target/bin/sandboxer.sh" "$HOME/bin/sandboxer.sh"
 check_error
+
+rm -f "$HOME/bin/sandboxer-desktop-file-creator.sh"
+check_error
+
+ln -s "$target/bin/sandboxer-desktop-file-creator.sh" "$HOME/bin/sandboxer-desktop-file-creator.sh"
+check_error
+
