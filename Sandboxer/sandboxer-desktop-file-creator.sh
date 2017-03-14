@@ -75,20 +75,17 @@ if [ "$create_cat" = "true" ] && [ "$action" = "install" ]; then
 
   #create and install menu file
   tmp_menufile="$tmp_dir/sandboxer.menu"
-  cat << EOF > "$tmp_menufile"
-<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
-  "http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
-  <Menu>
-  <Name>Applications</Name>
-  <Menu>
-  <Name>Sandboxed Applications</Name>
-  <Directory>sandboxer.directory</Directory>
-  <Include>
-  <Category>Sandboxer</Category>
-  </Include>
-  </Menu>
-  </Menu>
-EOF
+  echo "<!DOCTYPE Menu PUBLIC \"-//freedesktop//DTD Menu 1.0//EN\" \"http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd\">" > "$tmp_menufile"
+  echo "<Menu>" >> "$tmp_menufile"
+  echo "<Name>Applications</Name>" >> "$tmp_menufile"
+  echo "<Menu>" >> "$tmp_menufile"
+  echo "<Name>Sandboxed Applications</Name>" >> "$tmp_menufile"
+  echo "<Directory>sandboxer.directory</Directory>" >> "$tmp_menufile"
+  echo "<Include>" >> "$tmp_menufile"
+  echo "<Category>Sandboxer</Category>" >> "$tmp_menufile"
+  echo "</Include>" >> "$tmp_menufile"
+  echo "</Menu>" >> "$tmp_menufile"
+  echo "</Menu>" >> "$tmp_menufile"
 
   #TODO: for now only generic and mate applications-merged menus supported, add other DE support if needed
   mkdir -p "$HOME/.config/menus/applications-merged"
