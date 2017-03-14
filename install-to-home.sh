@@ -9,7 +9,7 @@ target="$1"
 
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
-function check_error {
+check_error() {
  if [[ $? != 0 ]]; then
   echo "Install ended with error !!!"
   cd "$curdir"
@@ -34,6 +34,9 @@ check_error
 echo "Installing main scripts"
 
 cp "$curdir/Sandboxer/sandboxer.sh" "$target/bin"
+check_error
+
+cp "$curdir/Sandboxer/sandboxer-desktop-file-creator.sh" "$target/bin"
 check_error
 
 cp "$curdir/Sandboxer/sandboxer.pre.lua" "$target/bin"
