@@ -130,19 +130,19 @@ if check_lua_export profile.desktop.name; then
   fi
 fi
 
-if check_lua_export profile.mime_list; then
+if check_lua_export profile.desktop.mime_list; then
   mkdir -p "$HOME/.local/share/mime/packages"
   mkdir -p "$HOME/.local/share/applications"
   if [[ $action = install ]]; then
     echo "installing mime packages for profile $profile"
-    for target in ${cfg[profile.mime_list]}
+    for target in ${cfg[profile.desktop.mime_list]}
     do
       echo "installing $target package"
-      echo "${cfg[profile.mime.$target]}" > "$HOME/.local/share/mime/packages/$target.xml"
+      echo "${cfg[profile.desktop.mime.$target]}" > "$HOME/.local/share/mime/packages/$target.xml"
     done
   else
     echo "removing mime packages for profile $profile"
-    for target in ${cfg[profile.mime_list]}
+    for target in ${cfg[profile.desktop.mime_list]}
     do
       echo "removing $target package"
       rm "$HOME/.local/share/mime/packages/$target.xml"
