@@ -76,7 +76,7 @@ if [ "$create_cat" = "true" ] && [ "$action" = "install" ]; then
   #create and install menu file
   tmp_menufile="$tmp_dir/sandboxer.menu"
   cat << EOF > "$tmp_menufile"
-  <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
   "http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
   <Menu>
   <Name>Applications</Name>
@@ -88,7 +88,7 @@ if [ "$create_cat" = "true" ] && [ "$action" = "install" ]; then
   </Include>
   </Menu>
   </Menu>
-  EOF
+EOF
 
   #TODO: for now only generic and mate applications-merged menus supported, add other DE support if needed
   mkdir -p "$HOME/.config/menus/applications-merged"
