@@ -19,8 +19,8 @@ if [[ ${cfg[tunables.features.pulse_skip_sanity_checks]} != true ]]; then
   # pulseaudio < 9.0 has some bugs, that may lead to it's crash when using with sandboxed env with some options combinations
   if [[ $pulseaudio_version -lt 9 ]]; then
     #/dev/shm mount + pid namespace
-    if `check_lua_export "sandbox.tags.devshm"` && `check_lua_export "sandbox.tags.unshare-pid"` ; then
-      log "sanity check failed: pulseaudio < v9.0 on host system may break, when using sandboxes with BOTH defaults.mounts.devshm_mount and defaults.bwrap.unshare_ipc options active. cannot proceed."
+    if `check_lua_export "sandbox.tags.devshm"` && `check_lua_export "sandbox.tags.unshare-pid"` && [[ $pulse_shm_enabled = true ]] ; then
+      log "sanity check failed: pulseaudio version on your host is < v9.0, and SHM usage seems to be enabled. it may crash, when using sandboxes with BOTH \"defaults.mounts.devshm_mount\" and \"defaults.bwrap.unshare_pid\" options active. cannot proceed, disable one of these options in your sandbox config, or add \"enable-shm = no\" option to your pulseaudio config file. you can also add \"tunables.features.pulse_skip_sanity_checks=true\" to disable this sanity check (if you feel brave)."
       teardown 1
     fi
   fi
@@ -57,8 +57,8 @@ if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
   # create client config
   echo "autospawn=no" > "${cfg[tunables.features.pulse_dir]}/client.conf"
   check_errors
-  if ! check_lua_export "sandbox.tags.devshm" || [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true ]]; then
-    [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true ]] && log "disabling shm support for pulseaudio" || log "warning: /dev/shm not mounted (no active \"defaults.mounts.devshm_mount\" option detected), disabling shm support for pulseaudio."
+  if ! check_lua_export "sandbox.tags.devshm" || [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true || $pulse_shm_enabled = false ]]; then
+    [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true || $pulse_shm_enabled = false ]] && log "disabling shm support for pulseaudio" || log "warning: /dev/shm not mounted (no active \"defaults.mounts.devshm_mount\" option detected), disabling shm support for pulseaudio."
     echo "enable-shm=no" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
     check_errors
   fi
