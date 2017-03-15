@@ -58,7 +58,7 @@ if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
   echo "autospawn=no" > "${cfg[tunables.features.pulse_dir]}/client.conf"
   check_errors
   if ! check_lua_export "sandbox.tags.devshm" || [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true || $pulse_shm_enabled = false ]]; then
-    [[ ${cfg[tunables.features.pulse_force_disable_shm]} = true || $pulse_shm_enabled = false ]] && log "disabling shm support for pulseaudio" || log "warning: /dev/shm not mounted (no active \"defaults.mounts.devshm_mount\" option detected), disabling shm support for pulseaudio."
+    log "disabling shm support for pulseaudio"
     echo "enable-shm=no" >> "${cfg[tunables.features.pulse_dir]}/client.conf"
     check_errors
   fi
