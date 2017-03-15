@@ -1,6 +1,17 @@
 #!/bin/bash
-
-#TODO: detect shm options from host pulseaudio config, and update pulseaudio config generation for sandbox
+#detect enable-shm option value
+pulse_shm_enabled="true"
+for pulse_conf in "/etc/pulse/daemon.conf" "$HOME/.config/pulse/daemon.conf" "/etc/pulse/client.conf" "$HOME/.config/pulse/client.conf"
+do
+  [[ ! -f $pulse_conf ]] && continue
+  while IFS='' read -r line || [[ -n "$line" ]]; do
+    if [[ $line =~ ^[[:space:]]*"enable-shm"[[:space:]]*"="[[:space:]]*"no"[[:space:]]*$ ]]; then
+      pulse_shm_enabled="false"
+    elif [[ $line =~ ^[[:space:]]*"enable-shm"[[:space:]]*"="[[:space:]]*"yes"[[:space:]]*$ ]]; then
+      pulse_shm_enabled="true"
+    fi
+  done < "$pulse_conf"
+done
 if [[ ${cfg[tunables.features.pulse_skip_sanity_checks]} != true ]]; then
   #get host pulseaudio version
   [[ `2>/dev/null pulseaudio --version` =~ ^"pulseaudio"[[:space:]]([0-9]*)".".*$ ]] && pulseaudio_version=( "${BASH_REMATCH[1]}" )
