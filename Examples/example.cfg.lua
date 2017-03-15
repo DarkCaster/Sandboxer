@@ -208,7 +208,7 @@ sandbox={
       defaults.mounts.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
       -- TODO: add mounts only to some parts of sys directory only needed for particular apps to work
       defaults.mounts.sys_mount, -- mount /sys directory (readonly). will leak sensitive information about hw config, but may be needed for some complex multimedia apps to work
-      defaults.mounts.devshm_mount, -- mount /dev/shm. if mounted - disables posix-shm isolation (not to be confused with sys.v-shm). may be needed for some applications to work. unsecure - exposes shared memory buffers from other host applications to sandbox.
+      -- defaults.mounts.devshm_mount, -- mount /dev/shm. if mounted - disables posix-shm isolation (not to be confused with sys.v-shm). may be needed for some applications to work. unsecure - exposes shared memory buffers from other host applications to sandbox. may also break host pulseadio daemon if it's version is < than 9.0 when used with defaults.bwrap.unshare_pid option.
       defaults.mounts.host_bin_mount, -- readonly mount host /bin directory
       defaults.mounts.host_sbin_mount, -- readonly mount host /sbin directory
       defaults.mounts.host_usr_mount, -- readonly mount host /usr directory
@@ -261,8 +261,8 @@ sandbox={
 
     defaults.bwrap.unshare_user,
     defaults.bwrap.unshare_ipc, -- use IPC namespace inside sandbox. May break X11 applications when using x11host feature (x11xpra feature should work).
-    defaults.bwrap.unshare_pid,
-    -- defaults.bwrap.unshare_net,
+    defaults.bwrap.unshare_pid, -- use separate pid namespace. recommended. but it may break host pulseaudio < v9.0 when using "pulse" feature (to provide pulseudio pass-through) and defaults.mounts.devshm_mount option (see above).
+    -- defaults.bwrap.unshare_net, -- separate network namespace, not much use right now - it will create only lo interface, may be useful to isolate apps from network.
     defaults.bwrap.unshare_uts,
     -- defaults.bwrap.unshare_cgroup,
     defaults.bwrap.uid, -- set uid inside sandbox according to tunables.uid setting. if you manually change tunables.uid - use of this entry is mandatory.
