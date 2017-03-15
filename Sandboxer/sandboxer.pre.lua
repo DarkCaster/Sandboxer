@@ -203,7 +203,8 @@ tunables.features.pulse_env={
   {"QEMU_AUDIO_DRV","pa"},
   {"SDL_AUDIODRIVER","pulse"},
 }
-tunables.features.pulse_force_disable_shm=true
+tunables.features.pulse_skip_sanity_checks=false
+tunables.features.pulse_force_disable_shm=false
 tunables.features.pulse_env_alsa_config=""
 tunables.features.x11util_build="default"
 tunables.features.x11util_enable=true
