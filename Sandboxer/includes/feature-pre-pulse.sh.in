@@ -1,16 +1,21 @@
 #!/bin/bash
 
+#TODO: detect shm options from host pulseaudio config, and update pulseaudio config generation for sandbox
 if [[ ${cfg[tunables.features.pulse_skip_sanity_checks]} != true ]]; then
   #get host pulseaudio version
   [[ `2>/dev/null pulseaudio --version` =~ ^"pulseaudio"[[:space:]]([0-9]*)".".*$ ]] && pulseaudio_version=( "${BASH_REMATCH[1]}" )
   [[ -z $pulseaudio_version ]] && log "cannot determine pulseaudio version, sanity check failed." && teardown 1
-  # pulseaudio < 9.0 has some bugs, that may lead to it's crash when using with sandboxed env with some setup
+  # pulseaudio < 9.0 has some bugs, that may lead to it's crash when using with sandboxed env with some options combinations
   if [[ $pulseaudio_version -lt 9 ]]; then
-    #TODO: check current sandbox config by reading sandbox.tags, and terminate if using bad combinations: /dev/shm mount + pid namespace, /dev/shm mount + NO pid namespace + disable pulse shm option active
-    true
+    #/dev/shm mount + pid namespace
+    if `check_lua_export "sandbox.tags.devshm"` && `check_lua_export "sandbox.tags.unshare-pid"` ; then
+      log "sanity check failed: pulseaudio < v9.0 on host system may break, when using sandboxes with BOTH defaults.mounts.devshm_mount and defaults.bwrap.unshare_ipc options active. cannot proceed."
+      teardown 1
+    fi
   fi
+else
+  log "warning: skipping sanity checks for pulseaudio."
 fi
-
 pulse_server="$PULSE_SERVER"
 [[ -z $pulse_server ]] && pulse_server=`2>/dev/null xprop -root | grep -E "^PULSE_SERVER.*" | sed -n "s|^PULSE_SERVER(STRING)\s=\s\"\(.*\)\"\$|\1|p"`
 # TODO: detect and use alternative methods of communication
