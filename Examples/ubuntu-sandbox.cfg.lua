@@ -22,6 +22,8 @@ tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
 -- use different build of x11 util, if you experience problems, for example:
 -- tunables.features.x11util_build="ubuntu-16.04"
 -- tunables.features.x11util_build="debian-8"
+tunables.features.pulse_env_alsa_config="skip" -- set custom alsa config file path, exported as ALSA_CONFIG_PATH. "skip" will disable export this var to sandbox, which is neccecary for stock ubuntu or debian based chroot.
+
 defaults.recalculate()
 
 sandbox={
