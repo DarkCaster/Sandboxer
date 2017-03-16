@@ -116,7 +116,7 @@ sandbox={
       defaults.mounts.devdri_mount,
       defaults.mounts.devinput_mount,
       -- defaults.mounts.sys_mount, - optional, may leak some system info. anyway, it will be mounted readonly if enabled
-      defaults.mounts.devshm_mount,
+      -- defaults.mounts.devshm_mount, - enable posix_shm sharing between host and sandbox. may break old pulseaudio (<9.0), may be needed for some apps to work, weakens security and isolation.
     },
   },
 
