@@ -117,7 +117,7 @@ sandbox={
       defaults.mounts.devsnd_mount,
       defaults.mounts.devdri_mount,
       defaults.mounts.devinput_mount,
-      -- defaults.mounts.sys_mount, - optional, may leak some system info. anyway, it will be mounted readonly if enabled
+      defaults.mounts.sys_mount, -- needed for mesa and 3d to work. may leak some system info. anyway, it will be mounted readonly if enabled.
       -- defaults.mounts.devshm_mount, - enable posix_shm sharing between host and sandbox. may break old pulseaudio (<9.0), may be needed for some apps to work, weakens security and isolation.
     },
   },
