@@ -300,6 +300,7 @@ function defaults.recalculate()
     {prio=20,tag="etcpasswd","ro-bind",loader.path.combine(tunables.auto.etc_path,"passwd"),"/etc/passwd"},
     {prio=20,tag="etcgroup","ro-bind",loader.path.combine(tunables.auto.etc_path,"group"),"/etc/group"},
   }
+  defaults.mounts.machineid_mount={prio=20,tag="etcmachineid","ro-bind",loader.path.combine(tunables.auto.etc_path,"machine-id"),"/etc/machine-id"}
   defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",tunables.uid)}
   defaults.mounts.home_mount={prio=20,tag="home","bind",tunables.auto.home_base_path,"/home"}
   if tunables.user=="root" then defaults.mounts.home_mount={} end
