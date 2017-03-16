@@ -41,11 +41,13 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 done < "$debian_list"
 [[ -z $git_repo || -z $tags || -z $git_commit || -z $directory ]] && echo "failed to detect repo parameters for selected tag: $tag" && exit 1
 
-echo "repo parameters:"
+echo "******************************"
+echo "selected parameters:"
 echo "git_repo   = $git_repo"
 echo "tags       = $tags"
 echo "git_commit = $git_commit"
 echo "directory  = $directory"
+echo "******************************"
 
 if [[ ! -d "$debian_git" ]]; then
   git clone $git_repo "$debian_git"
