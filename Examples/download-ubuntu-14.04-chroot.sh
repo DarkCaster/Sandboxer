@@ -29,5 +29,9 @@ check_errors
 mv "$script_dir/ubuntu_chroot/etc" "$script_dir/ubuntu_chroot/etc_orig"
 check_errors
 
+#remove machine-id, will be generated automatically
+rm -f "$script_dir/ubuntu_chroot/etc_orig/machine-id"
+check_errors
+
 rm /tmp/ubuntu-root.tar.gz
 check_errors
