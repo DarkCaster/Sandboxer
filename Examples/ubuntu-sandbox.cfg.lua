@@ -1,10 +1,27 @@
+-- this is an example config for sandbox that use external ubuntu rootfs as base.
+
+-- this example config is compatible with external root-fs archives that was downloaded and extracted by running:
+-- download-ubuntu-*.sh - download selected ubuntu x86_64 distribution (currently supported 12.04, 14.04, 16.04 and 16.10)
+-- download-debian-jessie-chroot.sh - download debian 8 (jessie) x86_64 rootfs from docker image repository
+-- (debian sid distribution is using different root-fs directory layout - it will be NOT COMPATIBLE with this example config file)
+
+-- THIS CONFIG WILL CREATE REGULAR SANDBOXED ENV FROM CHROOT DIRECTORY, THAT WAS PREVIOUSLY SETUP WITH ubuntu-setup.cfg.lua.
+-- all root-subdirectories from external rootfs (ubuntu_chroot directory) will be mounted read-only.
+-- most changes to root-fs inside sandbox will be discarded on exit, leaving chroot directory totally intact.
+-- some user-data, however, will be persistently stored at location defined by "tunables.datadir" parameter (see example.cfg.lua for more details)
+-- this data includes /var/tmp directory, /var/cache directory and /home directory
+
+-- it is strongly recommended to use this config rather than ubuntu-setup.cfg.lua to run regular software, most of desktop integration options enabled by default with this config.
+
 tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
+--tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot") -- for debian rootfs downloaded by download-debian-*-chroot.sh scripts
 tunables.etcdir_name="etc_sandbox"
 tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc_orig")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
 -- use different build of x11 util, if you experience problems, for example:
--- tunables.features.x11util_build="ubuntu-12.04"
+-- tunables.features.x11util_build="ubuntu-16.04"
+-- tunables.features.x11util_build="debian-8"
 defaults.recalculate()
 
 sandbox={
@@ -20,8 +37,8 @@ sandbox={
   setup={
     executor_build="default",
     --use one of this builds, if you experience problems with default
-    --executor_build="ubuntu-12.04",
-    --executor_build="ubuntu-16.10",
+    --executor_build="ubuntu-16.04",
+    --executor_build="debian-8",
     commands={
       -- usually, when creating sandbox from host env, it is recommended to dynamically construct etc dir for sandbox.
       -- construction is needed to filter some sensitive system configuration info
@@ -98,7 +115,7 @@ sandbox={
       defaults.mounts.devsnd_mount,
       defaults.mounts.devdri_mount,
       defaults.mounts.devinput_mount,
-      defaults.mounts.sys_mount,
+      -- defaults.mounts.sys_mount, - optional, may leak some system info. anyway, it will be mounted readonly if enabled
       defaults.mounts.devshm_mount,
     },
   },
