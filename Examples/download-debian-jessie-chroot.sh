@@ -17,3 +17,8 @@ check_errors () {
 [[ ! -d $script_dir/debian_chroot ]] || check_errors "directory $script_dir/debian_chroot already exist!"
 
 "$script_dir/download-debian-from-docker-repo.sh" jessie
+check_errors
+
+#remove apt configs needed only for docker (see https://github.com/docker/docker/blob/master/contrib/mkimage/debootstrap)
+rm "$script_dir/debian_chroot/etc_orig/apt/apt.conf.d/docker-"*
+check_errors
