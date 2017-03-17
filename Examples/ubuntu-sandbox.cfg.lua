@@ -15,7 +15,7 @@
 
 tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
 --tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot") -- for debian rootfs downloaded by download-debian-*-chroot.sh scripts
-tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc_orig")
+tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
 -- use different build of x11 util, if you experience problems, for example:
@@ -69,7 +69,7 @@ sandbox={
       -- remaining commands, used for any etc management option choosen above.
 
       -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
-      -- will be placed to "etc_sandbox" directory and will not overwrite files inside "etc_orig" directory managed by ubuntu-setup.cfg.lua
+      -- will be placed to "etc_sandbox" directory and will not overwrite files inside "etc" directory managed by ubuntu-setup.cfg.lua
       defaults.commands.passwd,
 
       -- various stuff for userdata

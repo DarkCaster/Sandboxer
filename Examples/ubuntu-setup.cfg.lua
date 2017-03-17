@@ -43,8 +43,8 @@ sandbox={
       --(or else dpkg configure stage will fail, because there is no running init daemon inside sandbox)
       {'[[ ! -x usr/sbin/policy-rc.d ]] && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
-      {'rm -f "etc_orig/resolv.conf"', 'cp "/etc/resolv.conf" "etc_orig/resolv.conf"'},
-      {'[[ ! -f "etc_orig/machine-id" ]] && touch "etc_orig/machine-id"; true'},
+      {'rm -f "etc/resolv.conf"', 'cp "/etc/resolv.conf" "etc/resolv.conf"'},
+      {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
     },
     -- only pass some whitelisted env-variables from host to sandboxed env
     env_whitelist={
@@ -70,8 +70,8 @@ sandbox={
       defaults.mounts.lib64_rw_mount,
       defaults.mounts.sbin_rw_mount,
       -- defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages. anyway, it will be mounted readonly.
-      -- in normal sandboxes, following directories constructed dynamically (see example.cfg.lua), but for external chroot case we must explicitly define mounts for it
-      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"etc_orig"),"/etc"},
+      -- in normal sandboxes, following directories constructed dynamically (see example.cfg.lua), or not needed at all, but for external chroot case we must explicitly define mounts for it
+      {prio=10,"bind",loader.path.combine(tunables.chrootdir,"etc"),"/etc"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"boot"),"/boot"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"root"),"/root"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"run"),"/run"},
