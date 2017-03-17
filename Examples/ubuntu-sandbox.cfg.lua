@@ -63,15 +63,14 @@ sandbox={
       -- (but we can just overwrite this files inside etc directory of chroot, but it may break ubuntu-setup.cfg.lua startup)
       -- also, we need to perform some minor configuration for our chroot etc dir.
       {'mkdir -p "${cfg[tunables.etchost_path]}/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
-      {'rm -f "${cfg[tunables.etchost_path]}/resolv.conf"', 'cp "/etc/resolv.conf" "${cfg[tunables.etchost_path]}/resolv.conf"'}, -- update resolv.conf in chroot/etc directory.
       defaults.commands.machineid_static, -- create machine-id file in dynamic etc directory, generated machine-id rely only to sandbox_uid value
 
       -- remaining commands, used for any etc management option choosen above.
 
       -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
-      -- will be placed to "etc_sandbox" directory and will not overwrite files inside "etc" directory managed by ubuntu-setup.cfg.lua
+      -- will be placed to "dynamic etc directory and will not overwrite files inside "etc" directory managed by ubuntu-setup.cfg.lua
       defaults.commands.passwd,
-
+      defaults.commands.resolvconf, -- generate resolvconf and place it to dynamic etc directory
       -- various stuff for userdata
       defaults.commands.home,
       defaults.commands.home_gui_config,
@@ -110,10 +109,11 @@ sandbox={
 
       -- if we are using option 3 when constructing etc for our sandbox.
       -- see "commands" section above for more details.
-      -- disable following two mounts if using another method of etc generation
+      -- disable following four mounts if using another method of etc generation
       defaults.mounts.host_etc_mount,
       defaults.mounts.passwd_mount,
       defaults.mounts.machineid_mount,
+      defaults.mounts.resolvconf_mount,
 
       -- optional mounts, may be useful for some programs
       defaults.mounts.devsnd_mount,

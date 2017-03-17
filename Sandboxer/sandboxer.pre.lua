@@ -226,6 +226,10 @@ defaults.commands.passwd_extended={
   'mkdir -p "${cfg[tunables.auto.etc_path]}"',
   '"$tools_dir/pwdgen.sh" "${cfg[tunables.user]}" "$uid" "${cfg[tunables.uid]}" "$gid" "${cfg[tunables.gid]}" "${cfg[tunables.auto.chroot_user_path]}" "${cfg[tunables.auto.etc_path]}/passwd" "${cfg[tunables.auto.etc_path]}/group"',
 }
+defaults.commands.resolvconf={
+  'mkdir -p "${cfg[tunables.auto.etc_path]}"',
+  'cp "/etc/resolv.conf" "${cfg[tunables.auto.etc_path]}/resolv.conf"',
+}
 defaults.commands.machineid={
   'mkdir -p "${cfg[tunables.auto.etc_path]}"',
   'echo "$config_uid" > "${cfg[tunables.basedir]}/sandbox_uid"',
@@ -304,6 +308,7 @@ function defaults.recalculate()
     {prio=20,tag="etcpasswd","ro-bind",loader.path.combine(tunables.auto.etc_path,"passwd"),"/etc/passwd"},
     {prio=20,tag="etcgroup","ro-bind",loader.path.combine(tunables.auto.etc_path,"group"),"/etc/group"},
   }
+  defaults.mounts.resolvconf_mount={prio=20,tag="etcresolvconf","ro-bind",loader.path.combine(tunables.auto.etc_path,"resolv.conf"),"/etc/resolv.conf"}
   defaults.mounts.machineid_mount={prio=20,tag="etcmachineid","ro-bind",loader.path.combine(tunables.auto.etc_path,"machine-id"),"/etc/machine-id"}
   defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",tunables.uid)}
   defaults.mounts.home_mount={prio=20,tag="home","bind",tunables.auto.home_base_path,"/home"}

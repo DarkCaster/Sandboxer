@@ -43,8 +43,9 @@ sandbox={
       --(or else dpkg configure stage will fail, because there is no running init daemon inside sandbox)
       {'[[ ! -x usr/sbin/policy-rc.d ]] && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
-      {'rm -f "etc/resolv.conf"', 'cp "/etc/resolv.conf" "etc/resolv.conf"'},
       {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
+      {'touch "etc/resolv.conf"'}, -- create empty resolv.conf at chroot directory, if missing.
+      defaults.commands.resolvconf, -- create resolv.conf at dynamic etc directory
     },
     -- only pass some whitelisted env-variables from host to sandboxed env
     env_whitelist={
@@ -69,6 +70,7 @@ sandbox={
       defaults.mounts.lib_rw_mount,
       defaults.mounts.lib64_rw_mount,
       defaults.mounts.sbin_rw_mount,
+      defaults.mounts.resolvconf_mount, -- mount resolv.conf from dynamic etc directory
       -- defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages. anyway, it will be mounted readonly.
       -- in normal sandboxes, following directories constructed dynamically (see example.cfg.lua), or not needed at all, but for external chroot case we must explicitly define mounts for it
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"etc"),"/etc"},
