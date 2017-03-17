@@ -20,9 +20,9 @@ check_errors () {
 check_errors
 
 #remove apt configs needed only for docker (see https://github.com/docker/docker/blob/master/contrib/mkimage/debootstrap)
-rm "$script_dir/debian_chroot/etc_orig/apt/apt.conf.d/docker-"*
+rm "$script_dir/debian_chroot/etc/apt/apt.conf.d/docker-"*
 check_errors
 
 #remove machine-id, will be generated automatically
-rm -f "$script_dir/debian_chroot/etc_orig/machine-id"
+rm -f "$script_dir/debian_chroot/etc/machine-id"
 check_errors

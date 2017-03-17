@@ -71,6 +71,3 @@ check_errors
 
 xz -d -c "$debian_git/$directory/rootfs.tar.xz" | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
 check_errors
-
-mv "$script_dir/debian_chroot/etc" "$script_dir/debian_chroot/etc_orig"
-check_errors
