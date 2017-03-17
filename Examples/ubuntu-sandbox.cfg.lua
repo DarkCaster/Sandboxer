@@ -62,7 +62,6 @@ sandbox={
       -- we should also mount dynamically created /etc/passwd and /etc/group config files with defaults.mounts.passwd_mount.
       -- (but we can just overwrite this files inside etc directory of chroot, but it may break ubuntu-setup.cfg.lua startup)
       -- also, we need to perform some minor configuration for our chroot etc dir.
-      {'mkdir -p "${cfg[tunables.etchost_path]}/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
       defaults.commands.machineid_static, -- create machine-id file in dynamic etc directory, generated machine-id rely only to sandbox_uid value
 
       -- remaining commands, used for any etc management option choosen above.

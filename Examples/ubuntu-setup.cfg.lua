@@ -44,6 +44,7 @@ sandbox={
       {'[[ ! -x usr/sbin/policy-rc.d ]] && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
       {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
+      {'mkdir -p "etc/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
       {'touch "etc/resolv.conf"'}, -- create empty resolv.conf at chroot directory, if missing.
       defaults.commands.resolvconf, -- create resolv.conf at dynamic etc directory
     },
