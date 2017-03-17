@@ -77,7 +77,6 @@
 -- tunables.etchost_path="/etc"
 
 -- TODO: add descriptions for features tunables:
--- tunables.features.fixupsdir_name="fixups"
 -- tunables.features.dbus_search_prefix
 -- tunables.features.gvfs_fix_search_prefix
 -- tunables.features.gvfs_fix_search_locations
