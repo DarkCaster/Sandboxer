@@ -10,7 +10,7 @@ if [[ ! -z $fixups_srcdir ]]; then
   # construct directory, that will be mounted
   rm -rf "${cfg[tunables.features.fixups_dir]}"
   check_errors
-  mkdir "${cfg[tunables.features.fixups_dir]}"
+  mkdir -p "${cfg[tunables.features.fixups_dir]}"
   check_errors
   # populate with main directory contents
   cp -rf "$fixups_srcdir"/* "${cfg[tunables.features.fixups_dir]}"
