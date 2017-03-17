@@ -232,6 +232,11 @@ defaults.commands.machineid={
   'echo "$config_uid" > "${cfg[tunables.basedir]}/sandbox_uid"',
   '"$tools_dir/machineidgen.sh" "${cfg[tunables.basedir]}" "${cfg[tunables.auto.etc_path]}/machine-id" "/etc/machine-id" "${cfg[tunables.basedir]}/sandbox_uid"',
 }
+defaults.commands.machineid_static={
+  'mkdir -p "${cfg[tunables.auto.etc_path]}"',
+  'echo "$config_uid" > "${cfg[tunables.basedir]}/sandbox_uid"',
+  '"$tools_dir/machineidgen.sh" "${cfg[tunables.basedir]}" "${cfg[tunables.auto.etc_path]}/machine-id" "${cfg[tunables.basedir]}/sandbox_uid"',
+}
 defaults.commands.machineid_host_etc={
   'echo "$config_uid" > "${cfg[tunables.basedir]}/sandbox_uid"',
   'if [[ `2>/dev/null cat "${cfg[tunables.etchost_path]}/machine-id"` =~ ^[a-f0-9]*$ && ! -z `2>/dev/null cat "${cfg[tunables.etchost_path]}/machine-id"` ]]; then true; else rm -f "${cfg[tunables.etchost_path]}/machine-id"; "$tools_dir/machineidgen.sh" "${cfg[tunables.basedir]}" "${cfg[tunables.etchost_path]}/machine-id" "${cfg[tunables.basedir]}/sandbox_uid"; fi',
