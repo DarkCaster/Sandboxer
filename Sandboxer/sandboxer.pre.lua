@@ -17,7 +17,7 @@ tunables={}
 -- default values for tunables. do not forget to run defaults.recalculate() if you change them
 tunables.basedir=config.ctldir
 tunables.chrootdir=loader.path.combine(tunables.basedir,"chroot")
-tunables.configdir=loader.path.combine(tunables.basedir,"chroot","dynamic_config")
+tunables.configdir=loader.path.combine(tunables.basedir,"chroot")
 tunables.uid=config.uid
 tunables.gid=config.gid
 tunables.user="sandboxer"
@@ -259,7 +259,7 @@ function defaults.recalculate()
 
   -- storage for all automatically generated tunables
   tunables.auto={}
-  tunables.auto.etc_path=loader.path.combine(tunables.configdir,"etc")
+  tunables.auto.etc_path=loader.path.combine(tunables.configdir,"etc_dynamic")
   tunables.auto.home_base_path=loader.path.combine(tunables.datadir,"home")
   if tunables.user=="root" then tunables.auto.home_base_path=tostring(tunables.chrootdir) end
   tunables.auto.chroot_user_path=loader.path.combine("/home",tunables.user)
