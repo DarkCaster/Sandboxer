@@ -312,7 +312,6 @@ function defaults.recalculate()
   defaults.mounts.var_cache_mount={prio=20,tag="cache","bind",tunables.auto.varcache_path,"/var/cache"}
   defaults.mounts.var_tmp_mount={prio=20,tag="vartmp","bind",tunables.auto.vartmp_path,"/var/tmp"}
   defaults.mounts.var_lib_mount={prio=20,tag="varlib","ro-bind",loader.path.combine(tunables.chrootdir,"var","lib"),"/var/lib"}
-  defaults.mounts.pulse_mount={prio=20,tag="pulse","bind",loader.path.combine(tunables.chrootdir,"pulse"),"/etc/pulse"}
   if config.uid~=tunables.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",tunables.uid} else defaults.bwrap.uid={} end
   if config.gid~=tunables.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",tunables.gid} else defaults.bwrap.gid={} end
   tunables.features.gvfs_fix_dir=loader.path.combine(tunables.chrootdir,"gvfs_fix")
