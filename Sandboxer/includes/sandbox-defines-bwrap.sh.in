@@ -187,6 +187,10 @@ sandbox_start() {
   #run bwrap, start master executor
   &>"$basedir/bwrap.log" bwrap "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}"
 
+  err_code="$?"
+
+  [[ $err_code != 0 ]] && log "bwrap exit with error code $err_code, bwrap output:" && cat "$basedir/bwrap.log" && exit 1
+
   #below is a cleanup-on-exit logic that may be activated when bwrap is complete
   [[ ${cfg[sandbox.setup.cleanup_on_exit]} != true ]] && exit 0
 
