@@ -17,11 +17,11 @@ tunables={}
 -- default values for tunables. do not forget to run defaults.recalculate() if you change them
 tunables.basedir=config.ctldir
 tunables.chrootdir=loader.path.combine(tunables.basedir,"chroot")
+tunables.configdir=loader.path.combine(tunables.basedir,"chroot","dynamic_config")
 tunables.uid=config.uid
 tunables.gid=config.gid
 tunables.user="sandboxer"
 tunables.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid)
-tunables.etcdir_name="etc"
 tunables.etchost_path="/etc"
 
 defaults={}
@@ -259,7 +259,7 @@ function defaults.recalculate()
 
   -- storage for all automatically generated tunables
   tunables.auto={}
-  tunables.auto.etc_path=loader.path.combine(tunables.chrootdir,tunables.etcdir_name)
+  tunables.auto.etc_path=loader.path.combine(tunables.configdir,"etc")
   tunables.auto.home_base_path=loader.path.combine(tunables.datadir,"home")
   if tunables.user=="root" then tunables.auto.home_base_path=tostring(tunables.chrootdir) end
   tunables.auto.chroot_user_path=loader.path.combine("/home",tunables.user)
@@ -314,9 +314,9 @@ function defaults.recalculate()
   defaults.mounts.var_lib_mount={prio=20,tag="varlib","ro-bind",loader.path.combine(tunables.chrootdir,"var","lib"),"/var/lib"}
   if config.uid~=tunables.uid then defaults.bwrap.uid={prio=5,tag="uid","uid",tunables.uid} else defaults.bwrap.uid={} end
   if config.gid~=tunables.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",tunables.gid} else defaults.bwrap.gid={} end
-  tunables.features.gvfs_fix_dir=loader.path.combine(tunables.chrootdir,"gvfs_fix")
-  tunables.features.pulse_dir=loader.path.combine(tunables.chrootdir,"pulse_dyn_config")
-  tunables.features.fixups_dir=loader.path.combine(tunables.chrootdir,tunables.features.fixupsdir_name)
+  tunables.features.gvfs_fix_dir=loader.path.combine(tunables.configdir,"gvfs_fix")
+  tunables.features.pulse_dir=loader.path.combine(tunables.configdir,"pulse")
+  tunables.features.fixups_dir=loader.path.combine(tunables.configdir,"fixups")
   tunables.features.envfix_home=tunables.auto.chroot_user_path
   tunables.features.x11host_target_dir=tunables.auto.user_path
 end

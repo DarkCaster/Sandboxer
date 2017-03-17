@@ -22,7 +22,6 @@ tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
 tunables.user="root"
 tunables.uid=0
 tunables.gid=0
-tunables.etcdir_name="etc_orig"
 -- use different build of x11 util, if you experience problems, for example:
 -- tunables.features.x11util_build="ubuntu-12.04"
 

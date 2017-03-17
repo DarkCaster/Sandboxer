@@ -15,7 +15,6 @@
 
 tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
 --tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot") -- for debian rootfs downloaded by download-debian-*-chroot.sh scripts
-tunables.etcdir_name="etc_sandbox"
 tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc_orig")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir

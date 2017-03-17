@@ -28,11 +28,18 @@
 -- used by builtin defaults.commands and default.bwrap defines.
 -- this directory is set (chdir) before running sandbox.setup.commands blocks, and when applying some features.
 -- this directory may be deleted on sandbox shutdown, if it is located inside tunables.basedir (default).
--- you can change this parameter if you want to generate your own persistent\non-standard chroot
--- and also want to use some builtin commands to perform some dynamic setup on each run.
+-- you can change this parameter if you want to use your own persistent\non-standard chroot and\or perform some dynamic changes with it.
 -- example:
 -- tunables.chrootdir=loader.path.combine(tunables.basedir,"chroot") -- default
 -- tunables.chrootdir=loader.path.combine(loader.workdir,"chroot-"..config.sandbox_uid)
+
+-- chroot construction dir: tunables.configdir
+-- used by builtin defaults.commands and default.bwrap defines.
+-- this directory may be deleted on sandbox shutdown, if it is located inside tunables.basedir (by default).
+-- you can change this parameter if you want to debug dynamic configudation creation, or for use with your own generation routines.
+-- and also want to use some builtin commands to perform some dynamic setup on each run.
+-- example:
+-- tunables.configdir=loader.path.combine(loader.workdir,"dynconfig-"..config.sandbox_uid)
 
 -- user id: tunables.uid
 -- numeric user id, used in various sandbox.setup.commands and when applying some features
@@ -61,16 +68,6 @@
 -- example:
 -- tunables.datadir=loader.path.combine(loader.workdir,"userdata-"..config.sandbox_uid) -- default
 -- tunables.datadir=loader.path.combine(os.getenv("HOME"),"sandboxer-"..config.sandbox_uid)
-
--- etc directory name inside chroot construction dir: tunables.etcdir_name
--- this dir-name used by various builtin commands for "/etc" generation (sandbox.setup.commands),
--- and predefined "/etc" mount entries for bwrap (sandbox.bwrap).
--- you may override this directory name if you constructing your own "etc" directory inside tunables.chrootdir
--- and do not want accidentally overwrite your own stuff by standard chroot generation routines.
--- this parameter do not affect name of "/etc" mount inside sandbox, but only "etc" directory name inside chroot construction dir.
--- example:
--- tunables.etcdir_name="etc" -- default
--- tunables.etcdir_name="etc_auto"
 
 -- etc directory path that will a source path for some construction commands
 -- that used to dynamically build etc directory for sandbox.
