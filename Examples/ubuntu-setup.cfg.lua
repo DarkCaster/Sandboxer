@@ -45,6 +45,7 @@ sandbox={
       {'[[ ! -x usr/sbin/policy-rc.d ]] && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
       {'rm -f "etc_orig/resolv.conf"', 'cp "/etc/resolv.conf" "etc_orig/resolv.conf"'},
+      {'[[ ! -f "etc_orig/machine-id" ]] && touch "etc_orig/machine-id"; true'},
     },
     -- only pass some whitelisted env-variables from host to sandboxed env
     env_whitelist={

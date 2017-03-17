@@ -51,10 +51,12 @@ sandbox={
       --[[defaults.commands.etc_min,
       defaults.commands.etc_dbus,
       defaults.commands.etc_x11,
-      defaults.commands.etc_udev,]]--
+      defaults.commands.etc_udev,
+      defaults.commands.machineid_static,]]--
 
       --2. or, instead, copy full config
       --defaults.commands.etc_full, -- copy full /etc to to tunables.chrootdir, may remove existing
+      --defaults.commands.machineid_static, -- create machine-id file in dynamic etc directory, generated machine-id rely only to sandbox_uid value
 
       --3. or, work directly with etc directory of our external chroot, and mount it later with defaults.mounts.host_etc_mount.
       -- this directory is specified by tunables.etchost_path tunable at the top of this config file.
@@ -63,7 +65,7 @@ sandbox={
       -- also, we need to perform some minor configuration for our chroot etc dir.
       {'mkdir -p "${cfg[tunables.etchost_path]}/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
       {'rm -f "${cfg[tunables.etchost_path]}/resolv.conf"', 'cp "/etc/resolv.conf" "${cfg[tunables.etchost_path]}/resolv.conf"'}, -- update resolv.conf in chroot/etc directory.
-      defaults.commands.machineid_host_etc, -- create machine-id file if not exist
+      defaults.commands.machineid_static, -- create machine-id file in dynamic etc directory, generated machine-id rely only to sandbox_uid value
 
       -- remaining commands, used for any etc management option choosen above.
 
@@ -112,6 +114,7 @@ sandbox={
       -- disable following two mounts if using another method of etc generation
       defaults.mounts.host_etc_mount,
       defaults.mounts.passwd_mount,
+      defaults.mounts.machineid_mount,
 
       -- optional mounts, may be useful for some programs
       defaults.mounts.devsnd_mount,
