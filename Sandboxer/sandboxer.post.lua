@@ -216,6 +216,18 @@ function loader.check_profile(profile, name)
   if type(profile.pty)=="nil" then profile.pty=false end
   assert(type(profile.exclusive)=="boolean" or type(profile.exclusive)=="nil", name..".exclusive value is incorrect or missing")
   if type(profile.exclusive)=="nil" then profile.exclusive=false end
+  assert(type(profile.log_stdout)=="string" or type(profile.log_stdout)=="nil", name..".log_stdout value is incorrect")
+  assert(type(profile.log_stderr)=="string" or type(profile.log_stderr)=="nil", name..".log_stderr value is incorrect")
+  assert(type(profile.log_overwrite)=="boolean" or type(profile.log_overwrite)=="nil", name..".log_stderr value is incorrect")
+  if type(profile.log_overwrite)=="nil" then profile.log_overwrite=false end
+  if profile.pty==true then
+    profile.log_overwrite=false
+    profile.log_stdout=nil
+    profile.log_stderr=nil
+  end
+  if profile.log_overwrite==true and profile.exclusive==false then
+    profile.log_overwrite=false
+  end
   -- start command opcode
   if profile.attach==true and profile.pty==false then
     profile.start_opcode=100
