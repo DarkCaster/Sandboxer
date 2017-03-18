@@ -220,7 +220,7 @@ function loader.check_profile(profile, name)
   assert(type(profile.log_stderr)=="string" or type(profile.log_stderr)=="nil", name..".log_stderr value is incorrect")
   assert(type(profile.log_overwrite)=="boolean" or type(profile.log_overwrite)=="nil", name..".log_stderr value is incorrect")
   if type(profile.log_overwrite)=="nil" then profile.log_overwrite=false end
-  if profile.pty==true then
+  if profile.pty==true or profile.attach==false then
     profile.log_overwrite=false
     profile.log_stdout=nil
     profile.log_stderr=nil
