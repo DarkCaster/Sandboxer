@@ -250,7 +250,7 @@ defaults.commands.home={
 }
 defaults.commands.home_gui_config={
   'mkdir -p "${cfg[tunables.auto.home_base_path]}"',
-  'if [[ -d ${cfg[tunables.auto.user_path]} ]]; then "$tools_dir/gui_toolkits_conf_copy.sh" "${cfg[tunables.user]}" "${cfg[tunables.auto.chroot_user_path]}" "${cfg[tunables.auto.user_path]}"; fi'
+  'if [[ -d ${cfg[tunables.auto.user_path]} ]]; then "$tools_dir/gui_toolkits_conf_copy.sh" "${cfg[tunables.user]}" "${cfg[tunables.auto.chroot_user_path]}" "${cfg[tunables.auto.user_path]}"; else echo "you must run defaults.commands.home_gui_config with and after defaults.commands.home"; false; fi'
 }
 defaults.commands.var_cache={ 'mkdir -p "${cfg[tunables.auto.varcache_path]}"' }
 defaults.commands.var_tmp={ 'mkdir -p "${cfg[tunables.auto.vartmp_path]}"' }
