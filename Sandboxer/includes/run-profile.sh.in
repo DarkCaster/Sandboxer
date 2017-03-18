@@ -72,6 +72,10 @@ if [[ ${cfg[$exec_profile.term_child_only]} = true ]]; then
   check_errors
 fi
 
+# set exec_log_out and exec_log_err if missing
+[[ -z $exec_log_out ]] && exec_log_out=${cfg[$exec_profile.log_stdout]}
+[[ -z $exec_log_err ]] && exec_log_err=${cfg[$exec_profile.log_stderr]}
+
 #wait for any running background command-list exec task to complete
 wait_for_cmd_list
 
