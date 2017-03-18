@@ -323,4 +323,6 @@ shell_no_pty={
   attach=true,
   pty=false,
   exclusive=false,
+  log_stderr=loader.path.combine(loader.workdir,"example.err.log"),
+  log_stdout=loader.path.combine(loader.workdir,"example.out.log"),
 }
