@@ -42,7 +42,7 @@ sandbox={
       "LC_ALL",
     },
     env_set={
-      {"PATH","/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"},
+      {"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"},
       defaults.env.set_xdg_runtime,
       defaults.env.set_home,
     },
