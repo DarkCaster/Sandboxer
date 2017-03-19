@@ -39,10 +39,10 @@ if [[ ! -z $envfix_home ]]; then
     [[ ${!var} != $envfix_var_fix ]] && envfix_env_add "$var" "$envfix_var_fix" # && echo "pre-added: $var=$envfix_var_fix" # debug
   done
   # process current env lists and remove our variables that already defined there
-  for val in `env_unset_get_names` `env_set_get_names`
+  for var in `env_unset_get_names` `env_set_get_names`
   do
     [[ -z $var || $var = _ || $var = PWD ]] && continue
-    envfix_env_remove "$val" # && echo "removed: $val" # debug
+    envfix_env_remove "$var" # && echo "removed: $var" # debug
   done
   # add final list of changed variables to env_set list
   for ((envfix_cnt=0;envfix_cnt<envfix_env_cnt;++envfix_cnt))
