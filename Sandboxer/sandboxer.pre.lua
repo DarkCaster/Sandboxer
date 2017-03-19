@@ -323,6 +323,7 @@ function defaults.recalculate()
   tunables.features.fixups_dir=loader.path.combine(tunables.configdir,"fixups")
   tunables.features.envfix_home=tunables.auto.chroot_user_path
   tunables.features.x11host_target_dir=tunables.auto.user_path
+  tunables.features.x11host_target_chroot_dir=tunables.auto.chroot_user_path
 end
 
 defaults.recalculate()

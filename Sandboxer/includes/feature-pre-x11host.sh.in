@@ -5,6 +5,7 @@
 if [[ -d ${cfg[tunables.features.x11host_target_dir]} && -f $HOME/.Xauthority ]]; then
   # copy .Xauthority to user's home dir inside sandbox
   cp "$HOME/.Xauthority" "${cfg[tunables.features.x11host_target_dir]}"
+  env_set_add "XAUTHORITY" "${cfg[tunables.features.x11host_target_chroot_dir]}/.Xauthority"
 else
   # or allow access to x11 with xhost utility
   &>/dev/null xhost "+si:localuser:$USER"
