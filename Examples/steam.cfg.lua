@@ -1,4 +1,4 @@
--- this is an example of config for runnint steam client in sandbox.
+-- this is an example config that allows to run steam client in sandbox.
 -- using external debian chroot (debian jessie), use download-debian-jessie-chroot.sh to download and prepare rootfs archive.
 -- see steam-howto.txt for info about other preparations needed to install and run steam inside sandbox.
 
