@@ -32,10 +32,11 @@ control mode:
 
 TODO list:
 
+- commander: sandboxed app stdout\stderr logging - add append and overwrite logging modes for commander, add smart interval for fdatasync to avoid spamming filesystem-journal when receiving small chunks of data with high frequency.
 - commander: handle ctrl+c, hup and term to perform safe detach from active executor connection (this logic already there, it is now activated by sigusr2 signal).
 - executor: check that orphaned processes with valid session id is properly tracked as childs when tracked child process is still running.
-- executor: in addition to logfile enable\disable startup parameter, add parameter to enable\disable stdout logging (now this behavior controlled by master\slave mode selection paremeter)
-- executor: when stdout logging is disabled - redirect standard fds (0,1,2) to /dev/null, so, they do not expose external bwrap output redirection to logfile 
+- executor: in addition to logfile enable\disable startup parameter, add parameter to enable\disable executor's own stdout\stderr logging (now this behavior controlled by master\slave mode selection paremeter)
+- executor: when stdout logging is disabled - redirect standard fds (0,1,2) to /dev/null, so, they do not expose external bwrap output redirection to logfile
 - executor: use seccomp to lockdown slave executor after it spawn user binary
 
 Longterm goals:
@@ -46,4 +47,3 @@ Longterm goals:
 - proper timings calculation for io-operations, use non-blocking mode for communication pipe, or check available data size before read.
 ...
 - PROFIT!
-
