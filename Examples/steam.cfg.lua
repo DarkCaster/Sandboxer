@@ -95,6 +95,13 @@ shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+  desktop={
+    name = "Shell for steam sandbox",
+    comment = "shell for sandbox uid "..config.sandbox_uid,
+    icon = "terminal",
+    terminal = true,
+    startupnotify = false,
+  },
 }
 
 steam={
