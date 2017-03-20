@@ -111,6 +111,13 @@ fakeroot_shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+  desktop={
+    name = "FakeRoot Shell for external chroot",
+    comment = "shell for sandbox uid "..config.sandbox_uid,
+    icon = "terminal",
+    terminal = true,
+    startupnotify = false,
+  },
 }
 
 -- do not use this exec profile, use fakeroot_shell instead.
