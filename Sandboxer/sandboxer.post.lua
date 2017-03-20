@@ -259,7 +259,7 @@ if type(profile.desktop)=="table" then
   if type(profile.desktop.mimetype)=="nil" then profile.desktop.mimetype="" end
   if type(profile.desktop.terminal)=="nil" then profile.desktop.terminal=false end
   if type(profile.desktop.startupnotify)=="nil" then profile.desktop.startupnotify=false end
-  profile.desktop.filename="sandboxer-profile-"..config.sandbox_uid..".desktop"
+  profile.desktop.filename="sandboxer-"..config.profile.."-"..config.sandbox_uid..".desktop"
   assert(type(profile.desktop.mime)=="nil" or type(profile.desktop.mime)=="table", "\"mime\" subtable is not a table type")
   if type(profile.desktop.mime)=="table" then
     --create list of files to install
