@@ -19,3 +19,8 @@ fi
 
 channel=`2>/dev/null "$commander" "$basedir/control" control "${cfg[sandbox.setup.security_key]}" 0 "$req_channel"`
 [[ -z $channel ]] && log "failed to create new session to run selected exec-profile" && teardown 1
+
+if [[ ${cfg[$exec_profile.term_orphans]} = true ]]; then
+  2>/dev/null "$commander" "$basedir/control" control "${cfg[sandbox.setup.security_key]}" 8 1
+  check_errors
+fi
