@@ -22,7 +22,7 @@ sandbox={
     "x11host", -- to run yast and handy package manager gui
   },
   setup={
-    executor_build="default",
+    executor_build="opensuse-42.2",
     commands={
       {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
       {'mkdir -p "etc/pulse"'},
@@ -48,6 +48,7 @@ sandbox={
       defaults.mounts.lib_rw_mount,
       defaults.mounts.lib64_rw_mount,
       defaults.mounts.sbin_rw_mount,
+      defaults.mounts.sys_mount,
       defaults.mounts.resolvconf_mount,
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"etc"),"/etc"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"boot"),"/boot"},
@@ -80,7 +81,8 @@ fakeroot_shell={
   },
   term_signal=defaults.signals.SIGHUP,
   attach=true,
-  pty=true,
+  pty=false, -- temporary measure
+  -- pty=true,
   desktop={
     name = "FakeRoot Shell for external opensuse chroot",
     comment = "shell for sandbox uid "..config.sandbox_uid,
