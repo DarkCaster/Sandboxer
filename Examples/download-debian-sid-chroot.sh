@@ -14,10 +14,8 @@ check_errors () {
   fi
 }
 
-[[ ! -d $script_dir/debian_chroot ]] || check_errors "directory $script_dir/debian_chroot already exist!"
-
-"$script_dir/download-debian-from-docker-repo.sh" sid
-check_errors
+"$script_dir/download-image-from-docker-repo.sh" debian sid rootfs.tar.xz
+check_errors "download-image-from-docker-repo.sh script failed!"
 
 #remove apt configs needed only for docker (see https://github.com/docker/docker/blob/master/contrib/mkimage/debootstrap)
 rm "$script_dir/debian_chroot/etc/apt/apt.conf.d/docker-"*
