@@ -90,8 +90,10 @@ check_errors
 if [[ ! -z `git branch` ]]; then
   git checkout -f --orphan "${target}_${tag}_dump"
   check_errors
-  git for-each-ref --format '%(refname:short)' refs/heads | xargs git branch -D
-  check_errors
+  if [[ ! -z `git for-each-ref --format '%(refname:short)' refs/heads` ]]; then
+    git for-each-ref --format '%(refname:short)' refs/heads | xargs git branch -D
+    check_errors
+  fi
 fi
 
 git fetch -f --all
