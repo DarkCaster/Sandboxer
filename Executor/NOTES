@@ -5,6 +5,7 @@ master only:
 0 <name> - optional parameter to define fifo name manually
 253 <1\0> - perform slaves shutdown. if param set to 1 - slaves will terminate it's chils with configured signals, sigkill otherwise. do not perform self shutdown when param is 1 - just send termination command to slaves.
 250 - return orphaned process count
+240 - source checksum verification
 
 slave only:
 
@@ -14,11 +15,15 @@ command mode:
 3 <name> <value> - add env variable to set
 4 <name> - add env variable name to remove
 5 <signal num> - signal to send to the child processes to gracefully terminate (by default - sigterm or sighup(for pty mode) will be used)
+6 <workdir> - workdir that will be set when starting user binary
+7 <0/1> - set child_only_terminate mode, when gracefully terminating (command 253 with arg 1) by user-defined signal (set by command 5)
+8 <0/1> - set or unset orphans terminate mode. if set to 1 - master will terminate all orphans if no slave executors running (after timeout)
 253 <1\0> - perform shutdown. if param is 1 - user signal send to child processes (set by command 5), sigkill otherwise
 100 - start process in captive mode without new session startup (and pty allocation).
 101 - same as 100, but start in detached mode instead, commander will exit after successfull start
 200 - start process in captive mode, perform pty-device allocation and create new session. useful for shells inside sandbox
 201 - same as 200, but start in detached mode instead, commander will exit after successfull start
+240 - request source checksum verification (provide commmander's source checksum value to master, and receive verification result)
 
 control mode:
 102 - reattach to detached session started with command 101
