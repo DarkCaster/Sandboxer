@@ -285,6 +285,8 @@ shell={
     {"TERM",os.getenv("TERM")},
   },
   term_signal=defaults.signals.SIGHUP, -- optional, number. signal, to gracefully terminate binary. will be sent to binary and all other processes from it's session (childs)
+  term_child_only=false, -- send term_signal and terminate only child process started by exec profile, instead of whole process tree started by this exec profile.
+  term_orphans=false, -- if set to true - terminate all orphan processes left when this and other exec profiles complete its execution. termination performed by master executor after some timeout if no exec profiles running. setting this option to true may interfere with other exec profiles - it will terminate orphan processes left from any exec profile.
   attach=true, -- optional, default value is false. if true - start in attached mode, commander module and sandboxer.sh script will not terminate and it will link stdin\stdout from sandboxed process and current terminal, so user can control running application.
   pty=true, -- optional, default value is false. allocate new pty to executor process in sandbox and target process. useful to run interactive shells inside sandbox.
   exclusive=false, -- optional, default value is false. exclusive mode - will create io channels with name match to profile name instead of random. refuse to launch this profile if already running
