@@ -83,6 +83,7 @@ fakeroot_shell={
     {"TERM",os.getenv("TERM")},
   },
   term_signal=defaults.signals.SIGHUP,
+  term_orphans=true, -- yast2 will spawn dbus process, that will become orphan when you exit from shell and this exec profile is complete.
   attach=true,
   pty=true,
   desktop={
