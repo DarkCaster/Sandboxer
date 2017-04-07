@@ -10,6 +10,7 @@
 -- it is strongly discouraged to use this config to run normal applications inside sandbox. you should use it only for setup purposes of external chroot.
 
 tunables.chrootdir=loader.path.combine(loader.workdir,"opensuse_chroot")
+tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc") -- needed for defaults.commands.machineid_host_etc
 tunables.user="root"
 tunables.uid=0
 tunables.gid=0
@@ -24,10 +25,12 @@ sandbox={
   setup={
     executor_build="opensuse-42.2",
     commands={
-      {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
+      --remove tty system group. this will fix openpty failures
+      {'cat etc/group | grep -vE \'^tty:x:[0-9].*:$\' > etc/group.new','mv etc/group.new etc/group'},
       {'mkdir -p "etc/pulse"'},
       {'touch "etc/resolv.conf"'},
       defaults.commands.resolvconf,
+      defaults.commands.machineid_host_etc, -- we need etc/machine-id for yast2. anyway, it will be redefined at normal sandboxes
     },
     env_whitelist={
       "LANG",
@@ -74,7 +77,7 @@ sandbox={
 
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
-  path="/",
+  path="/root",
   args={"opensuse-42.2","/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
