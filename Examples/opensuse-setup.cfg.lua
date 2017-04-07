@@ -81,8 +81,7 @@ fakeroot_shell={
   },
   term_signal=defaults.signals.SIGHUP,
   attach=true,
-  pty=false, -- temporary measure
-  -- pty=true,
+  pty=true,
   desktop={
     name = "FakeRoot Shell for external opensuse chroot",
     comment = "shell for sandbox uid "..config.sandbox_uid,
