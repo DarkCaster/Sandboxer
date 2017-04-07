@@ -61,6 +61,7 @@ static volatile uint8_t shutdown;
 static volatile uint8_t command_mode;
 static volatile bool child_is_alive;
 static volatile bool child_only_terminate;
+static volatile bool orphans_cleanup;
 static volatile pid_t child_pid;
 static volatile uint8_t child_ec;
 static volatile int child_signal;
@@ -100,6 +101,7 @@ static uint8_t operation_4(char* name, size_t n_len);
 static uint8_t operation_5(uint8_t signal);
 static uint8_t operation_6(char* dir, size_t len);
 static uint8_t operation_7(uint8_t _child_only_terminate);
+static uint8_t operation_8(uint8_t _orphans_cleanup);
 static uint8_t operation_240(uint32_t source_checksum);
 static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
@@ -288,6 +290,7 @@ int main(int argc, char* argv[])
     child_signal=15;
     child_pid=0;
     child_only_terminate=false;
+    orphans_cleanup=false;
 
     workdir=NULL;
 
@@ -507,6 +510,12 @@ int main(int argc, char* argv[])
                 else
                     err=13;
                 break;
+            case 8:
+                if((size_t)pl_len-(size_t)CMDHDRSZ==1)
+                    err=operation_8(*(data_buf+(int)CMDHDRSZ));
+                else
+                    err=14;
+                break;
             case 100:
                 err=operation_100_101_200_201(0,0);
                 break;
@@ -526,7 +535,7 @@ int main(int argc, char* argv[])
                     err=operation_240(source_checksum);
                 }
                 else
-                    err=14;
+                    err=15;
                 break;
             case 250:
                 err=operation_250();
@@ -544,7 +553,7 @@ int main(int argc, char* argv[])
                     }
                 }
                 else
-                    err=13;
+                    err=16;
                 break;
             default:
                 log_message(logger,LOG_WARNING,"Unknown operation code %i",LI(cmdhdr.cmd_type));
@@ -1033,6 +1042,18 @@ static uint8_t operation_7(uint8_t _child_only_terminate)
     else
         child_only_terminate=false;
     log_message(logger,LOG_INFO,"Terminate child only mode set to %i",LI(child_only_terminate));
+    if(operation_status(0)!=0)
+        return 255;
+    return 0;
+}
+
+static uint8_t operation_8(uint8_t _orphans_cleanup)
+{
+    if(_orphans_cleanup>0)
+        orphans_cleanup=true;
+    else
+        orphans_cleanup=false;
+    log_message(logger,LOG_INFO,"Orphans cleanup mode set to %i",LI(orphans_cleanup));
     if(operation_status(0)!=0)
         return 255;
     return 0;

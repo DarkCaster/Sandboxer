@@ -54,6 +54,7 @@ static uint8_t operation_4(char* name);
 static uint8_t operation_5(char* s_signal);
 static uint8_t operation_6(char* dir);
 static uint8_t operation_7(char* child_only_terminate);
+static uint8_t operation_8(char* orphans_cleanup);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect, const char *out_filename, const char *err_filename);
 static uint8_t operation_101_201(uint8_t use_pty);
 static uint8_t operation_240(uint32_t source_checksum);
@@ -275,6 +276,12 @@ int main(int argc, char* argv[])
         else
             err=operation_7(op_param[0]);
         break;
+    case 8:
+        if(p_count<1)
+            err=58;
+        else
+            err=operation_8(op_param[0]);
+        break;
     case 100:
         if(p_count<1)
             err=operation_100_200(0,&child_ec,0,NULL,NULL);
@@ -283,7 +290,7 @@ int main(int argc, char* argv[])
         else if(p_count<3)
             err=operation_100_200(0,&child_ec,0,op_param[0],op_param[1]);
         else
-            err=57;
+            err=59;
         break;
     case 101:
         err=operation_101_201(0);
@@ -296,7 +303,7 @@ int main(int argc, char* argv[])
         else if(p_count<3)
             err=operation_100_200(0,&child_ec,1,op_param[0],op_param[1]);
         else
-            err=58;
+            err=60;
         break;
     case 200:
         if(p_count<1)
@@ -304,7 +311,7 @@ int main(int argc, char* argv[])
         else if(p_count<3)
             err=operation_100_200(1,&child_ec,0,op_param[0],NULL);
         else
-            err=59;
+            err=61;
         break;
     case 201:
         err=operation_101_201(1);
@@ -315,7 +322,7 @@ int main(int argc, char* argv[])
         else if(p_count<2)
             err=operation_100_200(1,&child_ec,1,op_param[0],NULL);
         else
-            err=59;
+            err=62;
         break;
     case 240:
         err=operation_240(SOURCE_CHECKSUM);
@@ -325,9 +332,9 @@ int main(int argc, char* argv[])
         break;
     case 253:
         if(p_count<1)
-            err=56;
+            err=63;
         else if(!arg_is_numeric(op_param[0]))
-            err=57;
+            err=64;
         else
             err=operation_253((bool)(int)(strtol(op_param[0], NULL, 10)));
         break;
@@ -525,6 +532,24 @@ static uint8_t operation_7(char* child_only_terminate)
     uint8_t par=(uint8_t)strtol(child_only_terminate, NULL, 10);
     CMDHDR cmd;
     cmd.cmd_type=7;
+    cmdhdr_write(data_buf,0,cmd);
+    int32_t cmdlen=(int32_t)CMDHDRSZ;
+    *(data_buf+CMDHDRSZ)=par;
+    ++cmdlen;
+    param_send_macro(cmdlen);
+    return 0;
+}
+
+static uint8_t operation_8(char* orphans_cleanup)
+{
+    if(!arg_is_numeric(orphans_cleanup))
+    {
+        log_message(logger,LOG_ERROR,"Argument must be numeric - 1 or 0");
+        return 1;
+    }
+    uint8_t par=(uint8_t)strtol(orphans_cleanup, NULL, 10);
+    CMDHDR cmd;
+    cmd.cmd_type=8;
     cmdhdr_write(data_buf,0,cmd);
     int32_t cmdlen=(int32_t)CMDHDRSZ;
     *(data_buf+CMDHDRSZ)=par;
