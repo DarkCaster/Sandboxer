@@ -590,10 +590,12 @@ int main(int argc, char* argv[])
                 //check for slaves
                 pid_lock();
                 int msc = _master_get_slave_count();
-                int osc = (terminate_orphans && msc<=0)?_master_get_orphans_count():0;
+                int osc = (terminate_orphans && !orphans_cleanup && msc<=0)?_master_get_orphans_count():0;
                 if( msc<=0 && osc<=0 )
                 {
                     log_message(logger,LOG_INFO,"Performing shutdown because of timeout");
+                    if(orphans_cleanup && terminate_orphans)
+                        log_message(logger,LOG_INFO,"Orphans termination pending");
                     _request_shutdown();
                 }
                 pid_unlock();
