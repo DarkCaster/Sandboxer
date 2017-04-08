@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#xpra feature
+
+if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
+  #remove old xpra-daemon.stdout
+  rm -f "$basedir/xpra-daemon.stdout"
+  check_errors
+  log "starting new xpra session"
+  #execute xpra daemon in background
+  exec_profile="xpra"
+  if [[ ${cfg[$exec_profile.exec]} = placeholder ]]; then
+    cfg[$exec_profile.exec]=""
+    for hint in "/usr/bin" "/bin" "/usr/local/bin" "/usr/sbin" "/sbin"
+    do
+      [[ -x ${cfg[tunables.features.xpra_search_prefix]}$hint/xpra ]] && cfg[$exec_profile.exec]="$hint/xpra" && break
+      # log "no xpra binary at ${cfg[tunables.features.xpra_search_prefix]}$hint" # debug
+    done
+    [[ -z ${cfg[$exec_profile.exec]} ]] && log "xpra binary not found!" && teardown 1
+  fi
+  . "$includes_dir/channel-open.sh.in"
+  exec_bg="true"
+  exec_bg_pid=""
+  exec_log_out="$basedir/xpra-daemon.stdout"
+  exec_log_err="$basedir/xpra-daemon.stderr"
+  . "$includes_dir/run-profile.sh.in"
+  #wait for output. TODO: this is a copy from dbus daemon, change it to xpra information output
+  xpra_wait=400
+  while [[ $xpra_wait -ge 1 ]]
+  do
+    if [[ -f $basedir/xpra-daemon.stdout && `wc -l <"$basedir/xpra-daemon.stdout"` = 2 ]]; then
+      mapfile -t -n 1 xpra_env_a <"$basedir/xpra-daemon.stdout"
+      if [[ "${xpra_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
+        xpra_env="${xpra_env_a[0]}"
+        break
+      fi
+    fi
+    sleep 0.025
+    xpra_wait=$((xpra_wait-1))
+  done
+  #detach commander for xpra session
+  2>/dev/null kill -SIGUSR2 $exec_bg_pid
+  check_errors "failed to send detach command to xpra-session commander"
+  #TODO: xpra-watchdog
+  (. "$includes_dir/xpra-watchdog.sh.in" ) &>"$basedir/xpra-watchdog.log" &
+elif [[ -p $basedir/control/xpra.in && -p $basedir/control/xpra.out ]]; then
+  # just read already created xpra-daemon.stdout
+  mapfile -t -n 1 xpra_env_a <"$basedir/xpra-daemon.stdout"
+  #TODO: this is a copy from dbus daemon, change it to xpra information output parsing
+  #TODO: read DISPLAY env variable for sandbox
+  #TODO: read connection parameters
+  if [[ "${xpra_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
+    xpra_env="${xpra_env_a[0]}"
+  fi
+fi
+
+# check, do we succeed with xpra startup, and do not procced if we are not
+if [[ -z $xpra_env ]]; then
+  log "failed to get valid xpra-daemon env parameters"
+  teardown 1
+fi
+
+extra_env_set_add "DISPLAY" "$xpra_env"
