@@ -341,6 +341,17 @@ dbus={
   exclusive=true,
 }
 
+xpra={
+  exec="placeholder",
+  path="/",
+  args={ "--session", "--print-pid", "--print-address" },
+  term_signal=defaults.signals.SIGTERM,
+  term_child_only=true,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 x11util={
   exec="/executor/extra/x11util",
   path="/executor/extra",

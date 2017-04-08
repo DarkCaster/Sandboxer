@@ -38,7 +38,7 @@ tmp_dir="$TMPDIR"
 [[ -z $tmp_dir || ! -d $tmp_dir ]] && tmp_dir="/tmp"
 
 . "$includes_dir/find-lua-helper.bash.in" "$script_dir/BashLuaHelper" "$script_dir/../BashLuaHelper"
-. "$bash_lua_helper" "$config" -e sandbox -e profile -e dbus -e x11util -e tunables -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "$tmp_dir" -o "$tmp_dir/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
+. "$bash_lua_helper" "$config" -e sandbox -e profile -e dbus -e x11util -e xpra -e tunables -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "$tmp_dir" -o "$tmp_dir/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
 
