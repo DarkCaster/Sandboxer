@@ -346,8 +346,11 @@ xpra={
   path="/",
   args={
     'start',
-    '--bind="/executor/control/xpra.sock"',
-    '--pidfile="/executor/control/xpra.pid"',
+    '--socket-dir=/executor/control/xpra',
+    '--log-dir=/executor/control/xpra',
+    '--log-file=xpra.log',
+    '--bind=sock',
+    '--pidfile=/executor/control/xpra/xpra.pid',
     '--systemd-run=no',
     '--html=off',
     '--daemon=no',
