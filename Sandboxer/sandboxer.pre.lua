@@ -359,6 +359,7 @@ xpra={
     '--mdns=no',
     '--pulseaudio=no',
     '--dbus-proxy=no',
+    '--dbus-launch=',
     '--sharing=no',
     '--bell=no',
     '--speaker=off',
