@@ -85,3 +85,57 @@ parseopts () {
 }
 
 parseopts "$@"
+
+watchdog_lock_enter() {
+  local nowait="$1"
+  if mkdir "$watchdog_lock" 2>/dev/null; then
+    return 0
+  else
+    exit 0
+  fi
+}
+
+watchdog_lock_exit() {
+  rmdir "$watchdog_lock" 2>/dev/null
+  true
+}
+
+watchdog_lock_enter
+
+trap "{ watchdog_lock_exit; }" EXIT
+
+log () {
+  true
+}
+
+if [[ ! -z $logfile ]]; then
+log () {
+  echo "$@" >> "$logfile"
+}
+fi
+
+sandbox_lock_entered="false"
+
+sandbox_lock_enter() {
+  local nowait="$1"
+  if mkdir "$sandbox_lock" 2>/dev/null; then
+    sandbox_lock_entered="true"
+    return 0
+  else
+    [[ ! -z $nowait ]] && return 1
+    log "awaiting lock release"
+    while ! sandbox_lock_enter "nowait"; do
+      sleep 1
+    done
+    sandbox_lock_entered="true"
+    return 0
+  fi
+}
+
+sandbox_lock_exit() {
+  if [[ $sandbox_lock_entered = true ]]; then
+    rmdir "$sandbox_lock" 2>/dev/null
+    sandbox_lock_entered="false"
+  fi
+  true
+}
