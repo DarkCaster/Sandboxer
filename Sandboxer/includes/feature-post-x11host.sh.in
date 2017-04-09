@@ -1,5 +1,12 @@
 #!/bin/bash
 
+x11host_post_triggered=1
+
+if [[ ! -z $xpra_post_triggered ]]; then
+  log "x11host feature is not compatible with xpra feature. cannot proceed!"
+  teardown 1
+fi
+
 if [[ ! -z $x11host_pre_triggered && ${cfg[tunables.features.x11util_enable]} = true ]]; then
   x11util_ok=0
   for hint in "$HOME/.cache/sandboxer/x11util-${cfg[tunables.features.x11util_build]}" "$script_dir/x11util" "$script_dir/../Build/x11util"

@@ -2,6 +2,18 @@
 
 #xpra feature
 
+xpra_post_triggered=1
+
+if [[ ! -z $x11host_post_triggered || ! -z $x11host_pre_triggered ]]; then
+  log "xpra feature is not compatible with x11host feature. cannot proceed!"
+  teardown 1
+fi
+
+if [[ -z $dbus_env ]]; then
+  log "dbus feature is required for xpra feature activation. it must be activated before xpra feature. cannot proceed!"
+  teardown 1
+fi
+
 if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   #remove old xpra-daemon.stdout
   rm -f "$basedir/xpra-daemon.stdout"
