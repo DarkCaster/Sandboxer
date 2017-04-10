@@ -41,7 +41,7 @@ if [[ ! -p $basedir/control/dbus.in || ! -p $basedir/control/dbus.out ]]; then
   #detach commander for dbus session if it is running
   2>/dev/null kill -SIGUSR2 $exec_bg_pid
   check_errors "failed to send detach command to dbus-session commander"
-  (. "$includes_dir/dbus-watchdog.sh.in" ) &>"$basedir/dbus-watchdog.log" &
+  add_watchdog_profile "dbus"
 elif [[ -p $basedir/control/dbus.in && -p $basedir/control/dbus.out ]]; then
   # just read already created dbus-daemon.stdout
   mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"

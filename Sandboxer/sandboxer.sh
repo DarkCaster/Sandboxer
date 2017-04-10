@@ -344,6 +344,15 @@ extra_env_unset_add() {
 }
 
 #post-launch features
+watchdog_profiles=()
+watchdog_profiles_cnt=0
+
+add_watchdog_profile() {
+  watchdog_profiles[$watchdog_profiles_cnt]="-p"
+  watchdog_profiles_cnt=$((watchdog_profiles_cnt+1))
+  watchdog_profiles[$watchdog_profiles_cnt]="$1"
+  watchdog_profiles_cnt=$((watchdog_profiles_cnt+1))
+}
 
 feature_cnt_min=`get_lua_table_start "sandbox.features"`
 feature_cnt_max=`get_lua_table_end "sandbox.features"`

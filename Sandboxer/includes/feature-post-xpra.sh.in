@@ -55,8 +55,7 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   #  sleep 0.025
   #  xpra_wait=$((xpra_wait-1))
   #done
-  #TODO: xpra-watchdog
-  #(. "$includes_dir/xpra-watchdog.sh.in" ) &>"$basedir/xpra-watchdog.log" &
+  add_watchdog_profile "xpra"
 elif [[ -p $basedir/control/xpra.in && -p $basedir/control/xpra.out ]]; then
   # just read already created xpra-daemon.stdout
   #TODO: this is a copy from dbus daemon, change it to xpra information output parsing
