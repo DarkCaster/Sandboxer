@@ -25,11 +25,13 @@ showusage () {
   echo "-l log file path"
   echo "-p tracked profile name (may be applied multiple times)"
   echo "-c commander binary path"
+  echo "-k commander's security key"
   echo "-h show usage"
   exit 1
 }
 
 commander_bin=""
+security_key=""
 control_dir=""
 sandbox_lock=""
 watchdog_lock=""
@@ -45,7 +47,7 @@ add_profile() {
 
 parseopts () {
   local optname
-  while getopts ":b:s:w:l:p:c:h" optname
+  while getopts ":b:s:w:l:p:c:k:h" optname
   do
     case "$optname" in
       "b")
@@ -62,6 +64,9 @@ parseopts () {
       ;;
       "c")
       commander_bin="$OPTARG"
+      ;;
+      "k")
+      security_key="$OPTARG"
       ;;
       "p")
       add_profile "$OPTARG"
@@ -89,6 +94,7 @@ parseopts () {
   [[ -z $sandbox_lock ]] && echo "Sandboxer lock path must be set!" && showusage
   [[ -z $watchdog_lock ]] && echo "Watchdog lock path must be set!" && showusage
   [[ -z $commander_bin ]] && echo "Commander binary path must be set!" && showusage
+  [[ -z $security_key ]] && echo "Security key must be set!" && showusage
 }
 
 parseopts "$@"
@@ -114,11 +120,13 @@ trap "{ watchdog_lock_exit; }" EXIT
 trap "{ log \"dbus-watchdog: trap triggered, ignoring\"; }" SIGINT SIGHUP
 
 log () {
-  true
+  echo "$@"
 }
 
 if [[ ! -z $logfile ]]; then
 log () {
+  # debug
+  echo "$@"
   echo "$@" >> "$logfile"
 }
 fi
@@ -150,14 +158,7 @@ sandbox_lock_exit() {
 }
 
 check_session() {
-  local session="$1"
-  local el=""
-  for el in "$control_dir"/*
-  do
-    [[ $el = "$control_dir/*" ]] && continue
-    [[ $el =~ ^$session".in"$ || $el =~ ^$session".out"$ ]] && return 0
-  done
-  return 1
+  [[ -e "$control_dir/$1.in" || -e "$control_dir/$1.out" ]] && return 0 || return 1
 }
 
 check_other_sessions() {
@@ -178,5 +179,65 @@ check_other_sessions() {
   return 1
 }
 
+wait_for_session_exit() {
+  local session="$1"
+  local wait_ticks=400
+  while check_session "$session"
+  do
+    if [[ $wait_ticks -lt 1 ]]; then
+      log "timeout while waiting for $session session termination"
+      return 1
+    fi
+    sleep 0.025
+    wait_ticks=$((wait_ticks-1))
+  done
+  return 0
+}
+
+terminate_session() {
+  local session="$1"
+  log "requesting $session session to grace exit"
+  "$commander_bin" "$control_dir" "$session" "$security_key" 253 1
+  [[ $? != 0 ]] && log "failed to send command to $session session" && return 1
+  wait_for_session_exit $session && return 0 || return 1
+}
+
+kill_session() {
+  local session="$1"
+  log "requesting $session session to force quit"
+  "$commander_bin" "$control_dir" "$session" "$security_key" 253 0
+  [[ $? != 0 ]] && log "failed to send command to $session session" && return 1
+  wait_for_session_exit $session && return 0 || return 1
+}
+
 #initial sleep
-#sleep 10
+sleep 5
+
+while true
+do
+  #check, that there are slave sessions active other than tracked sessions
+  if check_other_sessions; then
+    #sleep and continue, if true
+    sleep 5
+    continue
+  fi
+
+  #enter lock
+  sandbox_lock_enter
+
+  #check, that there are slave sessions active other than dbus session
+  if check_other_sessions; then
+    #exit lock and continue, if true
+    sandbox_lock_exit
+    sleep 5
+    continue
+  fi
+
+# iterate through sessions backwards
+# terminate\or kill session
+
+  #exit lock
+  sandbox_lock_exit
+
+  exit 0
+done
