@@ -13,6 +13,7 @@
 # -w watchdog lock_path
 # -l log file path
 # -p tracked profile name (may be applied multiple times)
+# -c commander binary path
 # -h show usage
 
 showusage () {
@@ -23,10 +24,12 @@ showusage () {
   echo "-w watchdog lock_path"
   echo "-l log file path"
   echo "-p tracked profile name (may be applied multiple times)"
+  echo "-c commander binary path"
   echo "-h show usage"
   exit 1
 }
 
+commander_bin=""
 control_dir=""
 sandbox_lock=""
 watchdog_lock=""
@@ -42,7 +45,7 @@ add_profile() {
 
 parseopts () {
   local optname
-  while getopts ":b:s:w:l:p:h" optname
+  while getopts ":b:s:w:l:p:c:h" optname
   do
     case "$optname" in
       "b")
@@ -56,6 +59,9 @@ parseopts () {
       ;;
       "l")
       logfile="$OPTARG"
+      ;;
+      "c")
+      commander_bin="$OPTARG"
       ;;
       "p")
       add_profile "$OPTARG"
@@ -82,6 +88,7 @@ parseopts () {
   [[ -z $control_dir ]] && echo "Control dir must be set!" && showusage
   [[ -z $sandbox_lock ]] && echo "Sandboxer lock path must be set!" && showusage
   [[ -z $watchdog_lock ]] && echo "Watchdog lock path must be set!" && showusage
+  [[ -z $commander_bin ]] && echo "Commander binary path must be set!" && showusage
 }
 
 parseopts "$@"
@@ -103,6 +110,8 @@ watchdog_lock_exit() {
 watchdog_lock_enter
 
 trap "{ watchdog_lock_exit; }" EXIT
+
+trap "{ log \"dbus-watchdog: trap triggered, ignoring\"; }" SIGINT SIGHUP
 
 log () {
   true
@@ -139,3 +148,35 @@ sandbox_lock_exit() {
   fi
   true
 }
+
+check_session() {
+  local session="$1"
+  local el=""
+  for el in "$control_dir"/*
+  do
+    [[ $el = "$control_dir/*" ]] && continue
+    [[ $el =~ ^$session".in"$ || $el =~ ^$session".out"$ ]] && return 0
+  done
+  return 1
+}
+
+check_other_sessions() {
+  local el=""
+  local cnt=0
+  local check=0
+  for el in "$control_dir"/*
+  do
+    [[ $el = "$control_dir/*" ]] && continue
+    [[ $el =~ ^.*".in"$ || $el =~ ^.*".out"$ ]] || continue
+    check=0
+    for ((cnt=0;cnt<profile_count;++cnt))
+    do
+      [[ $el =~ ^${profile_storage[$cnt]}".in"$ || $el =~ ^${profile_storage[$cnt]}".out"$ ]] && check=1
+    done
+    [[ $check = 0 ]] && return 0
+  done
+  return 1
+}
+
+#initial sleep
+#sleep 10
