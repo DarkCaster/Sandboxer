@@ -125,8 +125,7 @@ log () {
 
 if [[ ! -z $logfile ]]; then
 log () {
-  # debug
-  echo "$@"
+  echo "$@" # debug
   echo "$@" >> "$logfile"
 }
 fi
@@ -211,6 +210,7 @@ kill_session() {
 }
 
 #initial sleep
+log "initial sleep" # debug
 sleep 5
 
 while true
@@ -218,6 +218,7 @@ do
   #check, that there are slave sessions active other than tracked sessions
   if check_other_sessions; then
     #sleep and continue, if true
+    log "check_other_sessions #1, succeed" # debug
     sleep 5
     continue
   fi
@@ -229,15 +230,23 @@ do
   if check_other_sessions; then
     #exit lock and continue, if true
     sandbox_lock_exit
+    log "check_other_sessions #2, succeed" # debug
     sleep 5
     continue
   fi
 
-# iterate through sessions backwards
-# terminate\or kill session
+  # iterate through session-list backwards
+  for ((cnt=profile_count-1;cnt>-1;--cnt))
+  do
+    log "terminating ${profile_storage[cnt]}" # debug
+    # terminate\kill session
+    terminate_session "${profile_storage[cnt]}" || kill_session "${profile_storage[cnt]}"
+  done
 
   #exit lock
   sandbox_lock_exit
+  break
 
-  exit 0
 done
+
+exit 0
