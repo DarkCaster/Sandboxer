@@ -216,10 +216,6 @@ kill_session() {
   wait_for_session_exit $session && return 0 || return 1
 }
 
-#initial sleep
-log "initial sleep" # debug
-sleep 5
-
 while true
 do
   #check, that there are slave sessions active other than tracked sessions
@@ -233,7 +229,8 @@ do
   #enter lock
   sandbox_lock_enter
 
-  #check, that there are slave sessions active other than dbus session
+  #final check before termination.
+  #running with sandbox locking to prevent concurrent sandboxer.sh script run.
   if check_other_sessions; then
     #exit lock and continue, if true
     sandbox_lock_exit
