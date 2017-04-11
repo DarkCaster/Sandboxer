@@ -65,6 +65,7 @@ copy_glob "host"
 copy_glob "kde4"
 copy_glob "csh"
 copy_glob "less"
+copy_glob "xpra"
 
 copy_file "drirc"
 copy_file "environment"

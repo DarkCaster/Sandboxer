@@ -100,6 +100,9 @@ sandbox={
     "gvfs_fix", -- fix gvfs setup inside sandbox, and strip down it's features to bare minimum. TODO: find out what removed gvfs features works inside sandbox and reenable it
     "pulse", -- make pass-through of running pulseaudio daemon from host to sandbox env. may be used together with defaults.mounts.devsnd_mount if you also need alsa and mixer functionality
     "x11host", -- make pass-through for host x11 env to sandbox. HIGHLY UNSECURE. NOT FOR RUNNING UNTRUSTED CODE.
+    --"xpra", -- make x11 pass-through with xpra software. FOR RUNNING X11 APPS IN MORE SECURE MANNER than with x11host feature.
+              -- you must select only one of x11 forwarding method - x11host or xpra. Requires dbus feature to be activated before.
+              -- xpra software with server-mode support must be installed on host (and inside sandbox - when using external chroot).
     "envfix", -- fix final env variables in sandbox - change all links to host home dir to sandboxed home dir
   },
 
