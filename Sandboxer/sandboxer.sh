@@ -366,9 +366,12 @@ done
 
 #create new executor's sub-session inside sandbox and get new control channel name
 
-# profile - main selected profile, may be also service profiles - dbus, pulse
+# profile - main selected profile
 exec_profile="profile"
 . "$includes_dir/channel-open.sh.in"
+
+# run watchdog script if we have started any features
+[[ $watchdog_profiles_cnt != 0 ]] && "$tools_dir/watchdog.sh" -b "$basedir/control" -s "$lock_path" -w "$basedir/watchdog.lock" -l "$basedir/watchdog.log" -c "$commander" -k "${cfg[sandbox.setup.security_key]}" ${watchdog_profiles[@]} &
 
 #exit lock
 lock_exit
