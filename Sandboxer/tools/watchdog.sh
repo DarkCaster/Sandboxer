@@ -181,6 +181,7 @@ check_other_sessions() {
 
 wait_for_session_exit() {
   local session="$1"
+  log "waiting for $session session termination"
   local wait_ticks=400
   while check_session "$session"
   do
