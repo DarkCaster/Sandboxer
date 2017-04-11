@@ -168,10 +168,11 @@ check_other_sessions() {
   do
     [[ $el = "$control_dir/*" ]] && continue
     [[ $el =~ ^.*".in"$ || $el =~ ^.*".out"$ ]] || continue
+    [[ $el =~ ^.*"/control.in"$ || $el =~ ^.*"/control.out"$ ]] && continue
     check=0
     for ((cnt=0;cnt<profile_count;++cnt))
     do
-      [[ $el =~ ^${profile_storage[$cnt]}".in"$ || $el =~ ^${profile_storage[$cnt]}".out"$ ]] && check=1
+      [[ $el =~ ^.*"/"${profile_storage[$cnt]}".in"$ || $el =~ ^.*"/"${profile_storage[$cnt]}".out"$ ]] && check=1
     done
     [[ $check = 0 ]] && return 0
   done
@@ -196,16 +197,22 @@ wait_for_session_exit() {
 terminate_session() {
   local session="$1"
   log "requesting $session session to grace exit"
-  "$commander_bin" "$control_dir" "$session" "$security_key" 253 1
-  [[ $? != 0 ]] && log "failed to send command to $session session" && return 1
+  [[ -z $logfile ]] && \
+  { "$commander_bin" "$control_dir" "$session" "$security_key" 253 1; \
+    [[ $? != 0 ]] && log "failed to send command to $session session" && return 1; } || \
+  { &>>"$logfile" "$commander_bin" "$control_dir" "$session" "$security_key" 253 1; \
+    [[ $? != 0 ]] && log "failed to send command to $session session" && return 1; }
   wait_for_session_exit $session && return 0 || return 1
 }
 
 kill_session() {
   local session="$1"
   log "requesting $session session to force quit"
-  "$commander_bin" "$control_dir" "$session" "$security_key" 253 0
-  [[ $? != 0 ]] && log "failed to send command to $session session" && return 1
+  [[ -z $logfile ]] && \
+  { "$commander_bin" "$control_dir" "$session" "$security_key" 253 0; \
+    [[ $? != 0 ]] && log "failed to send command to $session session" && return 1; } || \
+  { &>>"$logfile" "$commander_bin" "$control_dir" "$session" "$security_key" 253 0; \
+    [[ $? != 0 ]] && log "failed to send command to $session session" && return 1; }
   wait_for_session_exit $session && return 0 || return 1
 }
 
