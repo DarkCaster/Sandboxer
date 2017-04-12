@@ -354,6 +354,7 @@ add_watchdog_profile() {
   watchdog_profiles_cnt=$((watchdog_profiles_cnt+1))
 }
 
+post_feature_failed=0
 feature_cnt_min=`get_lua_table_start "sandbox.features"`
 feature_cnt_max=`get_lua_table_end "sandbox.features"`
 for ((feature_cnt=feature_cnt_min;feature_cnt<feature_cnt_max;++feature_cnt))
@@ -362,16 +363,20 @@ do
     log "activating ${cfg[sandbox.features.$feature_cnt]} feature"
     . "$includes_dir/feature-post-${cfg[sandbox.features.$feature_cnt]}.sh.in"
   fi
+  [[ $post_feature_failed != 0 ]] && break
 done
 
-#create new executor's sub-session inside sandbox and get new control channel name
-
-# profile - main selected profile
-exec_profile="profile"
-. "$includes_dir/channel-open.sh.in"
+if [[ $post_feature_failed = 0 ]]; then
+  # create new executor's sub-session inside sandbox and get new control channel name
+  # profile - main selected profile
+  exec_profile="profile"
+  . "$includes_dir/channel-open.sh.in"
+fi
 
 # run watchdog script if we have started any features
 [[ $watchdog_profiles_cnt != 0 ]] && "$tools_dir/watchdog.sh" -b "$basedir/control" -s "$lock_path" -w "$basedir/watchdog.lock" -l "$basedir/watchdog.log" -c "$commander" -k "${cfg[sandbox.setup.security_key]}" ${watchdog_profiles[@]} &
+
+[[ $post_feature_failed !=0 ]] && log "feature's -post script was failed, cannot proceed!" && teardown 1
 
 #exit lock
 lock_exit
