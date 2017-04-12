@@ -31,7 +31,7 @@ if [[ ! -p $basedir/control/dbus.in || ! -p $basedir/control/dbus.out ]]; then
   . "$includes_dir/run-profile.sh.in"
   #wait for output
   dbus_wait=400
-  while [[ $dbus_wait -ge 1 ]]
+  while [[ $dbus_wait -ge 1 && -p $basedir/control/dbus.in && -p $basedir/control/dbus.out ]]
   do
     if [[ -f $basedir/dbus-daemon.stdout ]]; then
       mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"

@@ -56,7 +56,7 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   xpra_wait=800
   xpra_conf_done=0
   log "awaiting xpra startup completion and config parameters output. this may take some time."
-  while [[ $xpra_wait -ge 1 && $xpra_conf_done = 0 ]]
+  while [[ $xpra_wait -ge 1 && $xpra_conf_done = 0 && -p $basedir/control/dbus.in && -p $basedir/control/dbus.out ]]
   do
     sleep 0.025
     if [[ -f $basedir/control/xpra/xpra_conf.out ]]; then
