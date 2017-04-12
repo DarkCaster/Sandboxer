@@ -18,6 +18,10 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   #remove old xpra-daemon.stdout
   rm -f "$basedir/xpra-daemon.stdout"
   check_errors
+  cp "$tools_dir/xpra_conf_export.sh" "$basedir/extra"
+  check_errors
+  chmod 755 "$basedir/extra/xpra_conf_export.sh"
+  check_errors
   log "starting new xpra session"
   #execute xpra daemon in background
   exec_profile="xpra"
@@ -34,6 +38,8 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   mkdir -p "$basedir/control/xpra"
   exec_bg="true"
   exec_bg_pid=""
+  exec_args_cnt=1
+  exec_args=( "--start=/executor/extra/xpra_conf_export.sh" )
   . "$includes_dir/run-profile.sh.in"
   wait "$exec_bg_pid"
   if [[ $? != 0 ]]; then
