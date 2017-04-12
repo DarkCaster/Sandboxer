@@ -48,19 +48,23 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
     teardown 1
   fi
   #wait for output. TODO: this is a copy from dbus daemon, change it to xpra information output
-  #xpra_wait=400
-  #while [[ $xpra_wait -ge 1 ]]
-  #do
-  #  if [[ -f $basedir/xpra-daemon.stdout && `wc -l <"$basedir/xpra-daemon.stdout"` = 2 ]]; then
-  #    mapfile -t -n 1 xpra_env_a <"$basedir/xpra-daemon.stdout"
-  #    if [[ "${xpra_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
-  #      xpra_env="${xpra_env_a[0]}"
-  #      break
-  #    fi
-  #  fi
-  #  sleep 0.025
-  #  xpra_wait=$((xpra_wait-1))
-  #done
+  xpra_wait=400
+  xpra_conf_done=0
+  while [[ $xpra_wait -ge 1 && $xpra_conf_done = 0 ]]
+  do
+    sleep 0.025
+    if [[ -f $basedir/control/xpra/xpra_conf.out ]]; then
+      mapfile -t xpra_conf <"$basedir/control/xpra/xpra_conf.out"
+      xpra_conf_line_cnt=0
+      while [[ ! -z ${xpra_conf[$xpra_conf_line_cnt]} ]]
+      do
+        [[ ${xpra_conf[$xpra_conf_line_cnt]} =~ ^"EOF"$ ]] && xpra_conf_done=1 && break
+        xpra_conf_line_cnt=$((xpra_conf_line_cnt+1))
+      done
+    fi
+    xpra_wait=$((xpra_wait-1))
+  done
+  [[ $xpra_conf_done = 0 ]] && log "failed to read xpra configuration from started service, cannot proceed!" && teardown 1
   add_watchdog_profile "xpra"
 elif [[ -p $basedir/control/xpra.in && -p $basedir/control/xpra.out ]]; then
   # just read already created xpra-daemon.stdout
