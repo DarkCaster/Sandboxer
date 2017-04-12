@@ -117,7 +117,7 @@ watchdog_lock_enter
 
 trap "{ watchdog_lock_exit; }" EXIT
 
-trap "{ log \"dbus-watchdog: trap triggered, ignoring\"; }" SIGINT SIGHUP
+trap "{ log \"watchdog.sh: trap triggered, ignoring\"; }" SIGINT SIGHUP
 
 log () {
   echo "$@"
