@@ -9,6 +9,11 @@ if [[ ! -z $x11host_post_triggered || ! -z $x11host_pre_triggered ]]; then
   post_feature_failed=1
 fi
 
+if [[ -z $gvfs_post_triggered ]]; then
+  log "gvfs_fix feature is required for xpra feature activation. it must be activated before xpra feature. cannot proceed!"
+  post_feature_failed=1
+fi
+
 if [[ -z $dbus_env ]]; then
   log "dbus feature is required for xpra feature activation. it must be activated before xpra feature. cannot proceed!"
   post_feature_failed=1
