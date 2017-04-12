@@ -21,7 +21,7 @@ if [[ ! -p $basedir/control/dbus.in || ! -p $basedir/control/dbus.out ]]; then
       [[ -x ${cfg[tunables.features.dbus_search_prefix]}$hint/dbus-daemon ]] && cfg[$exec_profile.exec]="$hint/dbus-daemon" && break
       # log "no dbus-daemon binary at ${cfg[tunables.features.dbus_search_prefix]}$hint" # debug
     done
-    [[ -z ${cfg[$exec_profile.exec]} ]] && log "dbus-daemon binary not found!" && post_feature_failed=1
+    [[ -z ${cfg[$exec_profile.exec]} ]] && log "dbus-daemon binary not found!" && teardown 1
   fi
   . "$includes_dir/channel-open.sh.in"
   exec_bg="true"
@@ -48,16 +48,18 @@ if [[ ! -p $basedir/control/dbus.in || ! -p $basedir/control/dbus.out ]]; then
   add_watchdog_profile "dbus"
 fi
 
-# just read already created dbus-daemon.stdout
-mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"
-if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
-  dbus_env="${dbus_env_a[0]}"
-fi
+if [[ $post_feature_failed = 0 ]]; then
+  # just read already created dbus-daemon.stdout
+  mapfile -t -n 1 dbus_env_a <"$basedir/dbus-daemon.stdout"
+  if [[ "${dbus_env_a[0]}" =~ ^unix:.*,guid=.{32,32}$ ]]; then
+    dbus_env="${dbus_env_a[0]}"
+  fi
 
-# check, do we succeed with dbus startup, and do not procced if we are not
-if [[ -z $dbus_env ]]; then
-  log "failed to get valid dbus-daemon env parameters"
-  post_feature_failed=1
-else
-  extra_env_set_add "DBUS_SESSION_BUS_ADDRESS" "$dbus_env"
+  # check, do we succeed with dbus startup, and do not procced if we are not
+  if [[ -z $dbus_env ]]; then
+    log "failed to get valid dbus-daemon env parameters"
+    post_feature_failed=1
+  else
+    extra_env_set_add "DBUS_SESSION_BUS_ADDRESS" "$dbus_env"
+  fi
 fi
