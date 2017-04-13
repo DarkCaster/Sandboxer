@@ -1,4 +1,4 @@
--- this is an example config for sandbox that use external ubuntu rootfs as base.
+-- this is an example config for sandbox that use external debian rootfs as base.
 
 -- this example config is compatible with external root-fs archives that was downloaded and extracted by running:
 -- download-ubuntu-*.sh - download selected ubuntu x86_64 distribution (currently supported 12.04, 14.04, 16.04 and 16.10)
@@ -6,15 +6,15 @@
 -- (debian sid distribution is using different root-fs directory layout - it will be NOT COMPATIBLE with this example config file)
 
 -- THIS CONFIG WILL CREATE SANDBOXED ENV THAT SHOULD BE USED ONLY TO PERFORM SETUP PROCEDURES, LIKE INSTALLING PACKAGES OR EDITING /etc/* config files.
--- all root-subdirectories from external rootfs (ubuntu_chroot directory) will be mounted read-write.
+-- all root-subdirectories from external rootfs (debian_chroot directory) will be mounted read-write.
 -- also pseudo "root" shell will be launched inside sandbox, thay you may use to install extra packages, edit config files and perform stuff like that.
 -- most of integration options that provide sandbox to use some of the host features is unavailable inside this sandbox.
 -- (x11host feature is the only one that is enabled by default, so you may run GUI programs, but it is strongly recommended to disable it)
 
 -- it is strongly discouraged to use this config to run normal applications inside sandbox. you should use it only for setup purposes of external chroot.
 
-tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
---tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot") -- for debian distribution
+tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
+--tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot") -- for ubuntu distribution
 
 -- special tweaks applied to some of "defaults" entries when using "root" username
 -- use "root" username for sandbox only if you want to get pseudo-superuser session
@@ -23,7 +23,8 @@ tunables.user="root"
 tunables.uid=0
 tunables.gid=0
 -- use different build of x11 util, if you experience problems, for example:
--- tunables.features.x11util_build="ubuntu-12.04"
+-- tunables.features.x11util_build="ubuntu-16.04"
+-- tunables.features.x11util_build="debian-8"
 
 -- DO NOT FORGET TO LAUNCH THIS IF YOU SET ANY "tubables.*" VARIABLE ABOVE!
 defaults.recalculate()
@@ -44,7 +45,7 @@ sandbox={
       {'[[ ! -x usr/sbin/policy-rc.d ]] && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
       --copy file with dns configuration from host env
       {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
-      {'mkdir -p "etc/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using ubuntu-setup.cfg.lua
+      {'mkdir -p "etc/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using debian-setup.cfg.lua
       {'touch "etc/resolv.conf"'}, -- create empty resolv.conf at chroot directory, if missing.
       defaults.commands.resolvconf, -- create resolv.conf at dynamic etc directory
     },
@@ -103,8 +104,8 @@ sandbox={
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/",
-  args={"ubuntu-16.04","/bin/bash","--login"},
-  --args={"debian-8","/bin/bash","--login"},
+  args={"debian-8","/bin/bash","--login"},
+  --args={"ubuntu-16.04","/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },

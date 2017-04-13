@@ -1,20 +1,20 @@
--- this is an example config for sandbox that use external ubuntu rootfs as base.
+-- this is an example config for sandbox that use external debian rootfs as base.
 
 -- this example config is compatible with external root-fs archives that was downloaded and extracted by running:
 -- download-ubuntu-*.sh - download selected ubuntu x86_64 distribution (currently supported 12.04, 14.04, 16.04 and 16.10)
 -- download-debian-jessie-chroot.sh - download debian 8 (jessie) x86_64 rootfs from docker image repository
 -- (debian sid distribution is using different root-fs directory layout - it will be NOT COMPATIBLE with this example config file)
 
--- THIS CONFIG WILL CREATE REGULAR SANDBOXED ENV FROM CHROOT DIRECTORY, THAT WAS PREVIOUSLY SETUP WITH ubuntu-setup.cfg.lua.
--- all root-subdirectories from external rootfs (ubuntu_chroot directory) will be mounted read-only.
+-- THIS CONFIG WILL CREATE REGULAR SANDBOXED ENV FROM CHROOT DIRECTORY, THAT WAS PREVIOUSLY SETUP WITH debian-setup.cfg.lua.
+-- all root-subdirectories from external rootfs (debian_chroot directory) will be mounted read-only.
 -- most changes to root-fs inside sandbox will be discarded on exit, leaving chroot directory totally intact.
 -- some user-data, however, will be persistently stored at location defined by "tunables.datadir" parameter (see example.cfg.lua for more details)
 -- this data includes /var/tmp directory, /var/cache directory and /home directory
 
--- it is strongly recommended to use this config rather than ubuntu-setup.cfg.lua to run regular software, most of desktop integration options enabled by default with this config.
+-- it is strongly recommended to use this config rather than debian-setup.cfg.lua to run regular software, most of desktop integration options enabled by default with this config.
 
-tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot")
---tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot") -- for debian rootfs downloaded by download-debian-*-chroot.sh scripts
+tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
+--tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot") -- for ubuntu rootfs downloaded by download-debian-*-chroot.sh scripts
 tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.xpra_search_prefix=tunables.chrootdir
@@ -47,7 +47,7 @@ sandbox={
       -- (and also prevent host /etc from possible damage, but, anyway it should not be possible without real root privs).
       -- when we using separate chroot as base, there are several possible options to construct etc directory for sandbox:
 
-      --1. copy only minimal config from ubuntu chroot that was setup at ubuntu-setup.cfg.lua
+      --1. copy only minimal config from debian chroot that was setup at debian-setup.cfg.lua
       --[[defaults.commands.etc_min,
       defaults.commands.etc_dbus,
       defaults.commands.etc_x11,
@@ -61,14 +61,14 @@ sandbox={
       --3. or, work directly with etc directory of our external chroot, and mount it later with defaults.mounts.host_etc_mount.
       -- this directory is specified by tunables.etchost_path tunable at the top of this config file.
       -- we should also mount dynamically created /etc/passwd and /etc/group config files with defaults.mounts.passwd_mount.
-      -- (but we can just overwrite this files inside etc directory of chroot, but it may break ubuntu-setup.cfg.lua startup)
+      -- (but we can just overwrite this files inside etc directory of chroot, but it may break debian-setup.cfg.lua startup)
       -- also, we need to perform some minor configuration for our chroot etc dir.
       defaults.commands.machineid_static, -- create machine-id file in dynamic etc directory, generated machine-id rely only to sandbox_uid value
 
       -- remaining commands, used for any etc management option choosen above.
 
       -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
-      -- will be placed to "dynamic etc directory and will not overwrite files inside "etc" directory managed by ubuntu-setup.cfg.lua
+      -- will be placed to "dynamic etc directory and will not overwrite files inside "etc" directory managed by debian-setup.cfg.lua
       defaults.commands.passwd,
       defaults.commands.resolvconf, -- generate resolvconf and place it to dynamic etc directory
       -- various stuff for userdata
