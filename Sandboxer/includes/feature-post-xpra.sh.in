@@ -88,8 +88,10 @@ if [[ ! -f $basedir/control/xpra/client.pid ]]; then
     exit 1
   }
   log "starting xpra client, this task will be performed in background and it may take some time while it's connecting to sandbox"
-  #TODO: xpra client starup logic
   #TODO: try to detect and use some IPC mechanism available in xpra to lower cpu usage and improve speed on local connection
+  #TODO: xpra tray enable\disable
+  "$tools_dir/xpra_client.sh" "$basedir/control" &
+  #TODO: track client connection status, and continue only after connection is established
   exit 0
   ) || post_feature_failed=1
 fi
