@@ -12,6 +12,7 @@
 tunables.chrootdir=loader.path.combine(loader.workdir,"opensuse_chroot")
 tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
+tunables.features.xpra_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
 tunables.features.x11util_build="opensuse-42.2"
 tunables.features.pulse_env_alsa_config="skip"

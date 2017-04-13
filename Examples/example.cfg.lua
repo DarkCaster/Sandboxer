@@ -78,6 +78,7 @@
 
 -- TODO: add descriptions for features tunables:
 -- tunables.features.dbus_search_prefix
+-- tunables.features.xpra_search_prefix
 -- tunables.features.gvfs_fix_search_prefix
 -- tunables.features.gvfs_fix_search_locations
 -- tunables.features.gvfs_fix_mounts
