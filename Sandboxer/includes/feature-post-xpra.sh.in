@@ -92,6 +92,8 @@ if [[ ! -f $basedir/xpra-client.pid ]]; then
   teardown() {
     exit 1
   }
+  rm -f "$basedir/xpra-client.stdout" && rm -f "$basedir/xpra-client.stderr"
+  check_errors
   log "starting xpra client, this task will be performed in background and it may take some time while it's connecting to sandbox"
   #TODO: try to detect and use some IPC mechanism available in xpra to lower cpu usage and improve speed on local connection
   #TODO: xpra tray enable\disable
