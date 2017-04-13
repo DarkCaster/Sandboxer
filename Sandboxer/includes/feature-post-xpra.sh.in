@@ -82,7 +82,7 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
 fi
 
 #start xpra client on host_etc_mount
-if [[ ! -f $basedir/control/xpra/client.pid ]]; then
+if [[ ! -f $basedir/xpra-client.pid ]]; then
   [[ $post_feature_failed = 0 ]] && (
   teardown() {
     exit 1
@@ -90,8 +90,25 @@ if [[ ! -f $basedir/control/xpra/client.pid ]]; then
   log "starting xpra client, this task will be performed in background and it may take some time while it's connecting to sandbox"
   #TODO: try to detect and use some IPC mechanism available in xpra to lower cpu usage and improve speed on local connection
   #TODO: xpra tray enable\disable
-  "$tools_dir/xpra_client.sh" "$basedir/control" &
-  #TODO: track client connection status, and continue only after connection is established
+  "$tools_dir/xpra_client.sh" "$basedir" &
+  log "awaiting xpra client connect confirmation. this may take some time."
+  xpra_wait=400
+  xpra_client_conf_done=0
+  while [[ $xpra_wait -ge 1 && $xpra_client_conf_done = 0 ]]
+  do
+    sleep 0.050
+    if [[ -f $basedir/xpra-client.stdout ]]; then
+      mapfile -t xpra_client_conf <"$basedir/xpra-client.stdout"
+      xpra_conf_line_cnt=0
+      while [[ ! -z ${xpra_client_conf[$xpra_conf_line_cnt]} ]]
+      do
+        [[ ${xpra_client_conf[$xpra_conf_line_cnt]} =~ ^.*"Attached to".*$ ]] && xpra_client_conf_done=1 && break
+        xpra_conf_line_cnt=$((xpra_conf_line_cnt+1))
+      done
+    fi
+    xpra_wait=$((xpra_wait-1))
+  done
+  [[ $xpra_client_conf_done = 0 ]] && log "failed to start xpra client" && exit 1
   exit 0
   ) || post_feature_failed=1
 fi
