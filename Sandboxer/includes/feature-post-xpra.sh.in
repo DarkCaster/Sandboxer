@@ -95,9 +95,8 @@ if [[ ! -f $basedir/xpra-client.pid ]]; then
   rm -f "$basedir/xpra-client.stdout" && rm -f "$basedir/xpra-client.stderr"
   check_errors
   log "starting xpra client, this task will be performed in background and it may take some time while it's connecting to sandbox"
-  #TODO: try to detect and use some IPC mechanism available in xpra to lower cpu usage and improve speed on local connection
-  #TODO: xpra tray enable\disable
-  "$tools_dir/xpra_client.sh" "$basedir" &
+  #TODO: try to detect and use some IPC mechanism available in xpra to improve speed on local connection
+  "$tools_dir/xpra_client.sh" "$basedir" "${cfg[tunables.features.xpra_show_tray]}" &
   log "awaiting xpra client connect confirmation. this may take some time."
   xpra_wait=400
   xpra_client_conf_done=0
