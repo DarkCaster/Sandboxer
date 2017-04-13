@@ -28,9 +28,13 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   #remove old xpra-daemon.stdout
   rm -f "$basedir/xpra-daemon.stdout"
   check_errors
-  cp "$tools_dir/xpra_conf_export.sh" "$basedir/extra"
+  rm -f "$basedir/extra/xpra_conf_export.sh" && cp "$tools_dir/xpra_conf_export.sh" "$basedir/extra"
   check_errors
   chmod 755 "$basedir/extra/xpra_conf_export.sh"
+  check_errors
+  mkdir -p "$basedir/control/xpra"
+  check_errors
+  rm -f "$basedir/control/xpra/xpra_conf.out"
   check_errors
   log "starting new xpra session"
   #execute xpra daemon in background
@@ -45,7 +49,6 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
     [[ -z ${cfg[$exec_profile.exec]} ]] && log "xpra binary not found!" && teardown 1
   fi
   . "$includes_dir/channel-open.sh.in"
-  mkdir -p "$basedir/control/xpra"
   exec_bg="true"
   exec_bg_pid=""
   exec_args_cnt=1
@@ -76,6 +79,8 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
     xpra_wait=$((xpra_wait-1))
   done
   [[ $xpra_conf_done = 0 ]] && log "failed to read xpra configuration from started service, cannot proceed!" && teardown 1
+  rm -f "$basedir/extra/xpra_conf_export.sh"
+  check_errors
   exit 0
   ) || post_feature_failed=1
   add_watchdog_profile "xpra"
