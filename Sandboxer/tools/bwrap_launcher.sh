@@ -26,10 +26,10 @@ lock_path="$basedir/$lock_dirname"
 lock_entered="false"
 nowait=""
 
-echo "cleanup=$cleanup" # debug
-echo "lock_dirname=$lock_dirname" # debug
-echo "basedir=$basedir" # debug
-echo "extra_paths_counter=$extra_paths_counter" # debug
+#echo "cleanup=$cleanup" # debug
+#echo "lock_dirname=$lock_dirname" # debug
+#echo "basedir=$basedir" # debug
+#echo "extra_paths_counter=$extra_paths_counter" # debug
 
 check_sessions() {
   test `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | wc -l` != "0" && return 0
@@ -43,7 +43,7 @@ lock_enter() {
     return 0
   else
     test ! -z "$nowait" && return 1
-    echo "awaiting lock release" # debug
+    #echo "awaiting lock release" # debug
     while ! lock_enter "nowait"; do
       sleep 1
     done
