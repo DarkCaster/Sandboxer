@@ -33,8 +33,6 @@ sandbox={
       defaults.commands.home_gui_config,
       defaults.commands.var_cache,
       defaults.commands.var_tmp,
-      {'mkdir -p "${cfg[tunables.auto.user_path]}/libs/i386"'},
-      {'mkdir -p "${cfg[tunables.auto.user_path]}/libs/x86_64"'},
     },
     env_whitelist={
       "LANG",
