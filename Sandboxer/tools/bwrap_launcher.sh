@@ -22,13 +22,19 @@ do
 done
 shift 1
 
+lock_path="$basedir/$lock_dirname"
+lock_entered="false"
+nowait=""
+
+echo "cleanup=$cleanup" # debug
+echo "lock_dirname=$lock_dirname" # debug
+echo "basedir=$basedir" # debug
+echo "extra_paths_counter=$extra_paths_counter" # debug
+
 check_sessions() {
   test `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | wc -l` != "0" && return 0
   return 1
 }
-
-lock_entered="true"
-nowait=""
 
 lock_enter() {
   nowait="$1"
@@ -83,6 +89,7 @@ cd "$basedir"
 for el in *
 do
   test "$el" = "$lock_dirname" && continue
+  echo "removing $el" # debug
   rm -rf "$el"
 done
 
