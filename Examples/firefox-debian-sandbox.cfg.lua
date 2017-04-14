@@ -79,6 +79,16 @@ sandbox={
   }
 }
 
+desktop_data={
+  name = "Firefox in debian sandbox",
+  comment = "Firefox browser run in sandbox uid "..config.sandbox_uid,
+  icon = "firefox",
+  mimetype = "x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;",
+  terminal = false,
+  startupnotify = false,
+  categories="Network;WebBrowser;GTK;"
+}
+
 shell={
   exec="/bin/bash",
   args={"-l"},
@@ -89,6 +99,13 @@ shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+  desktop={
+    name = "Shell for debian-firefox sandbox",
+    comment = "shell for sandbox uid "..config.sandbox_uid,
+    icon = "terminal",
+    terminal = true,
+    startupnotify = false,
+  },
 }
 
 firefox_log={
@@ -109,6 +126,7 @@ firefox={
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
+  desktop=desktop_data,
 }
 
 firefox_home_log={
@@ -129,4 +147,5 @@ firefox_home={
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
+  desktop=desktop_data,
 }
