@@ -97,3 +97,23 @@ firefox={
   attach=false,
   pty=false,
 }
+
+firefox_home_log={
+  exec="/home/sandboxer/firefox/firefox",
+  path="/home/sandboxer",
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true, -- for now it is needed for logging to work
+  log_stderr=loader.path.combine(loader.workdir,"firefox_dbg.err.log"),
+  log_stdout=loader.path.combine(loader.workdir,"firefox_dbg.out.log"),
+}
+
+firefox_home={
+  exec="/home/sandboxer/firefox/firefox",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+}
