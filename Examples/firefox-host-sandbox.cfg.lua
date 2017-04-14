@@ -49,6 +49,7 @@ sandbox={
       --defaults.mounts.devdri_mount, -- may be needed when using x11host for opengl acceleration
       --defaults.mounts.sys_mount, -- may be needed when using x11host for opengl acceleration
       defaults.mounts.host_bin_mount,
+      --defaults.mounts.host_sbin_mount,
       defaults.mounts.host_usr_mount,
       defaults.mounts.host_lib_mount,
       defaults.mounts.host_lib64_mount,
@@ -77,12 +78,21 @@ shell={
   pty=true,
 }
 
+firefox_log={
+  exec="/usr/bin/firefox",
+  path="/home/sandboxer",
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true, -- for now it is needed for logging to work
+  log_stderr=loader.path.combine(loader.workdir,"firefox_dbg.err.log"),
+  log_stdout=loader.path.combine(loader.workdir,"firefox_dbg.out.log"),
+}
+
 firefox={
   exec="/usr/bin/firefox",
   path="/home/sandboxer",
   args=loader.args,
-  env_unset={"TERM"},
-  env_set={{"TERM",os.getenv("TERM")}},
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
