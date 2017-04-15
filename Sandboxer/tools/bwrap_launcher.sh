@@ -32,7 +32,12 @@ nowait=""
 #echo "extra_paths_counter=$extra_paths_counter" # debug
 
 check_sessions() {
-  test `ls -1 "$basedir/control" | grep -E "(^.*\.in\$)|(^.*\.out\$)" | wc -l` != "0" && return 0
+  for session in "$basedir/control/"*.in "$basedir/control/"*.out
+  do
+    test "$session" = "$basedir/control/*.in" && continue
+    test "$session" = "$basedir/control/*.out" && continue
+    return 0
+  done
   return 1
 }
 
@@ -80,7 +85,7 @@ fi
 for ext_el in `seq 1 $extra_paths_counter`
 do
   eval 'target_path="$extra_path_'"$ext_el"'"'
-  echo "removing directory $target_path" # debug
+  # echo "removing directory $target_path" # debug
   rm -rf "$target_path"
 done
 
@@ -89,11 +94,11 @@ cd "$basedir"
 for el in *
 do
   test "$el" = "$lock_dirname" && continue
-  echo "removing $el" # debug
+  # echo "removing $el" # debug
   rm -rf "$el"
 done
 
 lock_exit
 
-echo "cleanup complete" # debug
+# echo "cleanup complete" # debug
 exit 0
