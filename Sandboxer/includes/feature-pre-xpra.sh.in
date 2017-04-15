@@ -3,7 +3,7 @@
 #find place for xpra ipc-file
 
 #detect temp directory, located on tmpfs
-for xpra_ipc_test in "$TMPDIR" "/tmp" "$XDG_RUNTIME_DIR"
+for xpra_ipc_test in "$TMPDIR" "/tmp" "/dev/shm" "$XDG_RUNTIME_DIR"
 do
   [[ -z "$xpra_ipc_test" || ! -d $xpra_ipc_test || -z `2>/dev/null df -P -t tmpfs "$xpra_ipc_test"` ]] && continue
   xpra_ipc_path="$xpra_ipc_test"
@@ -11,11 +11,12 @@ do
 done
 
 if [[ ! -z $xpra_ipc_path ]]; then
-  xpra_ipc_path="$xpra_ipc_path/xpra_ipc"
+  xpra_ipc_path="$xpra_ipc_path/xpra_ipc_$config_uid"
   mkdir -p "$xpra_ipc_path"
   check_errors
-  xpra_ipc_path="$xpra_ipc_path/ipc_$config_uid"
-  &>/dev/null dd if=/dev/zero of="$xpra_ipc_path" bs=1M count=1
+  xpra_ipc_path="$xpra_ipc_path/shared_mem"
+  #TODO: select filesize relative to free space
+  &>/dev/null dd if=/dev/zero of="$xpra_ipc_path" bs=1M count=64
   check_errors
   echo "$xpra_ipc_path" > "$basedir/xpra_ipc_path"
   sandbox_bind_rw "$xpra_ipc_path" "$xpra_ipc_path"
