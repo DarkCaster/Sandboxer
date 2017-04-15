@@ -105,3 +105,7 @@ check_error
 
 ln -s "$target/bin/sandboxer-desktop-file-creator.sh" "$HOME/bin/sandboxer-desktop-file-creator.sh"
 check_error
+
+find "$target" -type f -name "*.sh" -exec "$curdir/update_shebang.sh" {} \;
+find "$target" -type f -name "*.sh.in" -exec "$curdir/update_shebang.sh" {} \;
+
