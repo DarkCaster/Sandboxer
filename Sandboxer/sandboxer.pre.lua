@@ -358,6 +358,7 @@ xpra={
     '--daemon=no',
     '--file-transfer=no',
     '--exit-with-client=no',
+    '--remote-logging=no',
     '--mdns=no',
     '--pulseaudio=no',
     '--dbus-proxy=no',
