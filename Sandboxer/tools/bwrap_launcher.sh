@@ -86,7 +86,7 @@ lock_exit() {
 trap "{ log \"bwrap_launcher.sh: trap triggered, ignoring\"; }" INT HUP
 
 log "launching bwrap with command line parameters: $@"
-0</dev/null 1>"$basedir/bwrap.log" 2>&1 nohup bwrap "$@"
+0</dev/null 1>"$basedir/bwrap.log" 2>&1 "$nohup_bin" bwrap "$@"
 
 err_code="$?"
 test "$err_code" != "0" && error "bwrap failed with error code $err_code, bwrap.log output:" && cat_error_to_logfile "$basedir/bwrap.log" && exit 1
