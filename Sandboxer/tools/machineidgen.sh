@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/dash
 
 check_errors () {
-  local status="$?"
-  local msg="$@"
-  if [[ $status != 0 ]]; then
+  status="$?"
+  msg="$@"
+  if test "$status" != "0"; then
     echo "machineidgen.sh: operation finished with error code $status"
-    [[ ! -z $msg ]] && echo "$msg"
+    test ! -z "$msg" && echo "$msg"
     exit "$status"
   fi
 }

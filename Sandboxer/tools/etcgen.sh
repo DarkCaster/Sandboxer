@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/dash
 
 #create essential "/etc" directory for sandbox from host etc
 #copy only essential config files that needed for most programs to work.
@@ -9,7 +9,7 @@
 source_dir="$1"
 target_dir="$2"
 
-[[ -z $target_dir ]] && echo "target_dir is empty!" && exit 1
+test -z "$target_dir" && echo "target_dir is empty!" && exit 1
 
 mkdir -p "$target_dir"
 
