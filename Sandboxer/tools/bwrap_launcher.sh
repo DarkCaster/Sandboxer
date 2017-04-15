@@ -8,9 +8,10 @@
 #         <parameters for bwrap>
 
 cleanup="$1"
-lock_dirname="$2"
-basedir="$3"
-shift 3
+logfile="$2"
+lock_dirname="$3"
+basedir="$4"
+shift 4
 
 extra_paths_counter=0
 
@@ -27,12 +28,17 @@ lock_entered="false"
 nowait=""
 
 log() {
-  echo "$@"
+  echo "$@" >> "$basedir/$logfile"
 }
 
 error() {
-  echo "$@"
+  echo "$@" >> "$basedir/$logfile"
   1>&2 echo "$@"
+}
+
+cat_error_to_logfile() {
+  cat "$@" >> "$basedir/$logfile"
+  1>&2 cat "$@"
 }
 
 log "bwrap_launcher.sh startup"
@@ -83,7 +89,7 @@ log "launching bwrap with command line parameters: $@"
 0</dev/null 1>"$basedir/bwrap.log" 2>&1 nohup bwrap "$@"
 
 err_code="$?"
-test "$err_code" != "0" && error "bwrap failed with error code $err_code, bwrap.log output:" && 1>&2 cat "$basedir/bwrap.log" && exit 1
+test "$err_code" != "0" && error "bwrap failed with error code $err_code, bwrap.log output:" && cat_error_to_logfile "$basedir/bwrap.log" && exit 1
 
 #below is a cleanup-on-exit logic that may be activated when bwrap is complete
 test "$cleanup" != "true" && exit 0
@@ -107,7 +113,7 @@ cd "$basedir"
 
 for el in *
 do
-  test "$el" = "$lock_dirname" -o "$el" = "bwrap.log" -o "$el" = "bwrap_launcher.log" && continue
+  test "$el" = "$lock_dirname" -o "$el" = "bwrap.log" -o "$el" = "$logfile" && log "skipping $el" && continue
   log "removing $el" # debug
   rm -rf "$el"
 done
