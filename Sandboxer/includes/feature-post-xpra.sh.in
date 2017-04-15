@@ -19,7 +19,7 @@ if [[ -z $dbus_env ]]; then
   post_feature_failed=1
 fi
 
-[[ -z $xpra_ipc_dir && -f "$basedir/xpra_ipc_dir" ]] && IFS= read -d '' -r "xpra_ipc_dir" < "$basedir/xpra_ipc_dir"
+[[ -z $xpra_ipc_path && -f "$basedir/xpra_ipc_path" ]] && IFS= read -d '' -r "xpra_ipc_path" < "$basedir/xpra_ipc_path"
 
 if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   [[ $post_feature_failed = 0 ]] && (
@@ -53,9 +53,10 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   . "$includes_dir/channel-open.sh.in"
   exec_bg="true"
   exec_bg_pid=""
-  exec_args_cnt=1
-  exec_args=( "--start=/executor/extra/xpra_conf_export.sh" )
-  [[ ! -z $xpra_ipc_dir ]] && exec_args_cnt=2 && exec_args[1]="--mmap=/xpra_ipc/xpra ipc file"
+  exec_args_cnt=0
+  exec_args=()
+  [[ ! -z $xpra_ipc_path ]] && exec_args[$exec_args_cnt]="--mmap=$xpra_ipc_path" && exec_args_cnt=$((exec_args_cnt+1))
+  exec_args[$exec_args_cnt]="--start=/executor/extra/xpra_conf_export.sh" && exec_args_cnt=$((exec_args_cnt+1))
   . "$includes_dir/run-profile.sh.in"
   wait "$exec_bg_pid"
   if [[ $? != 0 ]]; then
@@ -99,7 +100,7 @@ if [[ ! -f $basedir/xpra-client.pid ]]; then
   check_errors
   log "starting xpra client, this task will be performed in background and it may take some time while it's connecting to sandbox"
   #TODO: try to detect and use some IPC mechanism available in xpra to improve speed on local connection
-  "$tools_dir/xpra_client.sh" "$basedir" "${cfg[tunables.features.xpra_show_tray]}" &
+  "$tools_dir/xpra_client.sh" "$basedir" "${cfg[tunables.features.xpra_show_tray]}" "$xpra_ipc_path" &
   log "awaiting xpra client connect confirmation. this may take some time."
   xpra_wait=400
   xpra_client_conf_done=0

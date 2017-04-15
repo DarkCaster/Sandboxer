@@ -6,13 +6,17 @@
 for xpra_ipc_test in "$TMPDIR" "/tmp" "$XDG_RUNTIME_DIR"
 do
   [[ -z "$xpra_ipc_test" || ! -d $xpra_ipc_test || -z `2>/dev/null df -P -t tmpfs "$xpra_ipc_test"` ]] && continue
-  xpra_ipc_dir="$xpra_ipc_test"
+  xpra_ipc_path="$xpra_ipc_test"
   break
 done
 
-if [[ ! -z $xpra_ipc_dir ]]; then
-  xpra_ipc_dir="$xpra_ipc_dir/xpra_ipc"
-  mkdir -p "$xpra_ipc_dir"
-  echo "$xpra_ipc_dir" > "$basedir/xpra_ipc_dir"
-  sandbox_bind_rw "$xpra_ipc_dir" "/xpra_ipc"
+if [[ ! -z $xpra_ipc_path ]]; then
+  xpra_ipc_path="$xpra_ipc_path/xpra_ipc"
+  mkdir -p "$xpra_ipc_path"
+  check_errors
+  xpra_ipc_path="$xpra_ipc_path/ipc_$config_uid"
+  &>/dev/null dd if=/dev/zero of="$xpra_ipc_path" bs=1M count=1
+  check_errors
+  echo "$xpra_ipc_path" > "$basedir/xpra_ipc_path"
+  sandbox_bind_rw "$xpra_ipc_path" "$xpra_ipc_path"
 fi
