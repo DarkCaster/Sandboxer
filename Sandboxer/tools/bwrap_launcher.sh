@@ -26,10 +26,23 @@ lock_path="$basedir/$lock_dirname"
 lock_entered="false"
 nowait=""
 
-#echo "cleanup=$cleanup" # debug
-#echo "lock_dirname=$lock_dirname" # debug
-#echo "basedir=$basedir" # debug
-#echo "extra_paths_counter=$extra_paths_counter" # debug
+log() {
+  echo "$@"
+}
+
+error() {
+  echo "$@"
+  1>&2 echo "$@"
+}
+
+log "bwrap_launcher.sh startup"
+log "cleanup=$cleanup" # debug
+log "basedir=$basedir" # debug
+log "lock_dirname=$lock_dirname" # debug
+log "extra_paths_counter=$extra_paths_counter" # debug
+
+nohup_bin=`2>/dev/null which nohup`
+test -z "$nohup_bin" && error "nohup binary from coreutils package not found! cannot proceed!" && exit 1
 
 check_sessions() {
   for session in "$basedir/control/"*.in "$basedir/control/"*.out
@@ -48,7 +61,7 @@ lock_enter() {
     return 0
   else
     test ! -z "$nowait" && return 1
-    #echo "awaiting lock release" # debug
+    log "awaiting lock release" # debug
     while ! lock_enter "nowait"; do
       sleep 1
     done
@@ -64,12 +77,13 @@ lock_exit() {
   return 0
 }
 
-trap "{ echo \"bwrap_launcher.sh: trap triggered, ignoring\"; }" INT HUP
+trap "{ log \"bwrap_launcher.sh: trap triggered, ignoring\"; }" INT HUP
 
-</dev/null 1>"$basedir/bwrap.log" 2>&1 nohup bwrap "$@"
+log "launching bwrap with command line parameters: $@"
+0</dev/null 1>"$basedir/bwrap.log" 2>&1 nohup bwrap "$@"
 
 err_code="$?"
-test "$err_code" != "0" && echo "bwrap failed with error code $err_code, bwrap.log output:" && cat "$basedir/bwrap.log" && exit 1
+test "$err_code" != "0" && error "bwrap failed with error code $err_code, bwrap.log output:" && 1>&2 cat "$basedir/bwrap.log" && exit 1
 
 #below is a cleanup-on-exit logic that may be activated when bwrap is complete
 test "$cleanup" != "true" && exit 0
@@ -78,14 +92,14 @@ lock_enter
 
 if check_sessions; then
   lock_exit
-  echo "bwrap_launcher.sh cannot perform cleanup, because some other sessions currently running in sandbox"
+  error "bwrap_launcher.sh cannot perform cleanup, because some other sessions currently running in sandbox"
   exit 1
 fi
 
 for ext_el in `seq 1 $extra_paths_counter`
 do
   eval 'target_path="$extra_path_'"$ext_el"'"'
-  # echo "removing directory $target_path" # debug
+  log "removing extra directory $target_path" # debug
   rm -rf "$target_path"
 done
 
@@ -93,12 +107,12 @@ cd "$basedir"
 
 for el in *
 do
-  test "$el" = "$lock_dirname" && continue
-  # echo "removing $el" # debug
+  test "$el" = "$lock_dirname" -o "$el" = "bwrap.log" -o "$el" = "bwrap_launcher.log" && continue
+  log "removing $el" # debug
   rm -rf "$el"
 done
 
 lock_exit
 
-# echo "cleanup complete" # debug
+log "cleanup complete" # debug
 exit 0
