@@ -181,5 +181,5 @@ sandbox_bind_rw() {
 }
 
 sandbox_start() {
-  0</dev/null 1>"$basedir/bwrap_launcher.log" "$tools_dir/bwrap_launcher.sh" "${cfg[sandbox.setup.cleanup_on_exit]}" "$lock_dirname" "$basedir" -- "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}" &
+  0</dev/null "$tools_dir/bwrap_launcher.sh" "${cfg[sandbox.setup.cleanup_on_exit]}" "bwrap_launcher.log" "$lock_dirname" "$basedir" -- "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}" &
 }
