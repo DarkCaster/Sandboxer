@@ -19,6 +19,8 @@ if [[ -z $dbus_env ]]; then
   post_feature_failed=1
 fi
 
+[[ -z $xpra_ipc_dir && -f "$basedir/xpra_ipc_dir" ]] && IFS= read -d '' -r "xpra_ipc_dir" < "$basedir/xpra_ipc_dir"
+
 if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   [[ $post_feature_failed = 0 ]] && (
   #redefine teardown, so it will not accidentally remove sandboxer lock
@@ -53,6 +55,7 @@ if [[ ! -p $basedir/control/xpra.in || ! -p $basedir/control/xpra.out ]]; then
   exec_bg_pid=""
   exec_args_cnt=1
   exec_args=( "--start=/executor/extra/xpra_conf_export.sh" )
+  [[ ! -z $xpra_ipc_dir ]] && exec_args_cnt=2 && exec_args[1]="--mmap=/xpra_ipc/xpra ipc file"
   . "$includes_dir/run-profile.sh.in"
   wait "$exec_bg_pid"
   if [[ $? != 0 ]]; then
