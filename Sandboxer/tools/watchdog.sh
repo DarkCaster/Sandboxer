@@ -99,6 +99,23 @@ parseopts () {
 
 parseopts "$@"
 
+#try to enable some loadables (optional)
+bash_version=`echo "$BASH_VERSION" | cut -f1-2 -d"."`
+loadables_dir=""
+
+#find loadables_dir
+for target in "/lib64/bash/$bash_version" "/usr/lib64/bash/$bash_version" "/lib/bash/$bash_version" "/usr/lib/bash/$bash_version"
+do
+  [[ -d $target ]] && loadables_dir="$target" && break
+done
+
+if [[ ! -z $loadables_dir ]]; then
+  for loadable in "sleep" "mkdir" "rmdir"
+  do
+    2>/dev/null enable -f "$loadables_dir/$loadable.so" "$loadable"
+  done
+fi
+
 watchdog_lock_enter() {
   local nowait="$1"
   if mkdir "$watchdog_lock" 2>/dev/null; then
