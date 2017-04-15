@@ -374,7 +374,9 @@ if [[ $post_feature_failed = 0 ]]; then
 fi
 
 # run watchdog script if we have started any features
-[[ $watchdog_profiles_cnt != 0 ]] && "$tools_dir/watchdog.sh" -b "$basedir/control" -s "$lock_path" -w "$basedir/watchdog.lock" -l "$basedir/watchdog.log" -c "$commander" -k "${cfg[sandbox.setup.security_key]}" ${watchdog_profiles[@]} &
+if [[ $watchdog_profiles_cnt != 0 ]]; then
+  "$tools_dir/watchdog.sh" -b "$basedir/control" -s "$lock_path" -w "$basedir/watchdog.lock" -l "$basedir/watchdog.log" -c "$commander" -k "${cfg[sandbox.setup.security_key]}" ${watchdog_profiles[@]} &
+fi
 
 [[ $post_feature_failed != 0 ]] && log "feature's -post script was failed, cannot proceed!" && teardown 1
 
