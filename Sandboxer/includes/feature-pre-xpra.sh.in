@@ -14,6 +14,7 @@ if [[ ! -z $xpra_ipc_path ]]; then
   xpra_ipc_path="$xpra_ipc_path/xpra_ipc_$config_uid"
   mkdir -p "$xpra_ipc_path"
   check_errors
+  add_extra_dir_cleanup "$xpra_ipc_path"
   xpra_ipc_path="$xpra_ipc_path/shared_mem"
   #TODO: select filesize relative to free space
   &>/dev/null dd if=/dev/zero of="$xpra_ipc_path" bs=1M count=64
