@@ -288,6 +288,14 @@ if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; 
   sandbox_bind_rw "$basedir/control" "/executor/control"
   sandbox_bind_ro "$basedir/extra" "/executor/extra"
 
+  extra_dirs_cleanup=()
+  extra_dirs_cleanup_cnt=0
+
+  add_extra_dir_cleanup() {
+    extra_dirs_cleanup[$extra_dirs_cleanup_cnt]="$1"
+    extra_dirs_cleanup_cnt=$((extra_dirs_cleanup_cnt+1))
+  }
+
   #pre-launch features
   feature_cnt_min=`get_lua_table_start "sandbox.features"`
   feature_cnt_max=`get_lua_table_end "sandbox.features"`

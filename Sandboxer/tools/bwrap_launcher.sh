@@ -15,10 +15,12 @@ shift 4
 
 extra_paths_counter=0
 
-while test "$1" != "--" -a "$1" != ""
+while test "$1" != "--"
 do
-  extra_paths_counter=`expr $extra_paths_counter + 1`
-  eval 'extra_path_'"$extra_paths_counter"'="'"$1"'"'
+  if test ! -z "$1"; then
+    extra_paths_counter=`expr $extra_paths_counter + 1`
+    eval 'extra_path_'"$extra_paths_counter"'="'"$1"'"'
+  fi
   shift 1
 done
 shift 1
