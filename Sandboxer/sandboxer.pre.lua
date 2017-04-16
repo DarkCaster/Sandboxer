@@ -186,6 +186,7 @@ defaults.mounts.devshm_mount={prio=20,tag="devshm","bind","/dev/shm","/dev/shm"}
 -- various tunables for features
 tunables.features.dbus_search_prefix="/"
 tunables.features.xpra_search_prefix="/"
+tunables.features.xpra_use_mmap=false
 tunables.features.xpra_show_tray=false
 tunables.features.gvfs_fix_search_prefix="/"
 tunables.features.gvfs_fix_search_locations={
