@@ -19,6 +19,6 @@ if [[ ! -z $xpra_ipc_path ]]; then
   #TODO: select filesize relative to free space
   &>/dev/null dd if=/dev/zero of="$xpra_ipc_path" bs=1M count=64
   check_errors
-  echo "$xpra_ipc_path" > "$basedir/xpra_ipc_path"
+  echo -n "$xpra_ipc_path" > "$basedir/xpra_ipc_path"
   sandbox_bind_rw "$xpra_ipc_path" "$xpra_ipc_path"
 fi
