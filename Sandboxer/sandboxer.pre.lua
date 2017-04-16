@@ -372,6 +372,7 @@ xpra={
     '--speed=100',
     '--compressors=',
     '--compress=0',
+    '--pings=no',
   },
   term_signal=defaults.signals.SIGTERM,
   term_child_only=true,
