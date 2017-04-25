@@ -94,10 +94,10 @@ echo "Creating symlinks"
 
 [[ ! -d $HOME/bin ]] && mkdir -p "$HOME/bin"
 
-rm -f "$HOME/bin/sandboxer.sh"
+rm -f "$HOME/bin/sandboxer"
 check_error
 
-ln -s "$target/bin/sandboxer.sh" "$HOME/bin/sandboxer.sh"
+ln -s "$target/bin/sandboxer.sh" "$HOME/bin/sandboxer"
 check_error
 
 rm -f "$HOME/bin/sandboxer-desktop-file-creator.sh"
@@ -108,4 +108,3 @@ check_error
 
 find "$target" -type f -name "*.sh" -exec "$curdir/update_shebang.sh" {} \;
 find "$target" -type f -name "*.sh.in" -exec "$curdir/update_shebang.sh" {} \;
-
