@@ -18,26 +18,29 @@ Sandboxer suite run applications inside "sandbox". Sanbox - is a special environ
 
 Each sandbox environment must be setup by using it's configuration file.
 Unique sandbox is usually bond to configuration file and it's on-disk location.
-Sanboxer's configuration system uses lua language (<https://www.lua.org/>) to manage config options.
+Sanboxer's configuration system uses lua language (<https://www.lua.org>) to manage config options.
 Each config file is just a lua-script that must define global "tables" with config options.
 This aproach was chosen because of it simplicity and extensibility.
 Also, it was easier for me to program config options validation, and transformation - it is also written with lua language.
 
 This aproach to sandbox configuration may change in future.
+Core information about sandbox configuration options for now provided in example.cfg.lua example and others.
 See example config files in "Examples" directory for more info.
-Core information about sandbox configuration presented in example.cfg.lua example and others.
 
-Config files must define at least two root-tables:
+Sandbox config file must define at least two root-tables:
 *   "sandbox" table. It describes general sandbox env setup: mounts inside sandbox, persistent-user data location, isolation options, commands used at sandbox construction stage to prepare it's env.
-*   One or more "execution profiles". Exec profile describe application that may be started inside sandbox by user. This may be an interactive shell, or some desktop application. All exec profiles described in a single config file - will be executed in a sanbox shared between them, so they may interact to each other. Exec profile also describe other options for target application, like working path, cmd line parameters, pty allocation, logging of stdout/stderr, etc.
+*   One or more "execution profiles". Exec profile describe application that may be started inside sandbox by user. This may be an interactive shell, or some desktop application. All exec profiles described in a single config file - will be executed in a sanbox shared between them, so they may interact to each other. Exec profile also describe other options for target application, like working directory, cmd line parameters, pty allocation, logging of stdout/stderr, etc.
 
 TODO: make more detailed howto about config files.
 
 ### Session management
 
-Minimalistic bubblewrap utility can only launch a single application inside a dynamically constructed sandbox. When controlled application (and it's childs) exit, then it's sandbox is destroyed.
+Minimalistic bubblewrap utility can only launch a single application inside a dynamically constructed sandbox.
+When controlled application (and it's childs) exit, then it's sandbox is destroyed.
 
-In order to launch multiple applicaions inside bubblewrap-controlled sandbox, we need a session management utility. It may be a ssh or telnet like utility, for example. But it is too heavy and resource-hungry, and it lack some functionality required for us to control sandboxed application.
+In order to launch multiple applicaions inside bubblewrap-controlled sandbox, we need a session management utility.
+It may be a ssh or telnet like utility, for example.
+But it is too heavy and resource-hungry, and it lack some functionality required for us to control sandboxed application.
 
 So, sandboxer suite comes with it's own session management utilities, that consists of two independend binaries. "executor" binary is launched inside bubblewrap-controlled sandbox and perform all needed session management stuff and basic communication with outer world. "commander" binary is launched inside host env and used in basic interactions with application that running inside sandbox. It may forward or log stdio/stderr, securely forward terminal io from pty device created inside sandbox, it may be also used to ask session manager to terminate application or launch another one.
 
@@ -47,7 +50,8 @@ Session management utilities was written with native C language, to provide the 
 
 To construct a sandboxed environment, we need to perform some preparations like copying some configuration files from host /etc directory (so, sandboxed app will have access only to needed parts of system configs), define mounts for rootfs inside sandbox, define command line options for bubblewrap utility.
 
-Such tasks executed on host system only at sandoxed application startup/shutdown by main sandboxer utility. In order to accelerate project development this utility and it's components written in Bash scripting laguage for now. I'm trying to use only native bash features, and not to rely on other utilities in order to provode good portability across different systems. Anyway, this utilities is intended to perform only initial coniguration tasks, and it should not affect performance or memory usage for sandboxed environment. It may be also rewritten in future with other programming language.
+Such tasks executed on host system only at sandoxed application startup/shutdown by main sandboxer utility.
+In order to accelerate project development, this utility and it's components written in Bash scripting laguage for now. I'm trying to use only native bash features, and not to rely on other utilities in order to provode good portability across different systems. Anyway, this utilities is intended to perform only initial coniguration tasks, and it should not affect performance or memory usage for sandboxed environment. It may be also rewritten in future with other programming language.
 
 #### Usage
 ```
@@ -55,7 +59,7 @@ sandboxer <sandbox config file> <exec profile> [parameters for application insid
 ```
 Execution must be performed from regular-user account. Running from root is not supported and will be unsecure. Bubblewrap utility is also intended to run as normal user.
 
-TODO: detailed description
+TODO: detailed description, see "Examples" directory for config files examples. Look for more info at "example.cfg.lua", "debian-setup.cfg.lua", "debian-sandbox.cfg.lua" and other example config files.
 
 ## System requirements and installation
 
@@ -80,6 +84,28 @@ In order to build and install sandboxer suite you also need:
 
 ### Building/installing bubblewrap utility
 
+Check your package manager, maybe bubblewrap utility is already available there. It may be also included in "flatpak" package.
 
+To build and install bubblewrap manually, run "build-bwrap.sh" script - it will download, compile and install bwrap binary to /usr/local, sudo will prompt for password at install stage, no need to run this script as root.
+
+### Building sandboxer suite
+
+Run build.sh script, it will download and build all external dependencies, build binary components.
+
+### Installing sandboxer suite
+
+Run install-to-home.sh, after build.sh script completed without errors. It will install sandboxer suite and examples to "$HOME/sandboxer" directory, and make symlink to main utlilty at "$HOME/bin/sandboxer". You may also pass custom target installation path to install-to-home.sh script as parameter.
+
+## Current project status
+
+TODO
+
+### Short term plans
+
+TODO
+
+### Long term plans
+
+TODO
 
 Copyright (c) 2016-2017 DarkCaster, see LICENSE for details.
