@@ -41,14 +41,45 @@ In order to launch multiple applicaions inside bubblewrap-controlled sandbox, we
 
 So, sandboxer suite comes with it's own session management utilities, that consists of two independend binaries. "executor" binary is launched inside bubblewrap-controlled sandbox and perform all needed session management stuff and basic communication with outer world. "commander" binary is launched inside host env and used in basic interactions with application that running inside sandbox. It may forward or log stdio/stderr, securely forward terminal io from pty device created inside sandbox, it may be also used to ask session manager to terminate application or launch another one.
 
-Session management utilities was written with native C language, to provide the best portability possible across different sandboxed environments. Also they are the only utilities that may run all the time while controlled sandboxed application is executing, so it need not to consume much of system resources. This utilities will be enforced in future with stuff like seccomp, refactored and optimized, or maybe even rewritten in more secure system programming language like Rust. You should not worry about it most of the times when all working as intended, sandboxer suite will use them internally.
+Session management utilities was written with native C language, to provide the best portability possible across different sandboxed environments. Also this is the only utilities that may run all the time while controlled sandboxed application is executing, so it need not to consume much of system resources. This utilities will be enforced in future with stuff like seccomp, refactored and optimized, or maybe even rewritten in more secure system programming language like Rust. Sandboxer suite will handle this utilities internally, it is not intended for direct use - command line parameters and internal logic may change in future releases without any notice.
 
 ### Sandbox management and application starup
 
 To construct a sandboxed environment, we need to perform some preparations like copying some configuration files from host /etc directory (so, sandboxed app will have access only to needed parts of system configs), define mounts for rootfs inside sandbox, define command line options for bubblewrap utility.
 
-This tasks is performed by main sandboxer utility.
+Such tasks executed on host system only at sandoxed application startup/shutdown by main sandboxer utility. In order to accelerate project development this utility and it's components written in Bash scripting laguage for now. I'm trying to use only native bash features, and not to rely on other utilities in order to provode good portability across different systems. Anyway, this utilities is intended to perform only initial coniguration tasks, and it should not affect performance or memory usage for sandboxed environment. It may be also rewritten in future with other programming language.
 
-TODO
+#### Usage
+```
+sandboxer <sandbox config file> <exec profile> [parameters for application inside sandbox]
+```
+Execution must be performed from regular-user account. Running from root is not supported and will be unsecure. Bubblewrap utility is also intended to run as normal user.
+
+TODO: detailed description
+
+## System requirements and installation
+
+In order to use sandboxer suite your system should meet a minimum system requirements to run a bubblewrap utility:
+*   A decent linux kernel with various namespaces support: PID, UID, NET and IPC namespace support is highly recommended.
+
+Sandboxer suite also requires the following in order to run:
+*   A decent x86_64 linux distro. Sandboxer suite may work with 32bit x86 OS'es (and with non x86 systems), but it is not tested right now.
+    Some modifications to config system (but not the user config files) and main logic may be required.
+*   Official standalone lua interpreter (<https://www.lua.org>) to parse and transform config files and it's options.
+    System is tested with lua versions 5.1, 5.2 and 5.3. Other lua implementations like lua-jit is not supported right now (but may be supported in future).
+*   Bash version 4.0 and up. Required by components that perform sandbox preparation tasks.
+*   Optional: posix compliant shell/interpreter (tested with bash, dash, busybox) to consume less system resources when running some components.
+    This requirement is optional, bash will be used as fallback.
+*   Optional: Xpra software (<https://xpra.org/>), version 2.0 and up. Both server and client components must be installed.
+    May be used to perform secure X11 integration for sandboxed application.
+
+In order to build and install sandboxer suite you also need:
+*   Git VCS. It is required in order to download some external dependencies and extra utilities.
+*   GCC compiler and CMAKE is required to build all internal binary components.
+*   Autotools is required to build FakeRoot-UserNS external helper utility.
+
+### Building/installing bubblewrap utility
+
+
 
 Copyright (c) 2016-2017 DarkCaster, see LICENSE for details.
