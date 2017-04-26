@@ -3,7 +3,7 @@
 Main goal of this project is to make a simple to configure and yet highly customizable application sandboxing/isolation suite.
 In addition to sandboxing feature, this suite can also be used to run applications inside pre-configured custom environment based on user-made chroot, in a similiar way to how it is done in a server containerization software like libvirt-lxc, LXC, docker, etc.
 
-For now, this project is relying on bubblewrap utility (<https://github.com/projectatomic/bubblewrap>) to perform application isolation.
+For now, this project is relying on "bubblewrap" utility (<https://github.com/projectatomic/bubblewrap>) to perform application isolation.
 Authors of bwrap implemented only minimal and essential functionality in its sandboxing utility. While it is good in terms of security, easy to maintain and fix bugs, it is also hard to configure and perform a preparation of sandboxed environment. That where this sandboxer suite comes in. It is just a configuration wrapper and set of service utilities that made on top of bubblewrap.
 
 For now it is in highly experimental state and possibly not so secure that it is intended to be. Do not rely on it to achive a 100% secutity with application isolation. It is impossible to achive with LXC-like containerization. Also, this software may contain some security bugs because I have a very limited time recources to maintain and enhance it and i'm the only one author right now. Even more mature software like firejail contain bugs and security vulnerabilities that discovered on a regular basis. So, proceed at your own risk. If you need more secure isolation - use virtualization solutions like qemu-kvm, virtualbox, etc. But, still, i'm trying to do my best to make this tool secure.
@@ -32,5 +32,23 @@ Config files must define at least two root-tables:
 *   One or more "execution profiles". Exec profile describe application that may be started inside sandbox by user. This may be an interactive shell, or some desktop application. All exec profiles described in a single config file - will be executed in a sanbox shared between them, so they may interact to each other. Exec profile also describe other options for target application, like working path, cmd line parameters, pty allocation, logging of stdout/stderr, etc.
 
 TODO: make more detailed howto about config files.
+
+### Session management
+
+Minimalistic bubblewrap utility can only launch a single application inside a dynamically constructed sandbox. When controlled application (and it's childs) exit, then it's sandbox is destroyed.
+
+In order to launch multiple applicaions inside bubblewrap-controlled sandbox, we need a session management utility. It may be a ssh or telnet like utility, for example. But it is too heavy and resource-hungry, and it lack some functionality required for us to control sandboxed application.
+
+So, sandboxer suite comes with it's own session management utilities, that consists of two independend binaries. "executor" binary is launched inside bubblewrap-controlled sandbox and perform all needed session management stuff and basic communication with outer world. "commander" binary is launched inside host env and used in basic interactions with application that running inside sandbox. It may forward or log stdio/stderr, securely forward terminal io from pty device created inside sandbox, it may be also used to ask session manager to terminate application or launch another one.
+
+Session management utilities was written with native C language, to provide the best portability possible across different sandboxed environments. Also they are the only utilities that may run all the time while controlled sandboxed application is executing, so it need not to consume much of system resources. This utilities will be enforced in future with stuff like seccomp, refactored and optimized, or maybe even rewritten in more secure system programming language like Rust. You should not worry about it most of the times when all working as intended, sandboxer suite will use them internally.
+
+### Sandbox management and application starup
+
+To construct a sandboxed environment, we need to perform some preparations like copying some configuration files from host /etc directory (so, sandboxed app will have access only to needed parts of system configs), define mounts for rootfs inside sandbox, define command line options for bubblewrap utility.
+
+This tasks is performed by main sandboxer utility.
+
+TODO
 
 Copyright (c) 2016-2017 DarkCaster, see LICENSE for details.
