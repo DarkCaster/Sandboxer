@@ -103,9 +103,9 @@ if check_lua_export profile.desktop.name; then
     echo "[Desktop Entry]" >> "$tmp_desktop"
     echo "Type=Application" >> "$tmp_desktop"
     echo "Name=${cfg[profile.desktop.name]}" >> "$tmp_desktop"
-    echo "GenericName=sandboxer.sh \"$config\" \"$profile\"" >> "$tmp_desktop"
+    echo "GenericName=sandboxer \"$config\" \"$profile\"" >> "$tmp_desktop"
     echo "Comment=${cfg[profile.desktop.comment]}" >> "$tmp_desktop"
-    echo "Exec=sandboxer.sh \"$config\" \"$profile\"" >> "$tmp_desktop"
+    echo "Exec=sandboxer \"$config\" \"$profile\"" >> "$tmp_desktop"
     echo "Icon=${cfg[profile.desktop.icon]}" >> "$tmp_desktop"
     if [[ $create_cat = true ]]; then
       echo "Categories=Sandboxer;${cfg[profile.desktop.categories]}" >> "$tmp_desktop"
