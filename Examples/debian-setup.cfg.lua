@@ -29,6 +29,34 @@ tunables.gid=0
 -- DO NOT FORGET TO LAUNCH THIS IF YOU SET ANY "tubables.*" VARIABLE ABOVE!
 defaults.recalculate()
 
+-- detect debian version
+function read_debian_version()
+  local lines = {}
+  for line in io.lines(loader.path.combine(tunables.chrootdir,"etc","os-release")) do
+    lines[#lines + 1] = line
+  end
+  for _,line_val in pairs(lines) do
+    -- VERSION_ID="9 %d+
+    if string.match(line_val,'VERSION_ID') ~= nil then return tonumber(string.match(line_val,'%d+')) end
+  end
+  return 0
+end
+
+debian_version=read_debian_version()
+assert(type(debian_version)=="number", "failed to parse debian version from etc/os_release file")
+
+-- detect debian arch (arch label file created by debian download script)
+function read_debian_arch()
+  local arch_label_file = io.open(loader.path.combine(tunables.chrootdir,"arch-label"), "r")
+  local arch_label="amd64"
+  if arch_label_file then
+    arch_label = arch_label_file:read()
+    arch_label_file:close()
+  end
+  return arch_label
+end
+debian_arch=read_debian_arch()
+
 sandbox={
   features={
     "rootfixups", -- add some "fixups" to sandboxed env, that will be used to setup pseudo-root shell later. do not remove!
@@ -67,11 +95,7 @@ sandbox={
       defaults.mounts.proc_mount,
       defaults.mounts.dev_mount,
       defaults.mounts.xdg_runtime_dir,
-      defaults.mounts.bin_rw_mount,
       defaults.mounts.usr_rw_mount,
-      defaults.mounts.lib_rw_mount,
-      defaults.mounts.lib64_rw_mount,
-      defaults.mounts.sbin_rw_mount,
       defaults.mounts.resolvconf_mount, -- mount resolv.conf from dynamic etc directory
       -- defaults.mounts.sys_mount, -- optional for root usage, may leak some system info when installing\configuring packages. anyway, it will be mounted readonly.
       -- in normal sandboxes, following directories constructed dynamically (see example.cfg.lua), or not needed at all, but for external chroot case we must explicitly define mounts for it
@@ -96,6 +120,21 @@ sandbox={
   }
 }
 
+-- add remaining mounts, depending on detected debian version
+if debian_version > 8 then
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib64","lib64"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/libx32","libx32"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/sbin","sbin"})
+else
+  table.insert(sandbox.setup.mounts, defaults.mounts.bin_rw_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.lib_rw_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.lib64_rw_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.sbin_rw_mount)
+end
+
 -- start bash shell with fakeroot utility built for ubuntu-16.04. it compatible with ubuntu 12.04,14.04 and 16.04
 -- (this fakeroot build maybe downloaded by running sandboxer-download-extra.sh script)
 -- this profile should be used to perform package management inside sandbox: apt-get, dpkg should work.
@@ -104,8 +143,7 @@ sandbox={
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/",
-  args={"debian-8","/bin/bash","--login"},
-  --args={"ubuntu-16.04","/bin/bash","--login"},
+  args={"debian-"..debian_version.."-"..debian_arch,"/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },

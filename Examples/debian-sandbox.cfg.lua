@@ -26,6 +26,35 @@ tunables.features.pulse_env_alsa_config="skip" -- set custom alsa config file pa
 
 defaults.recalculate()
 
+-- TODO: detect ubuntu and it's version
+
+-- detect debian version
+function read_debian_version()
+  local lines = {}
+  for line in io.lines(loader.path.combine(tunables.chrootdir,"etc","os-release")) do
+    lines[#lines + 1] = line
+  end
+  for _,line_val in pairs(lines) do
+    if string.match(line_val,'VERSION_ID') ~= nil then return tonumber(string.match(line_val,'%d+')) end
+  end
+  return 0
+end
+
+debian_version=read_debian_version()
+assert(type(debian_version)=="number", "failed to parse debian version from etc/os_release file")
+
+-- detect debian arch (arch label file created by debian download script)
+function read_debian_arch()
+  local arch_label_file = io.open(loader.path.combine(tunables.chrootdir,"arch-label"), "r")
+  local arch_label="amd64"
+  if arch_label_file then
+    arch_label = arch_label_file:read()
+    arch_label_file:close()
+  end
+  return arch_label
+end
+debian_arch=read_debian_arch()
+
 sandbox={
   -- sandbox features and host-integration stuff that require some complex or dynamic preparations.
   -- features are enabled in order of appearance, feature name may contain only lowercase letters, numbers and underscores.
@@ -99,11 +128,7 @@ sandbox={
       defaults.mounts.var_lib_mount,
 
       -- other dirs from our external chroot
-      defaults.mounts.bin_ro_mount,
       defaults.mounts.usr_ro_mount,
-      defaults.mounts.lib_ro_mount,
-      defaults.mounts.lib64_ro_mount,
-      defaults.mounts.sbin_ro_mount,
       {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"srv"),"/srv"},
       {prio=10,"ro-bind",loader.path.combine(tunables.chrootdir,"opt"),"/opt"},
 
@@ -137,6 +162,21 @@ sandbox={
     defaults.bwrap.gid,
   }
 }
+
+-- add remaining mounts, depending on detected debian version
+if debian_version > 8 then
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib64","lib64"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/libx32","libx32"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/sbin","sbin"})
+else
+  table.insert(sandbox.setup.mounts, defaults.mounts.bin_ro_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.lib_ro_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.lib64_ro_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.sbin_ro_mount)
+end
 
 shell={
   exec="/bin/bash",
