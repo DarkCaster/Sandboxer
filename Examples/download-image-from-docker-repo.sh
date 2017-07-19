@@ -7,19 +7,27 @@
 
 script_dir="$( cd "$( dirname "$0" )" && pwd )"
 
+show_usage () {
+  echo "usage: download-image-from-docker-repo.sh <target> <tag> [arch] [rootfs archive name] [chroot extract dir] [docker git repo dir]"
+  exit 1
+}
+
 target="$1"
-[[ -z $target ]] && echo "usage: download-image-from-docker-repo.sh <target> <tag> [rootfs archive name] [chroot extract dir] [docker git repo dir]" && exit 1
+[[ -z $target ]] && show_usage
 
 tag="$2"
-[[ -z $tag ]] && echo "usage: download-image-from-docker-repo.sh <target> <tag> [rootfs archive name] [chroot extract dir] [docker git repo dir]" && exit 1
+[[ -z $tag ]] && show_usage
 
-rootfs="$3"
+arch="$3"
+[[ $arch = none ]] && arch=""
+
+rootfs="$4"
 [[ -z $rootfs ]] && rootfs="rootfs.tar.xz"
 
-output="$4"
+output="$5"
 [[ -z $output ]] && output="$script_dir/${target}_chroot"
 
-image_git="$5"
+image_git="$6"
 [[ -z $image_git ]] && image_git="$script_dir/${target}_docker_repo"
 
 check_errors () {
@@ -45,6 +53,7 @@ tags=""
 git_commit=""
 git_fetch=""
 directory=""
+arch_tags=""
 
 # parse description
 while IFS='' read -r line || [[ -n "$line" ]]; do
@@ -54,12 +63,18 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
   if [[ $line =~ ^"Tags:"([[:space:]].*)$ ]]; then
     tags="${BASH_REMATCH[1]}"
     [[ $tags =~ ^.*[[:space:]]"$tag"(","|$).* ]] || tags=""
-    git_commit=""
-    git_fetch=""
     continue
   fi
+  [[ $line =~ ^"${arch}-GitCommit:"[[:space:]]*(.*)$ ]] && git_commit="${BASH_REMATCH[1]}" && continue
+  [[ $line =~ ^"${arch}-GitFetch:"[[:space:]]*"refs/heads/"(.*)$ ]] && git_fetch="${BASH_REMATCH[1]}" && continue
   [[ $line =~ ^"GitCommit:"[[:space:]]*(.*)$ ]] && git_commit="${BASH_REMATCH[1]}" && continue
   [[ $line =~ ^"GitFetch:"[[:space:]]*"refs/heads/"(.*)$ ]] && git_fetch="${BASH_REMATCH[1]}" && continue
+  [[ $line =~ ^"GitFetch:"[[:space:]]*"refs/heads/"(.*)$ ]] && git_fetch="${BASH_REMATCH[1]}" && continue
+  if [[ $line =~ ^"Architectures:"([[:space:]].*)$ && arch != none ]]; then
+    arch_tags="${BASH_REMATCH[1]}"
+    [[ $arch_tags =~ ^.*[[:space:]]"$arch"(","|$).* ]] || arch_tags=""
+    continue
+  fi
 done < "$image_list"
 
 rm "$image_list"
@@ -68,6 +83,7 @@ echo "******************************"
 echo "parameters parsed from list:"
 echo "git_repo   = $git_repo"
 echo "tags       =$tags"
+echo "arch_tags  =$arch_tags"
 echo "git_fetch  = $git_fetch"
 echo "git_commit = $git_commit"
 echo "directory  = $directory"

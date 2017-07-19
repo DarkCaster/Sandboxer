@@ -14,7 +14,7 @@ check_errors () {
   fi
 }
 
-"$script_dir/download-image-from-docker-repo.sh" opensuse 42.2 openSUSE-42.2.tar.xz
+"$script_dir/download-image-from-docker-repo.sh" opensuse 42.2 none openSUSE-42.2.tar.xz
 check_errors "download-image-from-docker-repo.sh script failed!"
 
 #remove "installrecommends = no" for zypper, that was defined on image builds

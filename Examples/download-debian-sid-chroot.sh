@@ -14,7 +14,7 @@ check_errors () {
   fi
 }
 
-"$script_dir/download-image-from-docker-repo.sh" debian sid rootfs.tar.xz
+"$script_dir/download-image-from-docker-repo.sh" debian sid amd64 rootfs.tar.xz
 check_errors "download-image-from-docker-repo.sh script failed!"
 
 #remove apt configs needed only for docker (see https://github.com/docker/docker/blob/master/contrib/mkimage/debootstrap)
