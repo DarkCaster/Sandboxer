@@ -32,8 +32,8 @@ function read_os_version()
     lines[#lines + 1] = line
   end
   for _,line_val in pairs(lines) do
-    if string.match(line_val,'VERSION_ID="%d+"') ~= nil then
-      os_version=tonumber(string.match(line_val,'%d+'))
+    if string.match(line_val,'VERSION_ID="%d+%.*%d*"') ~= nil then
+      os_version=tonumber(string.match(line_val,'%d+%.*%d*'))
     elseif string.match(line_val,'ID=%w+') ~= nil then
       _,os_id=string.match(line_val,'(ID=)(%w+)')
     end
@@ -60,7 +60,8 @@ os_arch=read_os_arch()
 if os_id=="debian" then
   os_oldfs_ver=8
 elseif os_id=="ubuntu" then
-  os_oldfs_ver=16.10001
+  os_oldfs_ver=999 -- for now, cloudimg for 17.04 use old fs layout without symlinks for /bin /sbin /lib, etc ...
+  -- os_oldfs_ver=17.04001
 else
   os_oldfs_ver=999
 end
@@ -158,7 +159,7 @@ end
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/",
-  args={"debian-"..os_version.."-"..os_arch,"/bin/bash","--login"},
+  args={os_id.."-"..os_version.."-"..os_arch,"/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },
