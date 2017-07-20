@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 # perform some basic setup for fresh debian_chroot
 # intended for run with debian-setup profile
