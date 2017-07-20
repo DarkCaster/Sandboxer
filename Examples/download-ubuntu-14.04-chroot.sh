@@ -12,22 +12,22 @@ check_errors () {
   fi
 }
 
-[[ ! -d $script_dir/ubuntu_chroot ]] || check_errors "directory $script_dir/ubuntu_chroot already exist!"
+[[ ! -d $script_dir/debian_chroot ]] || check_errors "directory $script_dir/debian_chroot already exist!"
 
 wget -O /tmp/ubuntu-root.tar.gz https://partner-images.canonical.com/core/trusty/current/ubuntu-trusty-core-cloudimg-amd64-root.tar.gz
 check_errors
 
-mkdir -p "$script_dir/ubuntu_chroot"
+mkdir -p "$script_dir/debian_chroot"
 check_errors
 
-cd "$script_dir/ubuntu_chroot"
+cd "$script_dir/debian_chroot"
 check_errors
 
 gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
 check_errors
 
 #remove machine-id, will be generated automatically
-rm -f "$script_dir/ubuntu_chroot/etc/machine-id"
+rm -f "$script_dir/debian_chroot/etc/machine-id"
 check_errors
 
 rm /tmp/ubuntu-root.tar.gz
