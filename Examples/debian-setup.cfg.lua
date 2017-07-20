@@ -13,8 +13,8 @@
 
 -- it is strongly discouraged to use this config to run normal applications inside sandbox. you should use it only for setup purposes of external chroot.
 
+-- chroot directory name, relative to this config file directory
 tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
---tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot") -- for ubuntu distribution
 
 -- special tweaks applied to some of "defaults" entries when using "root" username
 -- use "root" username for sandbox only if you want to get pseudo-superuser session
@@ -22,31 +22,31 @@ tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
 tunables.user="root"
 tunables.uid=0
 tunables.gid=0
--- use different build of x11 util, if you experience problems, for example:
--- tunables.features.x11util_build="ubuntu-16.04"
--- tunables.features.x11util_build="debian-8"
 
--- DO NOT FORGET TO LAUNCH THIS IF YOU SET ANY "tubables.*" VARIABLE ABOVE!
-defaults.recalculate()
-
--- detect debian version
-function read_debian_version()
+-- detect os version
+function read_os_version()
   local lines = {}
+  local os_id="debian"
+  local os_version=0
   for line in io.lines(loader.path.combine(tunables.chrootdir,"etc","os-release")) do
     lines[#lines + 1] = line
   end
   for _,line_val in pairs(lines) do
-    -- VERSION_ID="9 %d+
-    if string.match(line_val,'VERSION_ID') ~= nil then return tonumber(string.match(line_val,'%d+')) end
+    if string.match(line_val,'VERSION_ID="%d+"') ~= nil then
+      os_version=tonumber(string.match(line_val,'%d+'))
+    elseif string.match(line_val,'ID=%w+') ~= nil then
+      _,os_id=string.match(line_val,'(ID=)(%w+)')
+    end
   end
-  return 0
+  return os_id, os_version
 end
 
-debian_version=read_debian_version()
-assert(type(debian_version)=="number", "failed to parse debian version from etc/os_release file")
+os_id,os_version=read_os_version()
+assert(type(os_id)=="string", "failed to parse os id from etc/os_release file")
+assert(type(os_version)=="number", "failed to parse os version from etc/os_release file")
 
 -- detect debian arch (arch label file created by debian download script)
-function read_debian_arch()
+function read_os_arch()
   local arch_label_file = io.open(loader.path.combine(tunables.chrootdir,"arch-label"), "r")
   local arch_label="amd64"
   if arch_label_file then
@@ -55,7 +55,21 @@ function read_debian_arch()
   end
   return arch_label
 end
-debian_arch=read_debian_arch()
+os_arch=read_os_arch()
+
+if os_id=="debian" then
+  os_oldfs_ver=8
+elseif os_id=="ubuntu" then
+  os_oldfs_ver=16.10001
+else
+  os_oldfs_ver=999
+end
+
+-- set x11 test utility version
+tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
+
+-- DO NOT FORGET TO LAUNCH THIS IF YOU SET ANY "tubables.*" VARIABLE ABOVE!
+defaults.recalculate()
 
 sandbox={
   features={
@@ -63,10 +77,11 @@ sandbox={
     "x11host", -- to run synaptic, for example, if you need it. you may safely remove unsecure x11 integration from this temporary "setup" config if you need.
   },
   setup={
-    executor_build="default",
-    --use one of this builds, if you experience problems with default
-    --executor_build="ubuntu-16.04",
-    --executor_build="debian-8",
+    -- set executor utility build, precompiled executor binaries for various platforms may be downloaded by external script (TODO)
+    -- it will be set back to "default" executor binary, if missing
+    executor_build=os_id.."-"..os_version.."-"..os_arch,
+    --executor_build="default",
+
     commands={
       --disable automatic services startup on package installing
       --(or else dpkg configure stage will fail, because there is no running init daemon inside sandbox)
@@ -121,7 +136,7 @@ sandbox={
 }
 
 -- add remaining mounts, depending on detected debian version
-if debian_version > 8 then
+if os_version > os_oldfs_ver then
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})
@@ -143,7 +158,7 @@ end
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/",
-  args={"debian-"..debian_version.."-"..debian_arch,"/bin/bash","--login"},
+  args={"debian-"..os_version.."-"..os_arch,"/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },

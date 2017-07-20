@@ -13,38 +13,41 @@
 
 -- it is strongly recommended to use this config rather than debian-setup.cfg.lua to run regular software, most of desktop integration options enabled by default with this config.
 
+-- chroot directory name, relative to this config file directory
 tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
---tunables.chrootdir=loader.path.combine(loader.workdir,"ubuntu_chroot") -- for ubuntu rootfs downloaded by download-debian-*-chroot.sh scripts
+
 tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.xpra_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
--- use different build of x11 util, if you experience problems, for example:
--- tunables.features.x11util_build="ubuntu-16.04"
--- tunables.features.x11util_build="debian-8"
-tunables.features.pulse_env_alsa_config="skip" -- set custom alsa config file path, exported as ALSA_CONFIG_PATH. "skip" will disable export this var to sandbox, which is neccecary for stock ubuntu or debian based chroot.
 
-defaults.recalculate()
+-- set custom alsa config file path, exported as ALSA_CONFIG_PATH. "skip" will disable export this var to sandbox, which is neccecary for stock ubuntu or debian based chroot.
+tunables.features.pulse_env_alsa_config="skip"
 
--- TODO: detect ubuntu and it's version
-
--- detect debian version
-function read_debian_version()
+-- detect os version
+function read_os_version()
   local lines = {}
+  local os_id="debian"
+  local os_version=0
   for line in io.lines(loader.path.combine(tunables.chrootdir,"etc","os-release")) do
     lines[#lines + 1] = line
   end
   for _,line_val in pairs(lines) do
-    if string.match(line_val,'VERSION_ID') ~= nil then return tonumber(string.match(line_val,'%d+')) end
+    if string.match(line_val,'VERSION_ID="%d+"') ~= nil then
+      os_version=tonumber(string.match(line_val,'%d+'))
+    elseif string.match(line_val,'ID=%w+') ~= nil then
+      _,os_id=string.match(line_val,'(ID=)(%w+)')
+    end
   end
-  return 0
+  return os_id, os_version
 end
 
-debian_version=read_debian_version()
-assert(type(debian_version)=="number", "failed to parse debian version from etc/os_release file")
+os_id,os_version=read_os_version()
+assert(type(os_id)=="string", "failed to parse os id from etc/os_release file")
+assert(type(os_version)=="number", "failed to parse os version from etc/os_release file")
 
 -- detect debian arch (arch label file created by debian download script)
-function read_debian_arch()
+function read_os_arch()
   local arch_label_file = io.open(loader.path.combine(tunables.chrootdir,"arch-label"), "r")
   local arch_label="amd64"
   if arch_label_file then
@@ -53,7 +56,20 @@ function read_debian_arch()
   end
   return arch_label
 end
-debian_arch=read_debian_arch()
+os_arch=read_os_arch()
+
+if os_id=="debian" then
+  os_oldfs_ver=8
+elseif os_id=="ubuntu" then
+  os_oldfs_ver=16.10001
+else
+  os_oldfs_ver=999
+end
+
+-- set x11 test utility build
+tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
+
+defaults.recalculate()
 
 sandbox={
   -- sandbox features and host-integration stuff that require some complex or dynamic preparations.
@@ -66,10 +82,11 @@ sandbox={
     "envfix",
   },
   setup={
-    executor_build="default",
-    --use one of this builds, if you experience problems with default
-    --executor_build="ubuntu-16.04",
-    --executor_build="debian-8",
+    -- set executor utility build, precompiled executor binaries for various platforms may be downloaded by external script (TODO)
+    -- it will be set back to "default" executor binary, if missing
+    executor_build=os_id.."-"..os_version.."-"..os_arch,
+    --executor_build="default",
+
     commands={
       -- usually, when creating sandbox from host env, it is recommended to dynamically construct etc dir for sandbox.
       -- construction is needed to filter some sensitive system configuration info
@@ -164,7 +181,7 @@ sandbox={
 }
 
 -- add remaining mounts, depending on detected debian version
-if debian_version > 8 then
+if os_version > os_oldfs_ver then
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})
