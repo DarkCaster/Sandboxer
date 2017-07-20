@@ -27,3 +27,6 @@ check_errors
 
 echo "i386" > "$script_dir/debian_chroot/arch-label"
 check_errors
+
+cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
+check_errors

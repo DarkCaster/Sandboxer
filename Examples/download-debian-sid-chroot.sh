@@ -24,3 +24,6 @@ check_errors
 #remove machine-id, will be generated automatically
 rm -f "$script_dir/debian_chroot/etc/machine-id"
 check_errors
+
+cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
+check_errors
