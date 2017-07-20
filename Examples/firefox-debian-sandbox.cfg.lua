@@ -9,9 +9,48 @@ tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.xpra_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
--- use different build of x11 util, if you experience problems, for example:
--- tunables.features.x11util_build="debian-8"
 tunables.features.pulse_env_alsa_config="skip"
+-- detect os version
+function read_os_version()
+  local lines = {}
+  local os_id="debian"
+  local os_version=0
+  for line in io.lines(loader.path.combine(tunables.chrootdir,"etc","os-release")) do
+    lines[#lines + 1] = line
+  end
+  for _,line_val in pairs(lines) do
+    if string.match(line_val,'VERSION_ID="%d+%.*%d*"') ~= nil then
+      os_version=tonumber(string.match(line_val,'%d+%.*%d*'))
+    elseif string.match(line_val,'ID=%w+') ~= nil then
+      _,os_id=string.match(line_val,'(ID=)(%w+)')
+    end
+  end
+  return os_id, os_version
+end
+os_id,os_version=read_os_version()
+assert(type(os_id)=="string", "failed to parse os id from etc/os_release file")
+assert(type(os_version)=="number", "failed to parse os version from etc/os_release file")
+-- detect debian arch (arch label file created by debian download script)
+function read_os_arch()
+  local arch_label_file = io.open(loader.path.combine(tunables.chrootdir,"arch-label"), "r")
+  local arch_label="amd64"
+  if arch_label_file then
+    arch_label = arch_label_file:read()
+    arch_label_file:close()
+  end
+  return arch_label
+end
+os_arch=read_os_arch()
+if os_id=="debian" then
+  os_oldfs_ver=8
+elseif os_id=="ubuntu" then
+  os_oldfs_ver=999 -- for now, cloudimg for 17.04 use old fs layout without symlinks for /bin /sbin /lib, etc ...
+  -- os_oldfs_ver=17.04001
+else
+  os_oldfs_ver=999
+end
+-- set x11 test utility build
+tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 defaults.recalculate()
 
 sandbox={
@@ -24,7 +63,7 @@ sandbox={
     "envfix",
   },
   setup={
-    executor_build="debian-8",
+    executor_build=os_id.."-"..os_version.."-"..os_arch,
     commands={
       defaults.commands.resolvconf,
       defaults.commands.machineid_static,
@@ -50,11 +89,7 @@ sandbox={
       defaults.mounts.var_cache_mount,
       defaults.mounts.var_tmp_mount,
       defaults.mounts.var_lib_mount,
-      defaults.mounts.bin_ro_mount,
-      --defaults.mounts.sbin_ro_mount,
       defaults.mounts.usr_ro_mount,
-      defaults.mounts.lib_ro_mount,
-      defaults.mounts.lib64_ro_mount,
       defaults.mounts.host_etc_mount,
       defaults.mounts.passwd_mount,
       defaults.mounts.machineid_mount,
@@ -78,6 +113,21 @@ sandbox={
     defaults.bwrap.gid,
   }
 }
+
+-- add remaining mounts, depending on detected debian version
+if os_version > os_oldfs_ver then
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib64","lib64"})
+  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/libx32","libx32"})
+  --table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/sbin","sbin"})
+else
+  table.insert(sandbox.setup.mounts, defaults.mounts.bin_ro_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.lib_ro_mount)
+  table.insert(sandbox.setup.mounts, defaults.mounts.lib64_ro_mount)
+  --table.insert(sandbox.setup.mounts, defaults.mounts.sbin_ro_mount)
+end
 
 desktop_data={
   name = "Firefox in debian sandbox",
