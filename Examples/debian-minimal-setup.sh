@@ -38,7 +38,7 @@ dpkg-reconfigure tzdata
 check_errors
 
 # additional packages for dbus, x11, mesa, pulse integration and package management gui (synaptic) with minimal x11 stack
-apt-get install -y net-tools mc libpulse0 mesa-utils lsb-release synaptic
+apt-get install -y net-tools mc libpulse0 mesa-utils lsb-release wget synaptic
 check_errors
 
 apt-get dist-upgrade -y
