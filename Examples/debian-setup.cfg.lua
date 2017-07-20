@@ -16,58 +16,15 @@
 -- chroot directory name, relative to this config file directory
 tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
 
+-- detect debian\ubuntu os version
+dofile(loader.path.combine(loader.workdir,"debian-version-probe.lua.in"))
+
 -- special tweaks applied to some of "defaults" entries when using "root" username
 -- use "root" username for sandbox only if you want to get pseudo-superuser session
 -- do not set it for regular sandbox usage
 tunables.user="root"
 tunables.uid=0
 tunables.gid=0
-
--- detect os version
-function read_os_version()
-  local lines = {}
-  local os_id="debian"
-  local os_version=0
-  for line in io.lines(loader.path.combine(tunables.chrootdir,"etc","os-release")) do
-    lines[#lines + 1] = line
-  end
-  for _,line_val in pairs(lines) do
-    if string.match(line_val,'VERSION_ID="%d+%.*%d*"') ~= nil then
-      os_version=tonumber(string.match(line_val,'%d+%.*%d*'))
-    elseif string.match(line_val,'ID=%w+') ~= nil then
-      _,os_id=string.match(line_val,'(ID=)(%w+)')
-    end
-  end
-  return os_id, os_version
-end
-
-os_id,os_version=read_os_version()
-assert(type(os_id)=="string", "failed to parse os id from etc/os_release file")
-assert(type(os_version)=="number", "failed to parse os version from etc/os_release file")
-
--- detect debian arch (arch label file created by debian download script)
-function read_os_arch()
-  local arch_label_file = io.open(loader.path.combine(tunables.chrootdir,"arch-label"), "r")
-  local arch_label="amd64"
-  if arch_label_file then
-    arch_label = arch_label_file:read()
-    arch_label_file:close()
-  end
-  return arch_label
-end
-os_arch=read_os_arch()
-
-if os_id=="debian" then
-  os_oldfs_ver=8
-elseif os_id=="ubuntu" then
-  os_oldfs_ver=999 -- for now, cloudimg for 17.04 use old fs layout without symlinks for /bin /sbin /lib, etc ...
-  -- os_oldfs_ver=17.04001
-else
-  os_oldfs_ver=999
-end
-
--- set x11 test utility version
-tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 
 -- DO NOT FORGET TO LAUNCH THIS IF YOU SET ANY "tubables.*" VARIABLE ABOVE!
 defaults.recalculate()
