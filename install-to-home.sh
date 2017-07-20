@@ -75,7 +75,7 @@ check_error
 
 echo "Installing examples"
 
-for example in "$target/examples"/*.cfg.lua "$target/examples"/*.sh
+for example in "$target/examples"/*.cfg.lua "$target/examples"/*.sh "$target/examples"/*.txt "$target/examples"/*.lua.in
 do
   [[ ! -f $example ]] && continue
   echo "Moving existing example $example to $example.bak"
@@ -83,7 +83,7 @@ do
   check_error
 done
 
-for example in "$curdir/Examples"/*.cfg.lua "$curdir/Examples"/*.sh
+for example in "$curdir/Examples"/*.cfg.lua "$curdir/Examples"/*.sh "$curdir/Examples"/*.txt "$curdir/Examples"/*.lua.in
 do
   [[ ! -f $example ]] && continue
   cp "$example" "$target/examples"
