@@ -5,7 +5,7 @@
 
 -- do not forget to install following packages in addition to packages from debian-minimal-setup.sh:
 -- libxslt1.1
--- lynx (or any other browser that may be started by xdg-open and able to perform dropbox auth)
+-- midori (or any other js capable browser that may be started with xdg-open by dropbox in order to perform initial auth)
 
 tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
 dofile(loader.path.combine(loader.workdir,"debian-version-probe.lua.in"))
