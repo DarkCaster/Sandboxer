@@ -117,7 +117,7 @@ shell={
 desktop_data={
   name = "Dropbox in sandbox",
   comment = "Start dropbox in sandbox with uid "..config.sandbox_uid,
-  icon = "dropbox",
+  icon = loader.path.combine(tunables.datadir,"home","sandboxer","dropbox-linux.png"),
   terminal = false,
   startupnotify = false,
   categories="Network;FileTransfer;"
@@ -125,12 +125,17 @@ desktop_data={
 
 dropbox_install={
   exec="/bin/sh",
-  args={ "-c", "test ! -d .dropbox-dist && cd ~ && ( wget -O - \"https://www.dropbox.com/download?plat=lnx.x86_64\" | tar xzf - ) && .dropbox-dist/dropboxd" },
   path="/home/sandboxer",
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
 }
+
+if os_arch == "i386" then
+  dropbox_install.args={ "-c", "test ! -d .dropbox-dist && wget -O dropbox-linux.png \"https://www.dropbox.com/s/ijfcdopwi2pbsj9/dropbox-linux.png?raw=1\" && ( wget -O - \"https://www.dropbox.com/download?plat=lnx.x86\" | tar xzf - ) && .dropbox-dist/dropboxd" }
+elseif os_arch == "amd64" then
+  dropbox_install.args={ "-c", "test ! -d .dropbox-dist && wget -O dropbox-linux.png \"https://www.dropbox.com/s/ijfcdopwi2pbsj9/dropbox-linux.png?raw=1\" && ( wget -O - \"https://www.dropbox.com/download?plat=lnx.x86_64\" | tar xzf - ) && .dropbox-dist/dropboxd" }
+end
 
 dropbox={
   exec="/home/sandboxer/.dropbox-dist/dropboxd",
