@@ -106,6 +106,8 @@ sandbox={
     --"xpra", -- make x11 pass-through with xpra software. FOR RUNNING X11 APPS IN MORE SECURE MANNER than with x11host feature.
               -- you must select only one of x11 forwarding method - x11host or xpra. Requires dbus feature to be activated before.
               -- xpra software with server-mode support must be installed on host (and inside sandbox - when using external chroot).
+              -- TODO: add some additional checks for xpra in sandbox sanity.
+              -- (for example, xauth utility is needed for official xpra installation on debian stretch, but it will be not installed by default)
     "envfix", -- fix final env variables in sandbox - change all links to host home dir to sandboxed home dir
   },
 

@@ -25,7 +25,7 @@ sandbox={
     "gvfs_fix",
     "pulse",
     "x11host", -- less secure, try this if you do not have xpra software
-    --"xpra", -- more secure, you must install xpra software suite with server and client functionality.
+    --"xpra", -- more secure, you must install xpra software suite with server and client functionality. NOTE: do not forget to install xauth utility
     "envfix",
   },
   setup={
