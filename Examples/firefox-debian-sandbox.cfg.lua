@@ -20,8 +20,8 @@ sandbox={
     "dbus",
     "gvfs_fix",
     "pulse",
-    --"x11host", -- less secure, try this if you do not have xpra software
-    "xpra", -- more secure, you must install xpra software suite with server and client functionality.
+    "x11host", -- less secure, try this if you do not have xpra software
+    --"xpra", -- more secure, you must install xpra software suite with server and client functionality.
     "envfix",
   },
   setup={
@@ -66,7 +66,7 @@ sandbox={
 
   bwrap={
     defaults.bwrap.unshare_user,
-    defaults.bwrap.unshare_ipc,
+    -- defaults.bwrap.unshare_ipc,
     defaults.bwrap.unshare_pid,
     -- defaults.bwrap.unshare_net,
     defaults.bwrap.unshare_uts,
