@@ -5,7 +5,7 @@ bash_bin=`2>/dev/null which bash`
 dash_bin=`2>/dev/null which dash`
 
 [[ -z $bash_bin ]] && exit 0
-[[ -z $dash_bin ]] && dash_bin="#!/bin/sh"
+[[ -z $dash_bin ]] && dash_bin="/bin/sh"
 
 shebang=`head -n1 "$target"`
 
@@ -25,4 +25,3 @@ fi
 
 echo "Updating shebang to \"$result\" for file: $target"
 sed -i '1s|.*|'"$result"'|' "$target"
-
