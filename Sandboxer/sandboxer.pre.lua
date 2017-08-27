@@ -323,6 +323,7 @@ function defaults.recalculate()
   if config.gid~=tunables.gid then defaults.bwrap.gid={prio=5,tag="gid","gid",tunables.gid} else defaults.bwrap.gid={} end
   tunables.features.gvfs_fix_dir=loader.path.combine(tunables.configdir,"gvfs_fix")
   tunables.features.pulse_dir=loader.path.combine(tunables.configdir,"pulse")
+  tunables.features.alsa_dir=loader.path.combine(tunables.configdir,"alsa")
   tunables.features.fixups_dir=loader.path.combine(tunables.configdir,"fixups")
   tunables.features.envfix_home=tunables.auto.chroot_user_path
   tunables.features.x11host_target_dir=tunables.auto.user_path

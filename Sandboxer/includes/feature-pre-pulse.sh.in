@@ -78,6 +78,38 @@ if [[ $pulse_server_is_socket = true || ! -z $pulse_server ]]; then
   if [[ ! -z ${cfg[tunables.features.pulse_env_alsa_config]} ]]; then
     if [[ ${cfg[tunables.features.pulse_env_alsa_config]} = unset ]]; then
       env_unset_add "ALSA_CONFIG_PATH"
+    elif [[ ${cfg[tunables.features.pulse_env_alsa_config]} = auto ]]; then
+      # try to copy alsa config from host, and set ALSA_CONFIG_PATH
+      #TODO: move non-pulseaudio alsa-only preparations to separate -pre|-post features
+      mkdir -p "${cfg[tunables.features.alsa_dir]}"
+      check_errors
+      for alsa_cfg in "asound.conf" "asound-pulse.conf"
+      do
+        if [[ -f "/etc/$alsa_cfg" ]]; then
+          cp "/etc/$alsa_cfg" "${cfg[tunables.features.alsa_dir]}"
+          check_errors
+          touch "${cfg[tunables.auto.etc_path]}/$alsa_cfg"
+          check_errors
+          if [[ tunables.etchost_path != "/etc" ]]; then
+            touch "${cfg[tunables.etchost_path]}/$alsa_cfg"
+            check_errors
+          fi
+          sandbox_bind_ro "${cfg[tunables.features.alsa_dir]}/$alsa_cfg" "/etc/$alsa_cfg"
+        fi
+      done
+      if [[ ! -z $ALSA_CONFIG_PATH && -f $ALSA_CONFIG_PATH ]]; then
+        alsa_cfg=`basename "$ALSA_CONFIG_PATH"`
+        cp "$ALSA_CONFIG_PATH" "${cfg[tunables.features.alsa_dir]}/alsa_config_path.conf"
+        check_errors
+        touch "${cfg[tunables.auto.etc_path]}/$alsa_cfg"
+        check_errors
+        if [[ tunables.etchost_path != "/etc" ]]; then
+          touch "${cfg[tunables.etchost_path]}/$alsa_cfg"
+          check_errors
+        fi
+        sandbox_bind_ro "${cfg[tunables.features.alsa_dir]}/alsa_config_path.conf" "/etc/$alsa_cfg"
+        env_set_add "ALSA_CONFIG_PATH" "/etc/$alsa_cfg"
+      fi
     elif [[ ${cfg[tunables.features.pulse_env_alsa_config]} != skip ]]; then
       # export tunables.features.pulse_env_alsa_config value as ALSA_CONFIG_PATH to sandbox
       env_set_add "ALSA_CONFIG_PATH" "${cfg[tunables.features.pulse_env_alsa_config]}"
