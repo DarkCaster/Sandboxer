@@ -59,6 +59,14 @@ mkdir -p "$curdir/External"
 check_error
 
 if [[ ! -d $curdir/External/Fakeroot-UserNS ]]; then
+  function check_error {
+   if [[ $? != 0 ]]; then
+    echo "Fakeroot-UserNS configuration failed !!!"
+    cd "$curdir"
+    rm -rf "$curdir/External/Fakeroot-UserNS"
+    exit 1
+   fi
+  }
   cd "$curdir/External"
   git clone https://github.com/DarkCaster/Fakeroot-UserNS.git
   check_error
