@@ -11,7 +11,7 @@ tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.xpra_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
-tunables.features.pulse_env_alsa_config="skip"
+tunables.features.pulse_env_alsa_config="auto"
 tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 defaults.recalculate()
 
@@ -56,7 +56,7 @@ sandbox={
       defaults.mounts.passwd_mount,
       defaults.mounts.machineid_mount,
       defaults.mounts.resolvconf_mount,
-      --defaults.mounts.devsnd_mount, -- for alsa support.
+      --defaults.mounts.devsnd_mount, -- for direct alsa support (alsa-pulse may work without it).
       --defaults.mounts.devdri_mount, -- may be needed when using x11host for opengl acceleration
       --defaults.mounts.sys_mount, -- may be needed when using x11host for opengl acceleration
       --defaults.mounts.devinput_mount, -- joystics
