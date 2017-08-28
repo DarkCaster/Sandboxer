@@ -34,6 +34,9 @@ check_errors
 dpkg-reconfigure apt-utils
 check_errors
 
+apt-get install tzdata -y
+check_errors
+
 dpkg-reconfigure tzdata
 check_errors
 
