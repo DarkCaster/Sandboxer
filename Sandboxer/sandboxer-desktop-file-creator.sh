@@ -151,8 +151,9 @@ if check_lua_export profile.desktop.mime_list; then
   fi
   echo "running update-mime-database"
   update-mime-database "$HOME/.local/share/mime"
-  echo "running update-desktop-database"
-  update-desktop-database "$HOME/.local/share/applications"
 fi
+
+echo "running update-desktop-database"
+update-desktop-database "$HOME/.local/share/applications"
 
 rm -rf "$tmp_dir"
