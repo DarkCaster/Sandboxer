@@ -68,16 +68,6 @@ sandbox={
   }
 }
 
-desktop_data={
-  name = "Firefox in sandbox",
-  comment = "Firefox browser run in sandbox uid "..config.sandbox_uid,
-  icon = "firefox",
-  mimetype = "x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;",
-  terminal = false,
-  startupnotify = false,
-  categories="Network;WebBrowser;GTK;"
-}
-
 shell={
   exec="/bin/bash",
   path="/",
@@ -87,7 +77,7 @@ shell={
   attach=true,
   pty=true,
   desktop={
-    name = "Shell for debian-firefox sandbox",
+    name = "Shell for host-firefox sandbox",
     comment = "shell for sandbox uid "..config.sandbox_uid,
     icon = "terminal",
     terminal = true,
@@ -113,7 +103,16 @@ firefox={
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
-  desktop=desktop_data,
+  desktop={
+    name = "Firefox (in sandbox)",
+    comment = "Firefox browser, sandbox uid "..config.sandbox_uid,
+    icon = "firefox",
+    mimetype = "x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;",
+    field_code="%u",
+    terminal = false,
+    startupnotify = false,
+    categories="Network;WebBrowser;GTK;"
+  },
 }
 
 firefox_home_log={
@@ -134,5 +133,14 @@ firefox_home={
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
-  desktop=desktop_data,
+  desktop={
+    name = "Firefox (in sandbox)",
+    comment = "Firefox browser, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"home","sandboxer","firefox","browser","icons","mozicon128.png"),
+    mimetype = "x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;",
+    field_code="%u",
+    terminal = false,
+    startupnotify = false,
+    categories="Network;WebBrowser;GTK;"
+  },
 }
