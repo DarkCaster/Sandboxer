@@ -80,17 +80,12 @@ sandbox={
 }
 
 -- add remaining mounts, depending on detected debian version
+add_debian_mounts()
+
+-- add sbin mounts
 if os_version > os_oldfs_ver then
-  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
-  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
-  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})
-  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib64","lib64"})
-  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/libx32","libx32"})
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/sbin","sbin"})
 else
-  table.insert(sandbox.setup.mounts, defaults.mounts.bin_ro_mount)
-  table.insert(sandbox.setup.mounts, defaults.mounts.lib_ro_mount)
-  table.insert(sandbox.setup.mounts, defaults.mounts.lib64_ro_mount)
   table.insert(sandbox.setup.mounts, defaults.mounts.sbin_ro_mount)
 end
 
