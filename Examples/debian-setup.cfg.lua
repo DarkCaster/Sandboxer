@@ -104,7 +104,9 @@ if os_version > os_oldfs_ver then
 else
   table.insert(sandbox.setup.mounts, defaults.mounts.bin_rw_mount)
   table.insert(sandbox.setup.mounts, defaults.mounts.lib_rw_mount)
-  table.insert(sandbox.setup.mounts, defaults.mounts.lib64_rw_mount)
+  if os_arch=="amd64" then
+    table.insert(sandbox.setup.mounts, defaults.mounts.lib64_rw_mount)
+  end
   table.insert(sandbox.setup.mounts, defaults.mounts.sbin_rw_mount)
 end
 
