@@ -64,6 +64,7 @@ sandbox={
 
       -- mount directory with media files to the same point, so it can be opened directly by using information from desktop file
       {prio=99,"ro-bind","/mnt/data","/mnt/data"},
+      {prio=99,"ro-bind","/mnt/nas","/mnt/nas"},
     },
   },
 
