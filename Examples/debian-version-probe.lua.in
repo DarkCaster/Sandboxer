@@ -32,8 +32,8 @@ function read_os_arch()
 end
 os_arch=read_os_arch()
 
-if os_id=="debian" then
-  os_oldfs_ver=8
+if os_id=="debian" and os_arch=="amd64" then
+  os_oldfs_ver=8 -- for now, only amd64 debian build (version 9 and up) use new fs layout
 elseif os_id=="ubuntu" then
   os_oldfs_ver=999 -- for now, cloudimg for 17.04 use old fs layout without symlinks for /bin /sbin /lib, etc ...
   -- os_oldfs_ver=17.04001
@@ -56,7 +56,9 @@ function add_debian_mounts()
   else
     table.insert(sandbox.setup.mounts, defaults.mounts.bin_ro_mount)
     table.insert(sandbox.setup.mounts, defaults.mounts.lib_ro_mount)
-    table.insert(sandbox.setup.mounts, defaults.mounts.lib64_ro_mount)
+    if os_arch=="amd64" then
+      table.insert(sandbox.setup.mounts, defaults.mounts.lib64_ro_mount)
+    end
     --table.insert(sandbox.setup.mounts, defaults.mounts.sbin_ro_mount)
   end
 end
