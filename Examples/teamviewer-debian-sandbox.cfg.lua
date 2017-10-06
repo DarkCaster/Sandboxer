@@ -20,7 +20,7 @@ sandbox={
   -- sandbox features and host-integration stuff that require some complex or dynamic preparations.
   -- features are enabled in order of appearance, feature name may contain only lowercase letters, numbers and underscores.
   features={
-    "dbus",
+    --"dbus",
     "gvfs_fix",
     "pulse",
     "x11host",
@@ -82,13 +82,6 @@ sandbox={
 -- add remaining mounts, depending on detected debian version
 add_debian_mounts()
 
--- add sbin mounts
-if os_version > os_oldfs_ver then
-  table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/sbin","sbin"})
-else
-  table.insert(sandbox.setup.mounts, defaults.mounts.sbin_ro_mount)
-end
-
 shell={
   exec="/bin/bash",
   args={"-l"},
@@ -99,4 +92,22 @@ shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+}
+
+teamviewer={
+  exec="/home/sandboxer/teamviewer/teamviewer",
+  path="/home/sandboxer/teamviewer",
+  args={},
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+  exclusive=true,
+  desktop={
+    name = "TeamViewer (in sandbox)",
+    comment = "Remote control and meeting solution, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"home","sandboxer","teamviewer","tv_bin","desktop","teamviewer.png"),
+    terminal = false,
+    startupnotify = false,
+    categories="Network;Application;"
+  },
 }
