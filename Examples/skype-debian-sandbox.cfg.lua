@@ -125,7 +125,6 @@ skype={
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
-  desktop=desktop_data,
   desktop={
     name = "Skype (in sandbox)",
     comment = "Skype, sandbox uid "..config.sandbox_uid,
