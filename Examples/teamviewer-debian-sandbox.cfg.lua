@@ -1,4 +1,11 @@
--- example config for teamviewer sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
+-- example config for teamviewer sandbox.
+-- you need to use i386-based debian chroot downloaded with download-debian-stretch-i386-chroot.sh script and prepared with debian-setup.cfg.lua config.
+-- if using x86_64 host env you must also use i386 session management utilities: https://github.com/DarkCaster/Sandboxer/releases/tag/external-binaries .
+-- (archives downloaded from link above should be extracted to ~/.cache/sandboxer directory).
+-- TODO: add helper script for automatic download of precompiled binaries.
+-- you must also manually install libpng12-0 package from debian jessie (it was removed in stretch distro).
+-- see https://packages.debian.org/jessie/libpng12-0 for download links, and install package into debian chroot manually with "dpkg -i" command.
+
 -- this config is based on example.cfg.lua, most comments removed.
 
 -- chroot directory name, relative to this config file directory
@@ -20,7 +27,7 @@ sandbox={
   -- sandbox features and host-integration stuff that require some complex or dynamic preparations.
   -- features are enabled in order of appearance, feature name may contain only lowercase letters, numbers and underscores.
   features={
-    --"dbus",
+    --"dbus", -- looks like it is not needed, at least for outgoing sessions
     "gvfs_fix",
     "pulse",
     "x11host",
