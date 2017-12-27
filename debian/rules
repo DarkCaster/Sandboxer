@@ -1,6 +1,10 @@
 #!/usr/bin/make -f
 DH_VERBOSE = 1
 DPKG_EXPORT_BUILDFLAGS = 1
+TARGET_PREFIX=/usr/lib/sandboxer
+PACKAGE=sandboxer
+TARGET_INSTALL_PREFIX=debian/$(PACKAGE)$(TARGET_PREFIX)
+BIN_INSTALL_PREFIX=debian/$(PACKAGE)/usr/bin
 
 include /usr/share/dpkg/default.mk
 %:
@@ -8,16 +12,31 @@ include /usr/share/dpkg/default.mk
 
 override_dh_auto_clean:
 	dh_auto_clean -Scmake -DExecutor -BBuild/Executor-build
-#	dh_auto_clean -Scmake -DX11Util -BBuild/X11Util-build
+	dh_auto_clean -Scmake -DX11Util -BBuild/X11Util-build
 
 override_dh_auto_configure:
-	dh_auto_configure -Scmake -DExecutor -BBuild/Executor-build -- -DCMAKE_INSTALL_PREFIX="/usr/lib/sandboxer"
-#	dh_auto_configure -Scmake -DX11Util -BBuild/X11Util-build -- -DCMAKE_INSTALL_PREFIX="/usr/lib/sandboxer"
+	dh_auto_configure -Scmake -DExecutor -BBuild/Executor-build -- -DCMAKE_INSTALL_PREFIX="$(TARGET_PREFIX)/bin"
+	dh_auto_configure -Scmake -DX11Util -BBuild/X11Util-build -- -DCMAKE_INSTALL_PREFIX="$(TARGET_PREFIX)/bin"
 
 override_dh_auto_build:
 	dh_auto_build -Scmake -DExecutor -BBuild/Executor-build
-#	dh_auto_build -Scmake -DX11Util -BBuild/X11Util-build
+	dh_auto_build -Scmake -DX11Util -BBuild/X11Util-build
 
 override_dh_auto_install:
 	dh_auto_install -Scmake -DExecutor -BBuild/Executor-build
-#	dh_auto_install -Scmake -DX11Util -BBuild/X11Util-build
+	dh_auto_install -Scmake -DX11Util -BBuild/X11Util-build
+	cp "Sandboxer/sandboxer.sh" "$(TARGET_INSTALL_PREFIX)/bin"
+	cp "Sandboxer/sandboxer-desktop-file-creator.sh" "$(TARGET_INSTALL_PREFIX)/bin"
+	cp "Sandboxer/sandboxer.pre.lua" "$(TARGET_INSTALL_PREFIX)/bin"
+	cp "Sandboxer/sandboxer.post.lua" "$(TARGET_INSTALL_PREFIX)/bin"
+	cp -r "Sandboxer/fixups" "$(TARGET_INSTALL_PREFIX)/bin"
+	cp -r "Sandboxer/includes" "$(TARGET_INSTALL_PREFIX)/bin"
+	cp -r "Sandboxer/tools" "$(TARGET_INSTALL_PREFIX)/bin"
+	"BashLuaHelper/install.sh" "$(TARGET_INSTALL_PREFIX)/bin/BashLuaHelper"
+	mkdir -p "$(TARGET_INSTALL_PREFIX)/examples"
+	cp "Examples"/*.cfg.lua "$(TARGET_INSTALL_PREFIX)/examples"
+	cp "Examples"/*.txt "$(TARGET_INSTALL_PREFIX)/examples"
+	cp "Examples"/*.lua.in "$(TARGET_INSTALL_PREFIX)/examples"
+	mkdir -p "$(BIN_INSTALL_PREFIX)"
+	ln -s "$(TARGET_PREFIX)/bin/sandboxer.sh" "$(BIN_INSTALL_PREFIX)/sandboxer"
+	ln -s "$(TARGET_PREFIX)/bin/sandboxer-desktop-file-creator.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-desktop-file-creator.sh"
