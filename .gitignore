@@ -3,3 +3,5 @@
 /Build/
 /Deps/
 /External/
+/debian/*.log
+/debian/sandboxer
