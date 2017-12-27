@@ -2,12 +2,12 @@ Source: sandboxer
 Section: admin
 Priority: optional
 Maintainer: DarkCaster <dark.caster@outlook.com>
-Build-Depends: build-essential, libx11-dev, libxext-dev, cmake, lua5.1, debhelper (>= 9)
+Build-Depends: build-essential, libx11-dev, libxext-dev, cmake, bash, dash, lua5.1, debhelper (>= 9)
 Standards-Version: 3.9.5
 Homepage: https://github.com/DarkCaster/Sandboxer
 
 Package: sandboxer
 Architecture: any
-Depends: bubblewrap, lua (>= 5.1), ${shlibs:Depends}, ${misc:Depends}
+Depends: bubblewrap, bash, dash, lua (>= 5.1), ${shlibs:Depends}, ${misc:Depends}
 Description: application isolation suite
  Simple and customizable application sandboxing/isolation suite
