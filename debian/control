@@ -11,8 +11,3 @@ Architecture: any
 Depends: bubblewrap, ${shlibs:Depends}, ${misc:Depends}
 Description: application isolation suite
  Simple and customizable application sandboxing/isolation suite
-
-Package: sandboxer-doc
-Architecture: all
-Description: documentation for sandboxer
- Simple and customizable application sandboxing/isolation suite
