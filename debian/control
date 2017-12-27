@@ -1,0 +1,18 @@
+Source: sandboxer
+Section: admin
+Priority: optional
+Maintainer: DarkCaster <dark.caster@outlook.com>
+Build-Depends: build-essential, cmake, debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: https://github.com/DarkCaster/Sandboxer
+
+Package: sandboxer
+Architecture: any
+Depends: bubblewrap, ${shlibs:Depends}, ${misc:Depends}
+Description: application isolation suite
+ Simple and customizable application sandboxing/isolation suite
+
+Package: sandboxer-doc
+Architecture: all
+Description: documentation for sandboxer
+ Simple and customizable application sandboxing/isolation suite
