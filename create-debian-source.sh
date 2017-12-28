@@ -6,8 +6,9 @@ set -e
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
 target="$1"
+distro="$3"
 key="$2"
-[[ -z $target ]] && echo "usage: create-debian-source.sh <target directory> [sign key id]" && exit 1
+[[ -z $target ]] && echo "usage: create-debian-source.sh <target directory> [distro-id (examples: stable;unstable;xenial)] [sign key id]" && exit 1
 
 mkdir -p "$target/sandboxer"
 
@@ -17,6 +18,9 @@ git archive --format tar HEAD | (cd "$target/sandboxer" && tar xf -)
 cd "$curdir/BashLuaHelper"
 git archive --format tar HEAD | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
 cd "$target/sandboxer"
+
+[[ -z $distro ]] && sed -i "s|__DISTRO__|unstable|g" "$target/sandboxer/debian/changelog"
+[[ ! -z $distro ]] && sed -i "s|__DISTRO__|""$distro""|g" "$target/sandboxer/debian/changelog"
 
 if [[ -z $key ]]; then
   dpkg-buildpackage -d -S -us -uc

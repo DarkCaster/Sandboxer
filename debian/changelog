@@ -1,4 +1,4 @@
-sandboxer (0.4.dev) unstable; urgency=low
+sandboxer (0.4.dev) __DISTRO__; urgency=low
 
   * Initial Release.
 
