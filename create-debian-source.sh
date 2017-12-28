@@ -6,9 +6,10 @@ set -e
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
 target="$1"
-distro="$3"
-key="$2"
-[[ -z $target ]] && echo "usage: create-debian-source.sh <target directory> [distro-id (examples: stable;unstable;xenial)] [sign key id]" && exit 1
+distro="$2"
+key="$3"
+
+[[ -z $target ]] && echo "usage: create-debian-source.sh <target directory> [distroseries] [sign key id]" && exit 1
 
 mkdir -p "$target/sandboxer"
 
