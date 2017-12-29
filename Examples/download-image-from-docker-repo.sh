@@ -59,6 +59,7 @@ arch_tags=""
 while IFS='' read -r line || [[ -n "$line" ]]; do
   [[ -z $line && ! -z $git_repo && ! -z $tags && ! -z $git_commit && ! -z $directory ]] && break
   [[ $line =~ ^"GitRepo:"[[:space:]]*(.*)$ ]] && git_repo="${BASH_REMATCH[1]}" && continue
+  [[ $line =~ ^"${arch}-Directory:"[[:space:]]*(.*)$ ]] && directory="${BASH_REMATCH[1]}" && continue
   [[ $line =~ ^"Directory:"[[:space:]]*(.*)$ ]] && directory="${BASH_REMATCH[1]}" && continue
   if [[ $line =~ ^"Tags:"([[:space:]].*)$ ]]; then
     tags="${BASH_REMATCH[1]}"
@@ -68,7 +69,6 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
   [[ $line =~ ^"${arch}-GitCommit:"[[:space:]]*(.*)$ ]] && git_commit="${BASH_REMATCH[1]}" && continue
   [[ $line =~ ^"${arch}-GitFetch:"[[:space:]]*"refs/heads/"(.*)$ ]] && git_fetch="${BASH_REMATCH[1]}" && continue
   [[ $line =~ ^"GitCommit:"[[:space:]]*(.*)$ ]] && git_commit="${BASH_REMATCH[1]}" && continue
-  [[ $line =~ ^"GitFetch:"[[:space:]]*"refs/heads/"(.*)$ ]] && git_fetch="${BASH_REMATCH[1]}" && continue
   [[ $line =~ ^"GitFetch:"[[:space:]]*"refs/heads/"(.*)$ ]] && git_fetch="${BASH_REMATCH[1]}" && continue
   if [[ $line =~ ^"Architectures:"([[:space:]].*)$ && arch != none ]]; then
     arch_tags="${BASH_REMATCH[1]}"
