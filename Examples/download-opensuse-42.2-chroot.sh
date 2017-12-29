@@ -24,6 +24,9 @@ sed -i -e 's|^installRecommends.*$|# installRecommends = yes|g' "$script_dir/ope
 rm -f "$script_dir/opensuse_chroot/etc/machine-id"
 check_errors
 
+#create boot directory, if not exist
+mkdir -p "$script_dir/opensuse_chroot/boot"
+
 echo "#!/bin/sh" > "$script_dir/opensuse_chroot/root/bootstrap-minimal.sh"
 echo "zypper ref --force; zypper install dbus-1 aaa_base fipscheck glibc-locale ncurses-utils udev psmisc" >> "$script_dir/opensuse_chroot/root/bootstrap-minimal.sh"
 chmod 755 "$script_dir/opensuse_chroot/root/bootstrap-minimal.sh"
