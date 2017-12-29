@@ -35,6 +35,7 @@ override_dh_auto_install:
 	"BashLuaHelper/install.sh" "$(TARGET_INSTALL_PREFIX)/bin/BashLuaHelper"
 	mkdir -p "$(TARGET_INSTALL_PREFIX)/examples"
 	cp "Examples"/*.cfg.lua "$(TARGET_INSTALL_PREFIX)/examples"
+	cp "Examples"/*.sh "$(TARGET_INSTALL_PREFIX)/examples"
 	cp "Examples"/*.txt "$(TARGET_INSTALL_PREFIX)/examples"
 	cp "Examples"/*.lua.in "$(TARGET_INSTALL_PREFIX)/examples"
 	mkdir -p "$(BIN_INSTALL_PREFIX)"
