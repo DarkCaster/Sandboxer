@@ -5,8 +5,10 @@ curdir="$PWD"
 script_dir="$( cd "$( dirname "$0" )" && pwd )"
 self=`basename "$0"`
 [[ ! -e $script_dir/$self ]] && echo "script_dir detection failed. cannot proceed!" && exit 1
-script_file=`readlink "$script_dir/$self"`
-[[ ! -z $script_file ]] && script_dir=`realpath \`dirname "$script_file"\``
+if [[ -L $script_dir/$self ]]; then
+  script_file=`readlink -f "$script_dir/$self"`
+  script_dir=`realpath \`dirname "$script_file"\``
+fi
 
 #load parameters
 config="$1"
