@@ -28,11 +28,11 @@ check_errors
 mkdir -p "$script_dir/opensuse_chroot/boot"
 
 echo "#!/bin/sh" > "$script_dir/opensuse_chroot/root/bootstrap-minimal.sh"
-echo "zypper ref --force; zypper install dbus-1 aaa_base fipscheck glibc-locale ncurses-utils udev psmisc" >> "$script_dir/opensuse_chroot/root/bootstrap-minimal.sh"
+echo "zypper ref --force; zypper install -l -y dbus-1 aaa_base fipscheck glibc-locale ncurses-utils udev psmisc" >> "$script_dir/opensuse_chroot/root/bootstrap-minimal.sh"
 chmod 755 "$script_dir/opensuse_chroot/root/bootstrap-minimal.sh"
 
 echo "#!/bin/sh" > "$script_dir/opensuse_chroot/root/bootstrap-yast2.sh"
-echo "zypper ref --force; zypper install yast2-packager yast2-country yast2-fonts yast2-online-update-frontend yast2-online-update yast2-x11 yast2-qt yast2-qt-branding-openSUSE libyui-qt-pkg libyui-qt-graph xorg-x11-fonts gnu-free-fonts" >> "$script_dir/opensuse_chroot/root/bootstrap-yast2.sh"
+echo "zypper ref --force; zypper install -l -y yast2-packager yast2-country yast2-fonts yast2-online-update-frontend yast2-online-update yast2-x11 yast2-qt yast2-qt-branding-openSUSE libyui-qt-pkg libyui-qt-graph xorg-x11-fonts gnu-free-fonts" >> "$script_dir/opensuse_chroot/root/bootstrap-yast2.sh"
 chmod 755 "$script_dir/opensuse_chroot/root/bootstrap-yast2.sh"
 
 #echo some notes

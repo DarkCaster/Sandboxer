@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# download and extract opensuse 42.2 root-fs image from docker repository
+# download and extract opensuse 42.3 root-fs image from docker repository
 
 script_dir="$( cd "$( dirname "$0" )" && pwd )"
 
@@ -14,7 +14,7 @@ check_errors () {
   fi
 }
 
-"$script_dir/download-image-from-docker-repo.sh" opensuse 42.2 amd64 openSUSE-Leap-42.2.base.x86_64.tar.xz
+"$script_dir/download-image-from-docker-repo.sh" opensuse 42.3 amd64 openSUSE-Leap-42.3.base.x86_64.tar.xz
 check_errors "download-image-from-docker-repo.sh script failed!"
 
 #remove "installrecommends = no" for zypper, that was defined on image builds
