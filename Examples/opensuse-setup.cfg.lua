@@ -104,6 +104,7 @@ function concat_table(t1,t2)
 end
 
 -- invocation example: sandboxer opensuse-setup.cfg.lua fakeroot_exec echo ok
+-- command execution is performed by fakeroot script, so shell syntax and relative paths allowed
 fakeroot_exec={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",

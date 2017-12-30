@@ -102,7 +102,8 @@ function trim_args(t1)
   return t1
 end
 
--- invocation example: sandboxer opensuse-sandbox.cfg.lua cmd_exec /tmp echo "curdir is $PWD"
+-- invocation example: sandboxer opensuse-sandbox.cfg.lua cmd_exec / /bin/ls -la
+-- execution is performed by using execvp call, so you must provide absolute path for target binary
 cmd_exec={
   exec=loader.args[2],
   path=loader.args[1],
