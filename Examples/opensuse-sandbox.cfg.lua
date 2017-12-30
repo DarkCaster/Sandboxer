@@ -10,11 +10,12 @@
 -- it is strongly recommended to use this config rather than opensuse-setup.cfg.lua to run regular software, most of desktop integration options enabled by default with this config.
 
 tunables.chrootdir=loader.path.combine(loader.workdir,"opensuse_chroot")
+dofile(loader.path.combine(loader.workdir,"opensuse-version-probe.lua.in")) -- detect os, version and arch
 tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.xpra_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
-tunables.features.x11util_build="opensuse-42.2"
+tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 tunables.features.pulse_env_alsa_config="skip"
 defaults.recalculate()
 
@@ -27,7 +28,7 @@ sandbox={
     "envfix",
   },
   setup={
-    executor_build="opensuse-42.2",
+    executor_build=os_id.."-"..os_version.."-"..os_arch,
     commands={
       defaults.commands.machineid_static,
       defaults.commands.passwd,
@@ -93,4 +94,23 @@ shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+}
+
+function trim_args(t1)
+  table.remove(t1,1)
+  table.remove(t1,1)
+  return t1
+end
+
+-- invocation example: sandboxer opensuse-sandbox.cfg.lua cmd_exec /tmp echo "curdir is $PWD"
+cmd_exec={
+  exec=loader.args[2],
+  path=loader.args[1],
+  args=trim_args(loader.args),
+  env_set={
+    {"TERM",os.getenv("TERM")},
+  },
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
 }

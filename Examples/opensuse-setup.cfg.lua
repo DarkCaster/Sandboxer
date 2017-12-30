@@ -10,11 +10,12 @@
 -- it is strongly discouraged to use this config to run normal applications inside sandbox. you should use it only for setup purposes of external chroot.
 
 tunables.chrootdir=loader.path.combine(loader.workdir,"opensuse_chroot")
+dofile(loader.path.combine(loader.workdir,"opensuse-version-probe.lua.in")) -- detect os, version and arch
 tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc") -- needed for defaults.commands.machineid_host_etc
 tunables.user="root"
 tunables.uid=0
 tunables.gid=0
--- tunables.features.x11util_build="opensuse-42.2"
+tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 defaults.recalculate()
 
 sandbox={
@@ -23,7 +24,7 @@ sandbox={
     "x11host", -- to run yast and handy package manager gui
   },
   setup={
-    executor_build="opensuse-42.2",
+    executor_build=os_id.."-"..os_version.."-"..os_arch,
     commands={
       --remove tty system group. this will fix openpty failures
       {'cat etc/group | grep -vE \'^tty:x:[0-9].*:$\' > etc/group.new','mv etc/group.new etc/group'},
@@ -78,7 +79,7 @@ sandbox={
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args={"opensuse-42.2","/bin/bash","--login"},
+  args={os_id.."-"..os_version.."-"..os_arch,"/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },
@@ -93,4 +94,25 @@ fakeroot_shell={
     terminal = true,
     startupnotify = false,
   },
+}
+
+function concat_table(t1,t2)
+  for _,v in ipairs(t2) do
+    table.insert(t1, v)
+  end
+  return t1
+end
+
+-- invocation example: sandboxer opensuse-setup.cfg.lua fakeroot_exec echo ok
+fakeroot_exec={
+  exec="/fixups/fakeroot-session-starter.sh",
+  path="/root",
+  args=concat_table({os_id.."-"..os_version.."-"..os_arch},loader.args),
+  env_set={
+    {"TERM",os.getenv("TERM")},
+  },
+  term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
+  attach=true,
+  pty=false,
 }
