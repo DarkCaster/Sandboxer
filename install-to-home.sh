@@ -39,6 +39,18 @@ check_error
 cp "$curdir/Sandboxer/sandboxer-desktop-file-creator.sh" "$target/bin"
 check_error
 
+cp "$curdir/Sandboxer/sandboxer-kill.sh" "$target/bin"
+check_error
+
+cp "$curdir/Sandboxer/sandboxer-term.sh" "$target/bin"
+check_error
+
+cp "$curdir/Sandboxer/sandboxer-setup-phase-1.sh.in" "$target/bin"
+check_error
+
+cp "$curdir/Sandboxer/sandboxer-setup-phase-2.sh.in" "$target/bin"
+check_error
+
 cp "$curdir/Sandboxer/sandboxer.pre.lua" "$target/bin"
 check_error
 
@@ -98,6 +110,18 @@ rm -f "$HOME/bin/sandboxer"
 check_error
 
 ln -s "$target/bin/sandboxer.sh" "$HOME/bin/sandboxer"
+check_error
+
+rm -f "$HOME/bin/sandboxer-kill"
+check_error
+
+ln -s "$target/bin/sandboxer-kill.sh" "$HOME/bin/sandboxer-kill"
+check_error
+
+rm -f "$HOME/bin/sandboxer-term"
+check_error
+
+ln -s "$target/bin/sandboxer-term.sh" "$HOME/bin/sandboxer-term"
 check_error
 
 rm -f "$HOME/bin/sandboxer-desktop-file-creator.sh"
