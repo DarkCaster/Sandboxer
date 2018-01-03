@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+#includes dir
+includes_dir="$script_dir/includes"
+
+#tools_dir
+tools_dir="$script_dir/tools"
+
+#activate some loadables
+. "$includes_dir/loadables-helper.bash.in"
+
+#generate uid for given config file
+[[ ! -e $config ]] && echo "config file not found: $config" && exit 1
+config_uid=`realpath -s "$config" | md5sum -t | cut -f1 -d" "`
+
+#user id and group id
+uid=`id -u`
+gid=`id -g`
+
+#temp directory
+tmp_dir="$TMPDIR"
+[[ -z $tmp_dir || ! -d $tmp_dir ]] && tmp_dir="/tmp"

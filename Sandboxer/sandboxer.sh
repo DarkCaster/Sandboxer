@@ -18,120 +18,14 @@ profile="$1"
 [[ -z $profile ]] && echo "usage: sandboxer.sh <config file> <exec profile> [other parameters, will be forwarded to executed app]" && exit 1
 shift 1
 
-#includes dir
-includes_dir="$script_dir/includes"
-
-#tools_dir
-tools_dir="$script_dir/tools"
-
-#activate some loadables
-. "$includes_dir/loadables-helper.bash.in"
-
-#generate uid for given config file
-[[ ! -e $config ]] && echo "config file not found: $config" && exit 1
-config_uid=`realpath -s "$config" | md5sum -t | cut -f1 -d" "`
-
-#user id and group id
-uid=`id -u`
-gid=`id -g`
-
-#temp directory
-tmp_dir="$TMPDIR"
-[[ -z $tmp_dir || ! -d $tmp_dir ]] && tmp_dir="/tmp"
+. "$script_dir/sandboxer-setup-phase-1.sh.in"
 
 . "$includes_dir/find-lua-helper.bash.in" "$script_dir/BashLuaHelper" "$script_dir/../BashLuaHelper"
 . "$bash_lua_helper" "$config" -e sandbox -e profile -e dbus -e x11util -e xpra -e tunables -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "$tmp_dir" -o "$tmp_dir/sandbox-$config_uid" -o "$uid" -o "$gid" -x "$@"
 
 shift $#
 
-[[ "${#cfg[@]}" = 0 ]] && echo "can't find config storage variable populated by bash_lua_helper. bash_lua_helper failed!" && exit 1
-
-#echo "$cfg_list"
-
-log () {
-  echo "[ $@ ]"
-}
-
-# find commander binary
-commander=""
-for hint in "$script_dir/commander" "$script_dir/../Build/commander"
-do
-  if [[ -x $hint/commander ]]; then
-    commander="$hint/commander"
-    break
-  fi
-done
-
-[[ -z $commander ]] && log "commander binary not found!" && exit 1
-
-# get source-checksum
-source_checksum=`2>/dev/null "$commander"`
-[[ -z $source_checksum ]] && log "failed to read correct source_checksum from commander!" && exit 1
-
-# find executor binary
-executor=""
-for hint in "$HOME/.cache/sandboxer/executor-${cfg[sandbox.setup.executor_build]}-$source_checksum" "$script_dir/executor" "$script_dir/../Build/executor"
-do
-  if [[ -x $hint/executor ]]; then
-    executor="$hint/executor"
-    break
-  fi
-done
-
-[[ -z $executor ]] && log "executor binary not found!" && exit 1
-
-basedir="${cfg[tunables.basedir]}"
-
-#construct control directory if not exist, needed for lock
-mkdir -p "$basedir"
-[[ $? != 0 ]] && log "error creating basedir at $basedir" && exit 1
-
-lock_entered="false"
-lock_dirname="control.lock"
-lock_path="$basedir/$lock_dirname"
-
-lock_enter() {
-  local nowait="$1"
-  if mkdir "$lock_path" 2>/dev/null; then
-    lock_entered="true"
-    return 0
-  else
-    [[ ! -z $nowait ]] && return 1
-    log "awaiting lock release"
-    while ! lock_enter "nowait"; do
-      sleep 1
-    done
-    lock_entered="true"
-    return 0
-  fi
-}
-
-lock_exit() {
-  if [[ $lock_entered = true ]]; then
-    rmdir "$lock_path" 2>/dev/null
-    lock_entered="false"
-  fi
-  true
-}
-
-teardown() {
-  local status="$1"
-  lock_exit
-  exit $status
-}
-
-check_errors () {
-  local status="$?"
-  local msg="$@"
-  if [[ $status != 0 ]]; then
-    log "ERROR: operation finished with error code $status"
-    [[ ! -z $msg ]] && log "$msg"
-    teardown "$status"
-  fi
-}
-
-#placeholder for run-profile.sh.in
-wait_for_cmd_list() { true; }
+. "$script_dir/sandboxer-setup-phase-2.sh.in"
 
 #enter lock
 lock_enter
