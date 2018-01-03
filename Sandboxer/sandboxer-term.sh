@@ -25,14 +25,14 @@ config="$1"
 lock_enter
 
 #check that executor is running
-if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; then
+if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
   # load env lists management logic for bwrap
   . "$includes_dir/sandbox-defines-bwrap.sh.in"
-  log "attempting to terminate all exec profles for sandbox with $uid"
+  log "attempting to terminate all exec profles for sandbox at $basedir"
   "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 1
   check_errors
 else
-  log "sandbox with $uid does not appear to be running"
+  log "sandbox at $basedir does not appear to be running"
 fi
 
 #exit lock
