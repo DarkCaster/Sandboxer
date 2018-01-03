@@ -247,6 +247,7 @@ loader.check_profile(profile,config.profile)
 loader.check_profile(dbus,"dbus")
 loader.check_profile(x11util,"x11util")
 loader.check_profile(xpra,"xpra")
+loader.check_profile(none,"none")
 
 assert(type(profile.desktop)=="nil" or type(profile.desktop)=="table", "\"desktop\" subtable is not a table type")
 if type(profile.desktop)=="table" then

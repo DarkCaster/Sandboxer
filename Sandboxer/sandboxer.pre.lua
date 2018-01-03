@@ -391,3 +391,13 @@ x11util={
   pty=false,
   exclusive=true,
 }
+
+none={
+  exec="/bin/true",
+  path="/",
+  term_signal=defaults.signals.SIGTERM,
+  term_child_only=true,
+  attach=false,
+  pty=false,
+  exclusive=false,
+}

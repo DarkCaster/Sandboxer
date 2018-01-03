@@ -17,7 +17,7 @@ config="$1"
 . "$script_dir/sandboxer-setup-phase-1.sh.in"
 
 . "$includes_dir/find-lua-helper.bash.in" "$script_dir/BashLuaHelper" "$script_dir/../BashLuaHelper"
-. "$bash_lua_helper" "$config" -e sandbox -e tunables -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o "$profile" -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "$tmp_dir" -o "$tmp_dir/sandbox-$config_uid" -o "$uid" -o "$gid"
+. "$bash_lua_helper" "$config" -e sandbox -e tunables -b "$script_dir/sandboxer.pre.lua" -a "$script_dir/sandboxer.post.lua" -o none -o "$HOME" -o "$script_dir" -o "$curdir" -o "$config_uid" -o "$tmp_dir" -o "$tmp_dir/sandbox-$config_uid" -o "$uid" -o "$gid"
 
 . "$script_dir/sandboxer-setup-phase-2.sh.in"
 
