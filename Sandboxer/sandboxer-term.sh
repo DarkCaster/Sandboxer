@@ -12,7 +12,9 @@ fi
 
 #load parameters
 config="$1"
-[[ -z $config ]] && echo "usage: sandboxer-term.sh <config file>" && exit 1
+[[ -z $config ]] && echo "usage: sandboxer-term.sh <config file> [timeout]" && exit 1
+timeout="$2"
+[[ -z $timeout ]] && timeout=5
 
 . "$script_dir/sandboxer-setup-phase-1.sh.in"
 
@@ -24,6 +26,19 @@ config="$1"
 #enter lock
 lock_enter
 
+check_sessions() {
+  local el=""
+  local check=0
+  for el in "$control_dir"/*
+  do
+    [[ $el = "$control_dir/*" ]] && continue
+    [[ $el =~ ^.*".in"$ || $el =~ ^.*".out"$ ]] || continue
+    [[ $el =~ ^.*"/control.in"$ || $el =~ ^.*"/control.out"$ ]] && continue
+    return 0
+  done
+  return 1
+}
+
 #check that executor is running
 if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
   # load env lists management logic for bwrap
@@ -31,6 +46,19 @@ if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
   log "attempting to terminate all exec profles for sandbox at $basedir"
   "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 1
   check_errors
+  timepass="0"
+  step="0.05"
+  while [[ `echo "$timepass<$timeout" | bc -q` = 1 ]]
+  do
+    [[ `echo "$timepass>=0.5" | bc -q` = 1 ]] && step="0.1"
+    [[ `echo "$timepass>=1.0" | bc -q` = 1 ]] && step="0.25"
+    [[ `echo "$timepass>=2.0" | bc -q` = 1 ]] && step="0.5"
+    [[ `echo "$timepass>=5.0" | bc -q` = 1 ]] && step="1"
+    sleep $step
+    timepass=`echo "$timepass+$step" | bc -q`
+    check_sessions || break
+  done
+  [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "safe termination timed out!" && exit 1
 else
   log "sandbox at $basedir does not appear to be running"
 fi
