@@ -45,6 +45,9 @@ check_error
 cp "$curdir/Sandboxer/sandboxer-term.sh" "$target/bin"
 check_error
 
+cp "$curdir/Sandboxer/sandboxer-stop-all.sh" "$target/bin"
+check_error
+
 cp "$curdir/Sandboxer/sandboxer-setup-phase-1.sh.in" "$target/bin"
 check_error
 
@@ -122,6 +125,12 @@ rm -f "$HOME/bin/sandboxer-term"
 check_error
 
 ln -s "$target/bin/sandboxer-term.sh" "$HOME/bin/sandboxer-term"
+check_error
+
+rm -f "$HOME/bin/sandboxer-stop-all"
+check_error
+
+ln -s "$target/bin/sandboxer-stop-all.sh" "$HOME/bin/sandboxer-stop-all"
 check_error
 
 rm -f "$HOME/bin/sandboxer-desktop-file-creator.sh"

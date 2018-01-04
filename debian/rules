@@ -5,10 +5,11 @@ TARGET_PREFIX=/usr/lib/sandboxer
 PACKAGE=sandboxer
 TARGET_INSTALL_PREFIX=debian/$(PACKAGE)$(TARGET_PREFIX)
 BIN_INSTALL_PREFIX=debian/$(PACKAGE)/usr/bin
+SYSTEMD_INSTALL_PREFIX=debian/$(PACKAGE)/etc/systemd/system
 
 include /usr/share/dpkg/default.mk
 %:
-	dh $@
+	dh $@ --with systemd
 
 override_dh_auto_clean:
 	dh_auto_clean -Scmake -DExecutor -BBuild/Executor-build
@@ -29,6 +30,7 @@ override_dh_auto_install:
 	cp "Sandboxer/sandboxer-desktop-file-creator.sh" "$(TARGET_INSTALL_PREFIX)/bin"
 	cp "Sandboxer/sandboxer-kill.sh" "$(TARGET_INSTALL_PREFIX)/bin"
 	cp "Sandboxer/sandboxer-term.sh" "$(TARGET_INSTALL_PREFIX)/bin"
+	cp "Sandboxer/sandboxer-stop-all.sh" "$(TARGET_INSTALL_PREFIX)/bin"
 	cp "Sandboxer/sandboxer-setup-phase-1.sh.in" "$(TARGET_INSTALL_PREFIX)/bin"
 	cp "Sandboxer/sandboxer-setup-phase-2.sh.in" "$(TARGET_INSTALL_PREFIX)/bin"
 	cp "Sandboxer/sandboxer.pre.lua" "$(TARGET_INSTALL_PREFIX)/bin"
@@ -46,6 +48,9 @@ override_dh_auto_install:
 	ln -s "$(TARGET_PREFIX)/bin/sandboxer.sh" "$(BIN_INSTALL_PREFIX)/sandboxer"
 	ln -s "$(TARGET_PREFIX)/bin/sandboxer-kill.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-kill"
 	ln -s "$(TARGET_PREFIX)/bin/sandboxer-term.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-term"
+	ln -s "$(TARGET_PREFIX)/bin/sandboxer-stop-all.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-stop-all"
 	ln -s "$(TARGET_PREFIX)/bin/sandboxer-desktop-file-creator.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-desktop-file-creator.sh"
 	find "$(TARGET_INSTALL_PREFIX)" -type f -name "*.sh" -exec "$(CURDIR)/update_shebang.sh" {} \;
 	find "$(TARGET_INSTALL_PREFIX)" -type f -name "*.sh.in" -exec "$(CURDIR)/update_shebang.sh" {} \;
+	mkdir -p "$(SYSTEMD_INSTALL_PREFIX)"
+	cp "Sandboxer/sandboxer.service" "$(SYSTEMD_INSTALL_PREFIX)"
