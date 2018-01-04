@@ -1,0 +1,11 @@
+[Unit]
+Description=Sandboxer software isolation suite
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/true
+ExecStop=/usr/bin/sandboxer-stop-all
+
+[Install]
+WantedBy=multi-user.target
