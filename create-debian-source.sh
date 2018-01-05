@@ -16,14 +16,11 @@ distro="$4"
 [[ $distro = none ]] && distro=""
 
 mkdir -p "$target/sandboxer"
-
 git archive --format tar HEAD | (cd "$target/sandboxer" && tar xf -)
-
 [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in ]] && git submodule update --init
-cd "$curdir/BashLuaHelper"
-git archive --format tar HEAD | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
-cd "$target/sandboxer"
+(cd "$curdir/BashLuaHelper" && git archive --format tar HEAD) | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
 
+cd "$target/sandboxer"
 [[ -z $distro ]] && sed -i "s|__DISTRO__|unstable|g" "debian/changelog"
 [[ ! -z $distro ]] && sed -i "s|__DISTRO__|""$distro""|g" "debian/changelog"
 sed -i "s|__VERSION__SUFFIX__|""$version""|g" "debian/changelog"
