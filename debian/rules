@@ -26,6 +26,6 @@ override_dh_auto_build:
 override_dh_auto_install:
 	dh_auto_install -Scmake -DExecutor -BBuild/Executor-build
 	dh_auto_install -Scmake -DX11Util -BBuild/X11Util-build
-	install-to-home.sh "$(TARGET_INSTALL_PREFIX)" "$(BIN_INSTALL_PREFIX)"
+	./install-sandboxer.sh "$(TARGET_INSTALL_PREFIX)" "$(BIN_INSTALL_PREFIX)"
 	mkdir -p "$(SYSTEMD_INSTALL_PREFIX)"
 	cp "Sandboxer/sandboxer.service" "$(SYSTEMD_INSTALL_PREFIX)"
