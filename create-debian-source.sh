@@ -24,9 +24,9 @@ cd "$curdir/BashLuaHelper"
 git archive --format tar HEAD | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
 cd "$target/sandboxer"
 
-[[ -z $distro ]] && sed -i "s|__DISTRO__|unstable|g" "$target/sandboxer/debian/changelog"
-[[ ! -z $distro ]] && sed -i "s|__DISTRO__|""$distro""|g" "$target/sandboxer/debian/changelog"
-sed -i "s|__VERSION__SUFFIX__|""$version""|g" "$target/sandboxer/debian/changelog"
+[[ -z $distro ]] && sed -i "s|__DISTRO__|unstable|g" "debian/changelog"
+[[ ! -z $distro ]] && sed -i "s|__DISTRO__|""$distro""|g" "debian/changelog"
+sed -i "s|__VERSION__SUFFIX__|""$version""|g" "debian/changelog"
 
 if [[ -z $key ]]; then
   dpkg-buildpackage -d -S -us -uc
@@ -34,5 +34,5 @@ else
   dpkg-buildpackage -d -S -k$key
 fi
 
-cd "$target"
-rm -rf "$target/sandboxer"
+cd ..
+rm -rf "sandboxer"
