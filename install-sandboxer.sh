@@ -32,9 +32,9 @@ cp -r "$curdir/Sandboxer/includes" "$target/bin"
 cp -r "$curdir/Sandboxer/tools" "$target/bin"
 
 echo "Installing service binaries"
-cp -r "$curdir/Build/commander" "$target/bin"
-cp -r "$curdir/Build/executor" "$target/bin"
-cp -r "$curdir/Build/x11util" "$target/bin"
+[[ -d $curdir/Build/commander ]] && cp -r "$curdir/Build/commander" "$target/bin"
+[[ -d $curdir/Build/executor ]] && cp -r "$curdir/Build/executor" "$target/bin"
+[[ -d $curdir/Build/x11util ]] && cp -r "$curdir/Build/x11util" "$target/bin"
 [[ -d $curdir/Build/fixups ]] && cp -r "$curdir/Build/fixups" "$target/bin"
 "$curdir/BashLuaHelper/install.sh" "$target/bin/BashLuaHelper"
 
