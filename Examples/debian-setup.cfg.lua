@@ -110,8 +110,10 @@ else
   table.insert(sandbox.setup.mounts, defaults.mounts.sbin_rw_mount)
 end
 
--- start bash shell with fakeroot utility built for ubuntu-16.04. it compatible with ubuntu 12.04,14.04 and 16.04
--- (this fakeroot build maybe downloaded by running sandboxer-download-extra.sh script)
+-- start bash shell with fakeroot utility.
+-- by default, it will use bundled fakeroot utilty - it should be compatible with any recent debian or ubuntu distro.
+-- but it will search and use fakeroot utilty precompiled for particular distro, if present.
+-- (this fakeroot builds maybe downloaded by running sandboxer-download-extra.sh script (TODO))
 -- this profile should be used to perform package management inside sandbox: apt-get, dpkg should work.
 -- but, still there may be some errors, because virtual "root" env running inside regular user sandbox has some very tight restrictions,
 -- that may be not overriden even by using fakeroot utility. so, do not expect that every program that require real root privs will work.
@@ -134,17 +136,24 @@ fakeroot_shell={
   },
 }
 
--- do not use this exec profile, use fakeroot_shell instead.
--- you should use this only for test and debug purposes
--- (if you have some problems starting fakeroot_shell exec profile)
--- apt-get, dpkg will not work with this profile.
-shell={
-  exec="/bin/bash",
-  path="/",
+function concat_table(t1,t2)
+  for _,v in ipairs(t2) do
+    table.insert(t1, v)
+  end
+  return t1
+end
+
+-- invocation example: sandboxer debian-setup.cfg.lua fakeroot_exec echo ok
+-- command execution is performed by fakeroot script, so shell syntax and relative paths allowed
+fakeroot_exec={
+  exec="/fixups/fakeroot-session-starter.sh",
+  path="/root",
+  args=concat_table({os_id.."-"..os_version.."-"..os_arch},loader.args),
   env_set={
     {"TERM",os.getenv("TERM")},
   },
-  term_signal=defaults.signals.SIGHUP,
+  term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
   attach=true,
-  pty=true,
+  pty=false,
 }

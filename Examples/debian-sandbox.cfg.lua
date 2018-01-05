@@ -162,3 +162,20 @@ shell={
   attach=true,
   pty=true,
 }
+
+function trim_args(t1)
+  table.remove(t1,1)
+  table.remove(t1,1)
+  return t1
+end
+
+-- invocation example: sandboxer debian-sandbox.cfg.lua cmd_exec / /bin/ls -la
+-- execution is performed by using execvp call, so you must provide absolute path for target binary
+cmd_exec={
+  exec=loader.args[2],
+  path=loader.args[1],
+  args=trim_args(loader.args),
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+}

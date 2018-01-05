@@ -108,9 +108,6 @@ cmd_exec={
   exec=loader.args[2],
   path=loader.args[1],
   args=trim_args(loader.args),
-  env_set={
-    {"TERM",os.getenv("TERM")},
-  },
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
