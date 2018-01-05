@@ -9,4 +9,4 @@ target="$1"
 
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
-"$curdir/install.sh" "$target" "$HOME/bin"
+"$curdir/install-sandboxer.sh" "$target" "$HOME/bin"
