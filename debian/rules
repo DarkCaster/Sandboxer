@@ -26,31 +26,6 @@ override_dh_auto_build:
 override_dh_auto_install:
 	dh_auto_install -Scmake -DExecutor -BBuild/Executor-build
 	dh_auto_install -Scmake -DX11Util -BBuild/X11Util-build
-	cp "Sandboxer/sandboxer.sh" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer-desktop-file-creator.sh" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer-kill.sh" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer-term.sh" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer-stop-all.sh" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer-setup-phase-1.sh.in" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer-setup-phase-2.sh.in" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer.pre.lua" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp "Sandboxer/sandboxer.post.lua" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp -r "Sandboxer/fixups" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp -r "Sandboxer/includes" "$(TARGET_INSTALL_PREFIX)/bin"
-	cp -r "Sandboxer/tools" "$(TARGET_INSTALL_PREFIX)/bin"
-	"BashLuaHelper/install.sh" "$(TARGET_INSTALL_PREFIX)/bin/BashLuaHelper"
-	mkdir -p "$(TARGET_INSTALL_PREFIX)/examples"
-	cp "Examples"/*.cfg.lua "$(TARGET_INSTALL_PREFIX)/examples"
-	cp "Examples"/*.sh "$(TARGET_INSTALL_PREFIX)/examples"
-	cp "Examples"/*.txt "$(TARGET_INSTALL_PREFIX)/examples"
-	cp "Examples"/*.lua.in "$(TARGET_INSTALL_PREFIX)/examples"
-	mkdir -p "$(BIN_INSTALL_PREFIX)"
-	ln -s "$(TARGET_PREFIX)/bin/sandboxer.sh" "$(BIN_INSTALL_PREFIX)/sandboxer"
-	ln -s "$(TARGET_PREFIX)/bin/sandboxer-kill.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-kill"
-	ln -s "$(TARGET_PREFIX)/bin/sandboxer-term.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-term"
-	ln -s "$(TARGET_PREFIX)/bin/sandboxer-stop-all.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-stop-all"
-	ln -s "$(TARGET_PREFIX)/bin/sandboxer-desktop-file-creator.sh" "$(BIN_INSTALL_PREFIX)/sandboxer-desktop-file-creator.sh"
-	find "$(TARGET_INSTALL_PREFIX)" -type f -name "*.sh" -exec "$(CURDIR)/update_shebang.sh" {} \;
-	find "$(TARGET_INSTALL_PREFIX)" -type f -name "*.sh.in" -exec "$(CURDIR)/update_shebang.sh" {} \;
+	install-to-home.sh "$(TARGET_INSTALL_PREFIX)" "$(BIN_INSTALL_PREFIX)"
 	mkdir -p "$(SYSTEMD_INSTALL_PREFIX)"
 	cp "Sandboxer/sandboxer.service" "$(SYSTEMD_INSTALL_PREFIX)"
