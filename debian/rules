@@ -5,7 +5,6 @@ TARGET_PREFIX=/usr/lib/sandboxer
 PACKAGE=sandboxer
 TARGET_INSTALL_PREFIX=debian/$(PACKAGE)$(TARGET_PREFIX)
 BIN_INSTALL_PREFIX=debian/$(PACKAGE)/usr/bin
-SYSTEMD_INSTALL_PREFIX=debian/$(PACKAGE)/etc/systemd/system
 
 include /usr/share/dpkg/default.mk
 %:
@@ -24,6 +23,6 @@ override_dh_auto_build:
 	dh_auto_build -Scmake -DX11Util -BBuild/X11Util-build
 
 override_dh_auto_install:
+	./install-sandboxer.sh "$(TARGET_INSTALL_PREFIX)" "$(BIN_INSTALL_PREFIX)"
 	dh_auto_install -Scmake -DExecutor -BBuild/Executor-build
 	dh_auto_install -Scmake -DX11Util -BBuild/X11Util-build
-	./install-sandboxer.sh "$(TARGET_INSTALL_PREFIX)" "$(BIN_INSTALL_PREFIX)"
