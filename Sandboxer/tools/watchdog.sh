@@ -130,12 +130,6 @@ watchdog_lock_exit() {
   true
 }
 
-watchdog_lock_enter
-
-trap "{ watchdog_lock_exit; }" EXIT
-
-trap "{ log \"watchdog.sh: trap triggered, ignoring\"; }" SIGINT SIGHUP
-
 log () {
   echo "$@"
 }
@@ -172,6 +166,12 @@ sandbox_lock_exit() {
   fi
   true
 }
+
+trap "{ watchdog_lock_exit; sandbox_lock_exit; }" EXIT
+
+trap "{ log \"watchdog.sh: trap triggered, ignoring\"; }" SIGINT SIGHUP
+
+watchdog_lock_enter
 
 check_session() {
   [[ -e "$control_dir/$1.in" || -e "$control_dir/$1.out" ]] && return 0 || return 1
