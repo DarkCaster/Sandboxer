@@ -4,7 +4,7 @@ Description=Sandboxer software isolation suite
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/true
+ExecStart=/bin/true
 ExecStop=/usr/bin/sandboxer-stop-all 10 10
 
 [Install]
