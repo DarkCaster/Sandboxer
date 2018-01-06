@@ -5,6 +5,7 @@ master only:
 0 <name> - optional parameter to define fifo name manually
 253 <1\0> - perform slaves shutdown. if param set to 1 - slaves will terminate it's chils with configured signals, sigkill otherwise. do not perform self shutdown when param is 1 - just send termination command to slaves.
 250 - return orphaned process count
+249 - return slave executors count
 240 - source checksum verification
 
 slave only:
@@ -30,6 +31,7 @@ control mode:
 202 - reattach to detached session started with command 201
 253 <1\0> - perform shutdown. if param is 1 - user signal send to child processes (set by command 5), sigkill otherwise
 [internal command] 252 - update terminal window size, used only in 200\201 mode. used automatically when needed
+[internal command] 251 - commander detach
 [internal command] 150 - send captured user input or program output data.
 
 
