@@ -44,7 +44,7 @@ if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
   # load env lists management logic for bwrap
   . "$includes_dir/sandbox-defines-bwrap.sh.in"
   log "attempting to terminate all exec profles for sandbox at $basedir"
-  "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 1
+  2>/dev/null "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 1
   check_errors
   timepass="0"
   step="0.05"
@@ -60,7 +60,7 @@ if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
   done
   [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "safe termination timed out!" && exit 1
   log "attempting to terminate executor control session at $basedir"
-  "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 0
+  2>/dev/null "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 0
   check_errors
   timepass="0"
   step="0.05"
