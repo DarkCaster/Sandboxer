@@ -59,6 +59,22 @@ if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
     check_sessions || break
   done
   [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "safe termination timed out!" && exit 1
+  log "attempting to terminate executor control session at $basedir"
+  "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 0
+  check_errors
+  timepass="0"
+  step="0.05"
+  while [[ `echo "$timepass<$timeout" | bc -q` = 1 ]]
+  do
+    [[ `echo "$timepass>=0.5" | bc -q` = 1 ]] && step="0.1"
+    [[ `echo "$timepass>=1.0" | bc -q` = 1 ]] && step="0.25"
+    [[ `echo "$timepass>=2.0" | bc -q` = 1 ]] && step="0.5"
+    [[ `echo "$timepass>=5.0" | bc -q` = 1 ]] && step="1"
+    sleep $step
+    timepass=`echo "$timepass+$step" | bc -q`
+    [[ -p $control_dir/control.in || -p $control_dir/control.out ]] || break
+  done
+  [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "failed to terminate control session" && exit 1
 else
   log "sandbox at $basedir does not appear to be running"
 fi
