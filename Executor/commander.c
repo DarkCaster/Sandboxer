@@ -58,6 +58,7 @@ static uint8_t operation_8(char* orphans_cleanup);
 static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t reconnect, const char *out_filename, const char *err_filename);
 static uint8_t operation_101_201(uint8_t use_pty);
 static uint8_t operation_240(uint32_t source_checksum);
+static uint8_t operation_249(void);
 static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
 static size_t bytes_avail(int fd);
@@ -327,6 +328,9 @@ int main(int argc, char* argv[])
     case 240:
         err=operation_240(SOURCE_CHECKSUM);
         break;
+    case 249:
+        err=operation_249();
+        break;
     case 250:
         err=operation_250();
         break;
@@ -566,6 +570,37 @@ static uint8_t operation_101_201(uint8_t use_pty)
     cmdhdr_write(data_buf,0,cmd);
     int32_t cmdlen=CMDHDRSZ;
     param_send_macro(cmdlen);
+    return 0;
+}
+
+static uint8_t operation_249(void)
+{
+    CMDHDR cmd;
+    cmd.cmd_type=249;
+    cmdhdr_write(data_buf,0,cmd);
+    log_message(logger,LOG_INFO,"Sending request");
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,CMDHDRSZ,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        return ec;
+    int32_t cmdlen=0;
+    log_message(logger,LOG_INFO,"Reading response");
+    ec=message_read(fdi,tmp_buf,data_buf,0,&cmdlen,key,REQ_TIMEOUT_MS);
+    if(ec!=0)
+        return ec;
+    if(cmdhdr_read(data_buf,0).cmd_type!=0)
+    {
+        log_message(logger,LOG_ERROR,"Wrong responce code received %i",LI(cmdhdr_read(data_buf,0).cmd_type));
+        return 1;
+    }
+    int32_t len=(int32_t)cmdlen-(int32_t)CMDHDRSZ;
+    if(len!=4)
+    {
+        log_message(logger,LOG_ERROR,"Wrong length in response detected");
+        return 2;
+    }
+    uint32_t count=u32_read(data_buf,CMDHDRSZ);
+    fprintf(stdout,"%u\n",count);
+    fflush(stdout);
     return 0;
 }
 
