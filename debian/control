@@ -8,7 +8,7 @@ Homepage: https://github.com/DarkCaster/Sandboxer
 
 Package: sandboxer
 Architecture: any
-Depends: bubblewrap, bc, bash, dash, lua5.3 | lua5.2 | lua5.1, ${shlibs:Depends}, ${misc:Depends}
-Suggests: sandboxer-fakeroot
+Depends: bubblewrap, shared-mime-info, desktop-file-utils, bc, bash, dash, lua5.3 | lua5.2 | lua5.1, ${shlibs:Depends}, ${misc:Depends}
+Suggests: sandboxer-fakeroot, bash-builtins
 Description: application isolation suite
  Simple and customizable application sandboxing/isolation suite
