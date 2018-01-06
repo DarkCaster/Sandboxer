@@ -85,7 +85,7 @@ lock_exit() {
   return 0
 }
 
-trap "{ log \"bwrap_launcher.sh: trap triggered, ignoring\"; }" INT HUP
+trap "{ log \"bwrap_launcher.sh: trap triggered, ignoring\"; }" INT HUP TERM
 
 log "launching bwrap with command line parameters: $@"
 0</dev/null 1>"$basedir/bwrap.log" 2>&1 "$nohup_bin" bwrap "$@"
