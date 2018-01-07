@@ -26,19 +26,6 @@ timeout="$2"
 #enter lock
 lock_enter
 
-check_sessions() {
-  local el=""
-  local check=0
-  for el in "$control_dir"/*
-  do
-    [[ $el = "$control_dir/*" ]] && continue
-    [[ $el =~ ^.*".in"$ || $el =~ ^.*".out"$ ]] || continue
-    [[ $el =~ ^.*"/control.in"$ || $el =~ ^.*"/control.out"$ ]] && continue
-    return 0
-  done
-  return 1
-}
-
 #check that executor is running
 if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
   # load env lists management logic for bwrap
@@ -56,9 +43,11 @@ if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
     [[ `echo "$timepass>=5.0" | bc -q` = 1 ]] && step="1"
     sleep $step
     timepass=`echo "$timepass+$step" | bc -q`
-    check_sessions || break
+    slaves_cnt=`2>/dev/null "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 249 || -1`
+    [[ $slaves_cnt = 0 ]] && break
+    [[ $slaves_cnt = -1 ]] && echo "slave sessions count request failed!" && teardown 1
   done
-  [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "safe termination timed out!" && exit 1
+  [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "safe termination timed out!" && teardown 1
   log "attempting to terminate executor control session at $basedir"
   2>/dev/null "$commander" "$basedir/control" "control" "${cfg[sandbox.setup.security_key]}" 253 0
   check_errors
@@ -74,7 +63,7 @@ if [[ -p $basedir/control/control.in && -p $basedir/control/control.out ]]; then
     timepass=`echo "$timepass+$step" | bc -q`
     [[ -p $control_dir/control.in || -p $control_dir/control.out ]] || break
   done
-  [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "failed to terminate control session" && exit 1
+  [[ `echo "$timepass>=$timeout" | bc -q` = 1 ]] && echo "failed to terminate control session" && teardown 1
 else
   log "sandbox at $basedir does not appear to be running"
 fi
