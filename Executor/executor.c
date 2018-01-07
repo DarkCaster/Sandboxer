@@ -103,6 +103,7 @@ static uint8_t operation_6(char* dir, size_t len);
 static uint8_t operation_7(uint8_t _child_only_terminate);
 static uint8_t operation_8(uint8_t _orphans_cleanup);
 static uint8_t operation_240(uint32_t source_checksum);
+static uint8_t operation_249(void);
 static uint8_t operation_250(void);
 static uint8_t operation_253(bool grace_shutdown);
 static uint8_t operation_100_101_200_201(uint8_t comm_detached, uint8_t use_pty);
@@ -536,6 +537,9 @@ int main(int argc, char* argv[])
                 }
                 else
                     err=15;
+                break;
+            case 249:
+                err=operation_249();
                 break;
             case 250:
                 err=operation_250();
@@ -1058,6 +1062,27 @@ static uint8_t operation_8(uint8_t _orphans_cleanup)
     log_message(logger,LOG_INFO,"Orphans cleanup mode set to %i",LI(orphans_cleanup));
     if(operation_status(0)!=0)
         return 255;
+    return 0;
+}
+
+static uint8_t operation_249(void)
+{
+    if(mode==1)
+    {
+        log_message(logger,LOG_ERROR,"Operation is disabled for slave executor");
+        return 20;
+    }
+    pid_lock();
+    uint32_t count=(uint32_t)_master_get_slave_count();
+    pid_unlock();
+    //send response
+    CMDHDR response;
+    response.cmd_type=0;
+    cmdhdr_write(data_buf,0,response);
+    u32_write(data_buf,CMDHDRSZ,count);
+    uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,(int32_t)(CMDHDRSZ+4),key,REQ_TIMEOUT_MS);
+    if(ec!=0 && ec!=255)
+        log_message(logger,LOG_ERROR,"Failed to send response with orphans count",LI(ec));
     return 0;
 }
 
