@@ -82,9 +82,11 @@ wait_for_cmd_list
 #run
 if [[ $exec_bg != true ]]; then
   "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}" "$exec_log_out" "$exec_log_err"
+  exec_code="$?"
 else
   &>/dev/null "$commander" "$basedir/control" "$channel" "${cfg[sandbox.setup.security_key]}" "${cfg[$exec_profile.start_opcode]}" "$exec_log_out" "$exec_log_err" &
   exec_bg_pid="$!"
+  exec_code=""
 fi
 
 exec_bg=""

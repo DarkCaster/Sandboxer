@@ -291,3 +291,5 @@ log "running exec-profile $profile, using control channel $channel"
 
 #start selected exec profile
 . "$includes_dir/run-profile.sh.in"
+
+[[ -z $exec_code ]] || exit $exec_code
