@@ -5,7 +5,7 @@
 
 target="$1"
 [[ -z $target ]] && target="$HOME/sandboxer"
-[[ $target = $HOME ]] && echo "will not proceed install to home directory directly, try $HOME/sandboxer sub-directory instead"
+[[ $target = $HOME ]] && echo "will not proceed install to home directory directly, try $HOME/sandboxer sub-directory instead" && exit 1
 
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
