@@ -62,7 +62,7 @@ sandbox={
       defaults.commands.machineid_static,]]--
 
       --2. or, instead, copy full config
-      --defaults.commands.etc_full, -- copy full /etc to to tunables.chrootdir, may remove existing
+      --defaults.commands.etc_full,
       --defaults.commands.machineid_static, -- create machine-id file in dynamic etc directory, generated machine-id rely only to sandbox_uid value
 
       --3. or, work directly with etc directory of our external chroot, and mount it later with defaults.mounts.host_etc_mount.
@@ -75,7 +75,7 @@ sandbox={
       -- remaining commands, used for any etc management option choosen above.
 
       -- generate default /etc/passwd and /etc/group files with "sandbox" user (mapped to current uid)
-      -- will be placed to "dynamic etc directory and will not overwrite files inside "etc" directory managed by debian-setup.cfg.lua
+      -- will be placed to dynamic (temporary) etc directory and will not overwrite files inside "etc" directory managed by debian-setup.cfg.lua
       defaults.commands.passwd,
       defaults.commands.resolvconf, -- generate resolvconf and place it to dynamic etc directory
       -- various stuff for userdata

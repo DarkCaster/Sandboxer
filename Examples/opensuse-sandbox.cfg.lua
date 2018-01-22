@@ -1,5 +1,5 @@
 -- this is an example config for sandbox that use external opensuse rootfs as base.
--- config based on ubuntu-sandbox.cfg.lua, and will be maintained as small as possible - most notes removed.
+-- config based on debian-sandbox.cfg.lua, and will be maintained as small as possible - most notes removed.
 -- see ubuntu-sandbox.cfg.lua and example.cfg.lua for more comments and information about config options
 
 -- this example config is compatible with external root-fs archives that was downloaded and extracted by running:
