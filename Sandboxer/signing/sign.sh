@@ -22,7 +22,7 @@ trap cleanup EXIT
 
 #decrypt private key
 echo "decrypting private key"
-openssl aes-256-cbc -d -a -in "$script_dir/private.key.enc" | cat - >> "$tmp_file"
+openssl aes-256-cbc -d -a -md sha512 -in "$script_dir/private.key.enc" | cat - >> "$tmp_file"
 [[ ${PIPESTATUS[*]} = "0 0" ]] || false
 
 echo "signing target file"
