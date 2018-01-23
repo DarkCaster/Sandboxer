@@ -312,6 +312,7 @@ function defaults.recalculate()
     {prio=20,tag="etcgroup","ro-bind",loader.path.combine(tunables.auto.etc_path,"group"),"/etc/group"},
   }
   defaults.mounts.resolvconf_mount={prio=20,tag="etcresolvconf","ro-bind",loader.path.combine(tunables.auto.etc_path,"resolv.conf"),"/etc/resolv.conf"}
+  defaults.mounts.direct_resolvconf_mount={prio=20,tag="etcresolvconf","ro-bind","/etc/resolv.conf","/etc/resolv.conf"}
   defaults.mounts.machineid_mount={prio=20,tag="etcmachineid","ro-bind",loader.path.combine(tunables.auto.etc_path,"machine-id"),"/etc/machine-id"}
   defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",tunables.uid)}
   defaults.mounts.home_mount={prio=20,tag="home","bind",tunables.auto.home_base_path,"/home"}
