@@ -1,3 +1,9 @@
+sandboxer (0.5__VERSION__SUFFIX__) __DISTRO__; urgency=low
+
+  * Version 0.5.
+
+ -- DarkCaster <dark.caster@outlook.com>  Tue, 23 Jan 2018 00:00:00 +0000
+
 sandboxer (0.4.dev__VERSION__SUFFIX__) __DISTRO__; urgency=low
 
   * Initial Release.

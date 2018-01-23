@@ -20,6 +20,7 @@ mkdir -p "$target/examples"
 echo "Installing main scripts"
 cp "$curdir/Sandboxer/sandboxer.sh" "$target/bin"
 cp "$curdir/Sandboxer/sandboxer-desktop-file-creator.sh" "$target/bin"
+cp "$curdir/Sandboxer/sandboxer-download-extra.sh" "$target/bin"
 cp "$curdir/Sandboxer/sandboxer-kill.sh" "$target/bin"
 cp "$curdir/Sandboxer/sandboxer-term.sh" "$target/bin"
 cp "$curdir/Sandboxer/sandboxer-stop-all.sh" "$target/bin"
@@ -30,6 +31,11 @@ cp "$curdir/Sandboxer/sandboxer.post.lua" "$target/bin"
 cp -r "$curdir/Sandboxer/fixups" "$target/bin"
 cp -r "$curdir/Sandboxer/includes" "$target/bin"
 cp -r "$curdir/Sandboxer/tools" "$target/bin"
+
+# stuff for extra-binaries signature verification
+mkdir -p "$target/bin/signing"
+cp "$curdir/Sandboxer/signing/verify.sh" "$target/bin/signing"
+cp "$curdir/Sandboxer/signing/public.crt" "$target/bin/signing"
 
 echo "Installing service binaries"
 [[ -d $curdir/Build/commander ]] && cp -r "$curdir/Build/commander" "$target/bin"
@@ -68,5 +74,7 @@ rm -f "$bin_dir/sandboxer-stop-all"
 ln -rs "$target/bin/sandboxer-stop-all.sh" "$bin_dir/sandboxer-stop-all"
 rm -f "$bin_dir/sandboxer-desktop-file-creator"
 ln -rs "$target/bin/sandboxer-desktop-file-creator.sh" "$bin_dir/sandboxer-desktop-file-creator"
+rm -f "$bin_dir/sandboxer-download-extra.sh"
+ln -rs "$target/bin/sandboxer-download-extra.sh" "$bin_dir/sandboxer-download-extra"
 find "$target" -type f -name "*.sh" -exec "$curdir/update_shebang.sh" {} \;
 find "$target" -type f -name "*.sh.in" -exec "$curdir/update_shebang.sh" {} \;
