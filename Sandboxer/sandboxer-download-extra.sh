@@ -6,7 +6,15 @@
 
 dl_base="https://github.com/DarkCaster/Sandboxer/releases/download/external-binaries"
 
+#detection of actual script location
+curdir="$PWD"
 script_dir="$( cd "$( dirname "$0" )" && pwd )"
+self=`basename "$0"`
+[[ ! -e $script_dir/$self ]] && echo "script_dir detection failed. cannot proceed!" && exit 1
+if [[ -L $script_dir/$self ]]; then
+  script_file=`readlink -f "$script_dir/$self"`
+  script_dir=`realpath \`dirname "$script_file"\``
+fi
 
 set -e
 
