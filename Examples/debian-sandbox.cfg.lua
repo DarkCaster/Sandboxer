@@ -2,8 +2,7 @@
 
 -- this example config is compatible with external root-fs archives that was downloaded and extracted by running:
 -- download-ubuntu-*.sh - download selected ubuntu x86_64 distribution (currently supported 12.04, 14.04, 16.04 and 16.10)
--- download-debian-jessie-chroot.sh - download debian 8 (jessie) x86_64 rootfs from docker image repository
--- (debian sid distribution is using different root-fs directory layout - it will be NOT COMPATIBLE with this example config file)
+-- download-debian-*.sh - download various debian rootfs from docker image repository
 
 -- THIS CONFIG WILL CREATE REGULAR SANDBOXED ENV FROM CHROOT DIRECTORY, THAT WAS PREVIOUSLY SETUP WITH debian-setup.cfg.lua.
 -- all root-subdirectories from external rootfs (debian_chroot directory) will be mounted read-only.
@@ -138,7 +137,14 @@ sandbox={
     -- optional, if you do not touch tunables.uid and tunables.gid tunable parameters
     defaults.bwrap.uid,
     defaults.bwrap.gid,
-  }
+  },
+
+  -- use non-default bwrap command and parameters
+  -- optional, use with caution
+  --[[ bwrap_cmd={
+    "bwrap", -- you may pass non default bwrap executable name
+    -- additional command line parameters, one per string
+  } ]]--
 }
 
 -- add remaining mounts, depending on detected debian version
