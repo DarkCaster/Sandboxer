@@ -193,6 +193,12 @@ loader.transform_bwrap_list(sandbox.bwrap,"sandbox.bwrap",loader.bwrap_table_res
 loader.transform_bwrap_list(sandbox.setup.mounts,"sandbox.setup.mounts",loader.bwrap_table_result)
 sandbox.bwrap=loader.bwrap_table_result
 
+if type(sandbox.bwrap_cmd)~="nil" then
+  loader.check_one_level_string_list(sandbox.bwrap_cmd, "sandbox.bwrap_cmd")
+else
+  sandbox.bwrap_cmd={"bwrap"}
+end
+
 -- sort bwrap table, according to prio parameters
 function loader.bwrap_compare(first,second)
   if first.prio<second.prio then return true end
