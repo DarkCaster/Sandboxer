@@ -74,7 +74,7 @@ rm -f "$bin_dir/sandboxer-stop-all"
 ln -rs "$target/bin/sandboxer-stop-all.sh" "$bin_dir/sandboxer-stop-all"
 rm -f "$bin_dir/sandboxer-desktop-file-creator"
 ln -rs "$target/bin/sandboxer-desktop-file-creator.sh" "$bin_dir/sandboxer-desktop-file-creator"
-rm -f "$bin_dir/sandboxer-download-extra.sh"
+rm -f "$bin_dir/sandboxer-download-extra"
 ln -rs "$target/bin/sandboxer-download-extra.sh" "$bin_dir/sandboxer-download-extra"
 find "$target" -type f -name "*.sh" -exec "$curdir/update_shebang.sh" {} \;
 find "$target" -type f -name "*.sh.in" -exec "$curdir/update_shebang.sh" {} \;
