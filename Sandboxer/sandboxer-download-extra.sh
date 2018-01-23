@@ -17,9 +17,6 @@ targets="$1"
 [[ -z $targets ]] && targets=( debian-9-i386 debian-9 ubuntu-16.04 )
 
 download () {
-  rm -f "$tmp_dir/$1.tar.xz"
-  rm -f "$tmp_dir/$1.tar.xz.sign"
-
   echo -n "*** trying $1 ..."
   if ! ( cd "$tmp_dir" && wget -q "$1.tar.xz" ); then
     echo " failed."
@@ -46,7 +43,11 @@ extract () {
   mkdir -p "$HOME/.cache/sandboxer"
   rm -rf "$HOME/.cache/sandboxer/$1"
   ( cd "$HOME/.cache/sandboxer" && xz -c -d "$tmp_dir/$1.tar.xz" | tar xf - )
-  rm "$tmp_dir/$1.tar.xz"
+}
+
+cleanup () {
+  rm -f "$tmp_dir/$1.tar.xz"
+  rm -f "$tmp_dir/$1.tar.xz.sign"
 }
 
 commander=""
@@ -64,7 +65,11 @@ checksum=`2>/dev/null "$commander" || true`
 for target in "${targets[@]}"
 do
   file="executor-$target-$checksum"
+  cleanup "$file"
   ( download "$dl_base/$file" && verify "$file" && extract "$file" ) || true
+  cleanup "$file"
   file="extra-binaries-$target"
+  cleanup "$file"
   ( download "$dl_base/$file" && verify "$file" && extract "$file" ) || true
+  cleanup "$file"
 done
