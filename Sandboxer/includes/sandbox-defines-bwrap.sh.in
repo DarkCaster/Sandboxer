@@ -149,13 +149,17 @@ bwrap_add_param() {
   bwrap_param_cnt=$((bwrap_param_cnt+1))
 }
 
-# for now enforce --new-session parameter
-bwrap_add_param "--new-session"
-
 sandbox_init() {
   local cnt=1
-  local cnt_min=`get_lua_table_start "sandbox.bwrap"`
-  local cnt_max=`get_lua_table_end "sandbox.bwrap"`
+  local cnt_min=`get_lua_table_start "sandbox.bwrap_cmd"`
+  local cnt_max=`get_lua_table_end "sandbox.bwrap_cmd"`
+  for ((cnt=cnt_min;cnt<cnt_max;++cnt))
+  do
+    bwrap_add_param "${cfg[sandbox.bwrap_cmd.$cnt]}"
+  done
+  bwrap_add_param "--new-session" # for now enforce --new-session parameter
+  cnt_min=`get_lua_table_start "sandbox.bwrap"`
+  cnt_max=`get_lua_table_end "sandbox.bwrap"`
   for ((cnt=cnt_min;cnt<cnt_max;++cnt))
   do
     local fld_cnt=1

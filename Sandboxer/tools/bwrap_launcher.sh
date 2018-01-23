@@ -5,7 +5,7 @@
 #         <basedir>
 #         <additional dir to cleanup on exit> <additional dir> ...
 #         -- - end of launcher script parameters
-#         <parameters for bwrap>
+#         <bwrap commandline, including bwrap command>
 
 cleanup="$1"
 logfile="$2"
@@ -87,8 +87,8 @@ lock_exit() {
 
 trap "{ log \"bwrap_launcher.sh: trap triggered, ignoring\"; }" INT HUP TERM
 
-log "launching bwrap with command line parameters: $@"
-0</dev/null 1>"$basedir/bwrap.log" 2>&1 "$nohup_bin" bwrap "$@"
+log "launching bwrap with command line: $@"
+0</dev/null 1>"$basedir/bwrap.log" 2>&1 "$nohup_bin" "$@"
 
 err_code="$?"
 test "$err_code" != "0" && error "bwrap failed with error code $err_code, bwrap.log output:" && cat_error_to_logfile "$basedir/bwrap.log" && exit 1
