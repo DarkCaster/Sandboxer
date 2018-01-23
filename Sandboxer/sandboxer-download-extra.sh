@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# helper script, that will check, download and verify precompiled helper utilities
+# for use with different types of external root-fs sandboxes
+# usage: sandboxer-download-extra.sh <space separated targets list>
+
+dl_base="https://github.com/DarkCaster/Sandboxer/releases/download/external-binaries"
+
+script_dir="$( cd "$( dirname "$0" )" && pwd )"
+
+set -e
+
+tmp_dir="$TMPDIR"
+[[ -z $tmp_dir || ! -d $tmp_dir ]] && tmp_dir="/tmp"
+
+targets="$1"
+[[ -z $targets ]] && targets=( debian-9-i386 debian-9 ubuntu-16.04 )
+
+download () {
+  rm -f "$tmp_dir/$1.tar.xz"
+  rm -f "$tmp_dir/$1.tar.xz.sign"
+
+  echo -n "*** trying $1 ..."
+  if ! ( cd "$tmp_dir" && wget -q "$1.tar.xz" ); then
+    echo " failed."
+    return 1
+  else
+    echo " ok."
+  fi
+
+  echo -n "*** trying $1.tar.xz.sign ..."
+  if ! ( cd "$tmp_dir" && wget -q "$1.tar.xz.sign" ); then
+    echo " failed."
+    return 1
+  else
+    echo " ok."
+  fi
+}
+
+verify () {
+  "$script_dir/signing/verify.sh" "$tmp_dir/$1.tar.xz" || return 1
+}
+
+extract () {
+  echo "extracting $1.tar.xz to $HOME/.cache/sandboxer"
+  mkdir -p "$HOME/.cache/sandboxer"
+  rm -rf "$HOME/.cache/sandboxer/$1"
+  ( cd "$HOME/.cache/sandboxer" && xz -c -d "$tmp_dir/$1.tar.xz" | tar xf - )
+  rm "$tmp_dir/$1.tar.xz"
+}
+
+commander=""
+for hint in "$script_dir/commander" "$script_dir/../Build/commander"
+do
+  if [[ -x $hint/commander ]]; then
+    commander="$hint/commander"
+    break
+  fi
+done
+
+[[ -z $commander ]] && echo "commander binary not found!" && exit 1
+checksum=`2>/dev/null "$commander" || true`
+
+for target in "${targets[@]}"
+do
+  file="executor-$target-$checksum"
+  ( download "$dl_base/$file" && verify "$file" && extract "$file" ) || true
+  file="extra-binaries-$target"
+  ( download "$dl_base/$file" && verify "$file" && extract "$file" ) || true
+done
