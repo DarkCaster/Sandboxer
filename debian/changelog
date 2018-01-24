@@ -1,8 +1,8 @@
-sandboxer (0.5.5.dev__VERSION__SUFFIX__) __DISTRO__; urgency=low
+sandboxer (0.5.1__VERSION__SUFFIX__) __DISTRO__; urgency=low
 
-  * Version 0.5.5.dev.
+   * Version 0.5.1. Minor fixes.
 
- -- DarkCaster <dark.caster@outlook.com>  Tue, 24 Jan 2018 00:00:00 +0000
+  -- DarkCaster <dark.caster@outlook.com>  Tue, 24 Jan 2018 00:00:00 +0000
 
 sandboxer (0.5__VERSION__SUFFIX__) __DISTRO__; urgency=low
 
