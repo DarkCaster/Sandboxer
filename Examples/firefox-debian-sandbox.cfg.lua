@@ -146,7 +146,6 @@ firefox_home={
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
-  desktop=desktop_data,
   desktop={
     name = "Firefox (in sandbox)",
     comment = "Firefox browser, sandbox uid "..config.sandbox_uid,
