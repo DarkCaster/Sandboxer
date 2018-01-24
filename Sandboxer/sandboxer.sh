@@ -215,10 +215,8 @@ if [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]; 
   comm_wait=400
   while [[ ! -p $basedir/control/control.in || ! -p $basedir/control/control.out ]]
   do
-    if [[ $comm_wait -lt 1 ]]; then
-      log "timeout while waiting control channels"
-      teardown 1
-    fi
+    [[ -f $basedir/sandbox.failed ]] && log "sandbox startup failed!" && teardown 1
+    [[ $comm_wait -lt 1 ]] && log "timeout while waiting control channels" && teardown 1
     sleep 0.025
     comm_wait=$((comm_wait-1))
   done

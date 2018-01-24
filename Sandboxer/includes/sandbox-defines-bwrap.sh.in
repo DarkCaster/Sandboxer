@@ -185,5 +185,6 @@ sandbox_bind_rw() {
 }
 
 sandbox_start() {
+  rm -f "$basedir/sandbox.failed"
   0</dev/null "$tools_dir/bwrap_launcher.sh" "${cfg[sandbox.setup.cleanup_on_exit]}" "bwrap_launcher.log" "$lock_dirname" "$basedir" "${extra_dirs_cleanup[@]}" -- "${bwrap_params[@]}" "${bwrap_env_unset[@]}" "${bwrap_env_set[@]}" "/executor/executor" 0 1 "/executor/control" "control" "${cfg[sandbox.setup.security_key]}" &
 }

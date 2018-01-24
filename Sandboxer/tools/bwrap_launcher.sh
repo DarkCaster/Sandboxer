@@ -91,7 +91,12 @@ log "launching bwrap with command line: $@"
 0</dev/null 1>"$basedir/bwrap.log" 2>&1 "$nohup_bin" "$@"
 
 err_code="$?"
-test "$err_code" != "0" && error "bwrap failed with error code $err_code, bwrap.log output:" && cat_error_to_logfile "$basedir/bwrap.log" && exit 1
+if [ "$err_code" != "0" ]; then
+  error "bwrap failed with error code $err_code, bwrap.log output:"
+  cat_error_to_logfile "$basedir/bwrap.log"
+  touch "$basedir/sandbox.failed"
+  exit 1
+fi
 
 #below is a cleanup-on-exit logic that may be activated when bwrap is complete
 test "$cleanup" != "true" && exit 0
