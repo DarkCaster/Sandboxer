@@ -16,3 +16,6 @@ rm -f "$script_dir/debian_chroot/etc/machine-id"
 rm /tmp/ubuntu-root.tar.gz
 #copy setup script
 cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
+#alter config for apt, to make it work under fakeroot
+echo "APT::Sandbox::Seccomp::Allow { \"socket\" };" > "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
+echo "APT::Sandbox::Seccomp::Allow { \"connect\" };" >> "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
