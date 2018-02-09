@@ -50,9 +50,7 @@ defaults.env={}
 
 defaults.env.blacklist_main={
   -- main blacklist, include variables that may leak sensitive information
-  -- or will be incorrect inside sandbox because of isolation. (TODO: ability to use subsystems defined by such variables)
-  -- this list does not include variables for current X11 session and DE,
-  -- does not include variables regad
+  -- or will be incorrect inside sandbox because of isolation.
   "DBUS_SESSION_BUS_ADDRESS",
   "FROM_HEADER",
   "GPG_AGENT_INFO",
