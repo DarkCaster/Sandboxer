@@ -70,7 +70,7 @@ sandbox={
 
   bwrap={
     defaults.bwrap.unshare_user,
-    defaults.bwrap.unshare_ipc,
+    -- defaults.bwrap.unshare_ipc,
     defaults.bwrap.unshare_pid,
     defaults.bwrap.unshare_net, -- cut off sandbox from network
     defaults.bwrap.unshare_uts,
