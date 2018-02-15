@@ -19,12 +19,12 @@ defaults.recalculate()
 -- load base config
 dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
 
--- remove some mounts
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
+-- remove some mounts from base config
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount) -- remove line, to enable direct alsa support (alsa-pulse may work without it).
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount) -- remove line, to enable opengl acceleration
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount) -- remove line, to enable opengl acceleration
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount) -- remove line, to enable direct access to input devices (joystics, for example)
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount) -- remove line, if you experience problems with pulseaudio
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
 -- modify PATH env
