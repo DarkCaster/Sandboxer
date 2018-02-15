@@ -72,4 +72,5 @@ make
 make install DESTDIR="$curdir/Build"
 cd "$curdir"
 
-[[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in ]] && git submodule update --init
+[[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in && -d $curdir/.git ]] && git submodule update --init
+[[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in && ! -d $curdir/.git ]] && git clone "https://github.com/DarkCaster/Bash-Lua-Helper.git" "$curdir/BashLuaHelper"
