@@ -1,106 +1,38 @@
 -- example config for smplayer sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
+-- using debian-sandbox.cfg.lua config file as base
+
 -- opengl acceleration should work with opensurce mesa drivers, tested on Intel HD graphics.
 -- for proprietary NVIDIA and AMD drivers it may be neccesary to forward it's libgl (and x11 drivers) from host system to sandbox:
 -- you can write mount rules for this (see mounts section), or simply copy all files neccesary into external debian chroot
 -- this config is based on example.cfg.lua, most comments removed.
 
-tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
-dofile(loader.path.combine(loader.workdir,"debian-version-probe.lua.in"))
-
+-- redefine some parameters
 tunables.datadir=loader.path.combine(loader.workdir,"userdata-mpv")
-tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
-tunables.features.dbus_search_prefix=tunables.chrootdir
-tunables.features.xpra_search_prefix=tunables.chrootdir
-tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
-tunables.features.pulse_env_alsa_config="skip"
-tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 defaults.recalculate()
 
-sandbox={
-  features={
-    --"dbus",
-    --"gvfs_fix",
-    "pulse",
-    "x11host", -- less secure, try this if you do not have xpra software
-    "envfix",
-  },
-  setup={
-    executor_build=os_id.."-"..os_version.."-"..os_arch,
-    commands={
-      defaults.commands.resolvconf,
-      defaults.commands.machineid_static,
-      defaults.commands.passwd,
-      defaults.commands.home,
-      defaults.commands.home_gui_config,
-      defaults.commands.var_cache,
-      defaults.commands.var_tmp,
-    },
-    env_whitelist={
-      "LANG",
-      "LC_ALL",
-    },
-    env_set={
-      {"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"},
-      defaults.env.set_xdg_runtime,
-      defaults.env.set_home,
-    },
-    mounts={
-      defaults.mounts.system_group, -- includes: proc, dev, empty /run dir, empty /var dir, empty /tmp
-      defaults.mounts.xdg_runtime_dir,
-      defaults.mounts.home_mount,
-      defaults.mounts.var_cache_mount,
-      defaults.mounts.var_tmp_mount,
-      defaults.mounts.var_lib_mount,
-      defaults.mounts.usr_ro_mount,
-      defaults.mounts.host_etc_mount,
-      defaults.mounts.passwd_mount,
-      defaults.mounts.machineid_mount,
-      --defaults.mounts.resolvconf_mount,
-      --defaults.mounts.devsnd_mount, -- for direct alsa support (alsa-pulse may work without it).
-      defaults.mounts.devdri_mount, -- may be needed when using x11host for opengl acceleration
-      defaults.mounts.sys_mount, -- may be needed when using x11host for opengl acceleration
-      --defaults.mounts.devinput_mount, -- joystics
-      --defaults.mounts.devshm_mount,
+-- load base config
+dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
 
-      -- mount directory with media files to the same point, so it can be opened directly by using information from desktop file
-      {prio=99,"ro-bind","/mnt/data","/mnt/data"},
-      {prio=99,"ro-bind","/mnt/nas","/mnt/nas"},
-    },
-  },
+-- remove some unneded features and mounts
+loader.table.remove_value(sandbox.features,"dbus")
+loader.table.remove_value(sandbox.features,"gvfs_fix")
 
-  bwrap={
-    defaults.bwrap.unshare_user,
-    -- defaults.bwrap.unshare_ipc,
-    defaults.bwrap.unshare_pid,
-    defaults.bwrap.unshare_net, -- cut off sandbox from network
-    defaults.bwrap.unshare_uts,
-    -- defaults.bwrap.unshare_cgroup,
-    defaults.bwrap.uid,
-    defaults.bwrap.gid,
-  }
-}
+-- remove some mounts
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount)
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
--- add remaining mounts, depending on detected debian version
-add_debian_mounts()
+-- modify PATH env
+table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 
-shell={
-  exec="/bin/bash",
-  args={"-l"},
-  path="/",
-  env_set={
-    {"TERM",os.getenv("TERM")},
-  },
-  term_signal=defaults.signals.SIGHUP,
-  attach=true,
-  pty=true,
-  desktop={
-    name = "Shell for debian-smplayer sandbox",
-    comment = "shell for sandbox uid "..config.sandbox_uid,
-    icon = "terminal",
-    terminal = true,
-    startupnotify = false,
-  },
-}
+-- add host mounts, readonly
+table.insert(sandbox.setup.mounts,{prio=99,"ro-bind","/mnt/data","/mnt/data"})
+table.insert(sandbox.setup.mounts,{prio=99,"ro-bind","/mnt/nas","/mnt/nas"})
+
+-- add bwrap unshare-net option to cut off sandbox from network
+table.insert(sandbox.bwrap,defaults.bwrap.unshare_net)
+print(loader.lua_version.num)
 
 smplayer_log={
   exec="/usr/bin/smplayer",
