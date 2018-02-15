@@ -18,6 +18,11 @@ So, proceed at your own risk.
 If you need more secure isolation - use virtualization solutions like qemu-kvm, virtualbox, etc.
 But, still, i'm trying to do my best to make this tool secure.
 
+## Packages for ubuntu and debian distributions:
+
+*   [Launchpad](https://launchpad.net/~dark-caster/+archive/ubuntu/sandboxer), for ubuntu distributions
+*   [OBS](https://build.opensuse.org/repositories/home:Warhammer40k:sandboxer), for debian and ubuntu distributions
+
 ## Main concepts of this sandboxing suite:
 
 There is an environment constructed by your OS, used in your normal user-session and DE.
