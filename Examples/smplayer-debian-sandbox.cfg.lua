@@ -32,7 +32,6 @@ table.insert(sandbox.setup.mounts,{prio=99,"ro-bind","/mnt/nas","/mnt/nas"})
 
 -- add bwrap unshare-net option to cut off sandbox from network
 table.insert(sandbox.bwrap,defaults.bwrap.unshare_net)
-print(loader.lua_version.num)
 
 smplayer_log={
   exec="/usr/bin/smplayer",
