@@ -146,7 +146,7 @@ You may also pass custom target installation path to install-to-home.sh script a
 
 ### Short term plans
 
-*   Add tools for gathering statistics from running sandboxes and control/terminate running sandboxes/sessions
+*   Add tools for gathering statistics from running sandboxes
 *   Improve logging from sandboxed applications
 *   Add tools that will perform setup of custom network-namespace and firewalling for sandboxed application.
     For now it is only possible to run sandbox with host networking, or run sandbox with empty network-namespace without any external connectivity.
