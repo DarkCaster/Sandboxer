@@ -4,7 +4,6 @@
 -- opengl acceleration should work with opensurce mesa drivers, tested on Intel HD graphics.
 -- for proprietary NVIDIA and AMD drivers it may be neccesary to forward it's libgl (and x11 drivers) from host system to sandbox:
 -- you can write mount rules for this (see mounts section), or simply copy all files neccesary into external debian chroot
--- this config is based on example.cfg.lua, most comments removed.
 
 -- redefine some parameters
 tunables.datadir=loader.path.combine(loader.workdir,"userdata-mpv")
