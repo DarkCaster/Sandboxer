@@ -16,9 +16,16 @@ distro="$4"
 [[ $distro = none ]] && distro=""
 
 mkdir -p "$target/sandboxer"
-git archive --format tar HEAD | (cd "$target/sandboxer" && tar xf -)
-[[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in ]] && git submodule update --init
-(cd "$curdir/BashLuaHelper" && git archive --format tar HEAD) | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
+if [[ -d $curdir/.git ]]; then
+  git archive --format tar HEAD | (cd "$target/sandboxer" && tar xf -)
+  [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in ]] && git submodule update --init
+  (cd "$curdir/BashLuaHelper" && git archive --format tar HEAD) | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
+else
+  cp -r "$curdir"/* "$target/sandboxer"
+  [[ ! -f $target/sandboxer/BashLuaHelper/lua-helper.bash.in ]] && git clone "https://github.com/DarkCaster/Bash-Lua-Helper.git" "$target/sandboxer/BashLuaHelper"
+  rm -rf "$target/sandboxer/BashLuaHelper"/{.git,.gitignore}
+  rm -rf "$target/sandboxer"/{.git,.gitignore,.gitmodules}
+fi
 
 cd "$target/sandboxer"
 [[ -z $distro ]] && sed -i "s|__DISTRO__|unstable|g" "debian/changelog"
