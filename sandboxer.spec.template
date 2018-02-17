@@ -13,6 +13,8 @@ Summary:        Application isolation suite
 Url:            https://github.com/DarkCaster/Sandboxer
 Group:          System/Management
 Source0:        sandboxer-%{version}.tar.xz
+BuildRequires:  pkgconfig(x11)
+BuildRequires:  pkgconfig(xext)
 BuildRequires:  cmake
 BuildRequires:  bash
 BuildRequires:  dash
@@ -24,9 +26,14 @@ Requires:       dash
 Requires:       Lua(API) >= 5.1
 Suggests:       lua
 Requires:       sed
+Requires:       bc
 Requires:       grep
 Requires:       coreutils
 Requires:       util-linux
+Requires:       desktop-file-utils
+Requires:       shared-mime-info
+Requires:       bubblewrap
+Suggests:       sandboxer-fakeroot
 
 %description
 Simple and customizable application sandboxing/isolation suite
@@ -67,4 +74,4 @@ popd
 
 %changelog
 * Sat Feb 17 2018 fwdsbs.to.11df@xoxy.net
-- Sandboxer package, version %{pkg_ver}
+- Sandboxer package
