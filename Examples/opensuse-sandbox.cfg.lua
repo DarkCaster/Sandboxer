@@ -96,10 +96,11 @@ shell={
   pty=true,
 }
 
-function trim_args(t1)
-  table.remove(t1,1)
-  table.remove(t1,1)
-  return t1
+function trim_args(target)
+  local result={}
+  assert(type(target)=="table", "trim_args: target must be a table!")
+  for i = #target, 3, -1 do table.insert(result, 1, target[i]) end
+  return result
 end
 
 -- invocation example: sandboxer opensuse-sandbox.cfg.lua cmd_exec / /bin/ls -la
