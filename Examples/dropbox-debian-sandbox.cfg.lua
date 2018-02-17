@@ -1,106 +1,41 @@
 -- example config for dropbox sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
+-- using debian-sandbox.cfg.lua config file as base
+
 -- xpra x11-forwarding software (must be installed on host, v2.0 and up) may be used to isolate sanbox from host x11 service.
 -- opengl acceleration untested and may not work (especially with xpra mode or when using proprietary video drivers that install it's own libgl).
--- this config is based on example.cfg.lua, most comments removed.
 
 -- do not forget to install following packages in addition to packages from debian-minimal-setup.sh:
 -- libxslt1.1
 -- midori (or any other js capable browser that may be started with xdg-open by dropbox in order to perform initial auth)
 
-tunables.chrootdir=loader.path.combine(loader.workdir,"debian_chroot")
-dofile(loader.path.combine(loader.workdir,"debian-version-probe.lua.in"))
+-- redefine defaults.recalculate function, that will be called by base config
+defaults.recalculate_orig=defaults.recalculate
+function defaults.recalculate()
+  -- redefine some parameters
+  tunables.datadir=loader.path.combine(loader.workdir,"userdata-dropbox")
+  defaults.recalculate_orig()
+  defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
+end
 
-tunables.datadir=loader.path.combine(loader.workdir,"userdata-dropbox")
-tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
-tunables.features.dbus_search_prefix=tunables.chrootdir
-tunables.features.xpra_search_prefix=tunables.chrootdir
-tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
-tunables.features.pulse_env_alsa_config="skip"
-tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 defaults.recalculate()
 
-sandbox={
-  features={
-    "dbus",
-    "gvfs_fix",
-    "pulse",
-    "x11host", -- less secure, try this if you do not have xpra software
-    --"xpra", -- more secure, you must install xpra software suite with server and client functionality. NOTE: do not forget to install xauth utility
-    "envfix",
-  },
-  setup={
-    executor_build=os_id.."-"..os_version.."-"..os_arch,
-    commands={
-      defaults.commands.resolvconf,
-      defaults.commands.machineid_static,
-      defaults.commands.passwd,
-      defaults.commands.home,
-      defaults.commands.home_gui_config,
-      defaults.commands.var_cache,
-      defaults.commands.var_tmp,
-    },
-    env_whitelist={
-      "LANG",
-      "LC_ALL",
-    },
-    env_set={
-      {"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"},
-      defaults.env.set_xdg_runtime,
-      defaults.env.set_home,
-    },
-    mounts={
-      defaults.mounts.system_group, -- includes: proc, dev, empty /run dir, empty /var dir, empty /tmp
-      defaults.mounts.xdg_runtime_dir,
-      defaults.mounts.home_mount,
-      defaults.mounts.var_cache_mount,
-      defaults.mounts.var_tmp_mount,
-      defaults.mounts.var_lib_mount,
-      defaults.mounts.usr_ro_mount,
-      defaults.mounts.host_etc_mount,
-      defaults.mounts.passwd_mount,
-      defaults.mounts.machineid_mount,
-      defaults.mounts.resolvconf_mount,
-      --defaults.mounts.devsnd_mount, -- for alsa support.
-      --defaults.mounts.devdri_mount, -- may be needed when using x11host for opengl acceleration
-      --defaults.mounts.sys_mount, -- may be needed when using x11host for opengl acceleration
-      --defaults.mounts.devinput_mount, -- joystics
-      --defaults.mounts.devshm_mount,
-    },
-  },
+-- load base config
+dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
 
-  bwrap={
-    defaults.bwrap.unshare_user,
-    defaults.bwrap.unshare_ipc,
-    defaults.bwrap.unshare_pid,
-    -- defaults.bwrap.unshare_net,
-    defaults.bwrap.unshare_uts,
-    -- defaults.bwrap.unshare_cgroup,
-    defaults.bwrap.uid,
-    defaults.bwrap.gid,
-  }
-}
+-- remove some mounts from base config
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount) -- remove line, to enable direct alsa support (alsa-pulse may work without it).
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount) -- remove line, to enable opengl acceleration
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount) -- remove line, to enable opengl acceleration
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount) -- remove line, to enable direct access to input devices (joystics, for example)
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount) -- remove line, if you experience problems with pulseaudio
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
--- add remaining mounts, depending on detected debian version
-add_debian_mounts()
+-- modify PATH env
+table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 
-shell={
-  exec="/bin/bash",
-  args={"-l"},
-  path="/",
-  env_set={
-    {"TERM",os.getenv("TERM")},
-  },
-  term_signal=defaults.signals.SIGHUP,
-  attach=true,
-  pty=true,
-  desktop={
-    name = "Shell for dropbox sandbox",
-    comment = "shell for sandbox uid "..config.sandbox_uid,
-    icon = "terminal",
-    terminal = true,
-    startupnotify = false,
-  },
-}
+-- add bwrap unshare_ipc option, remove following 2 lines if dropbox GUI is not displaying properly
+loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
+table.insert(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
 desktop_data={
   name = "Dropbox in sandbox",
