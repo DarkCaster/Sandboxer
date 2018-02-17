@@ -31,7 +31,8 @@ rm -f "$target/sandboxer/sandboxer.spec.template"
 sed -i "s|__VERSION__SUFFIX__|""$version""|g" "$target/sandboxer.spec"
 
 # todo: read full version
-full_ver=""
+full_ver=`cat "$target/sandboxer.spec" | grep -e "^%define pkg_ver" | head -n1 | cut -f3 -d" " | tr -d [:blank:]`
+[[ -z $full_ver ]] && echo "failed to detect package version!" && exit 1
 mv "$target/sandboxer" "$target/sandboxer-$full_ver"
 ( cd "$target" && tar cf "sandboxer-$full_ver.tar" "sandboxer-$full_ver" --owner=0 --group=0 && xz -9e "sandboxer-$full_ver.tar" )
 rm -rf "$target/sandboxer-$full_ver"

@@ -1,0 +1,70 @@
+#
+# spec file for package sandboxer
+#
+
+%define target_prefix %{_prefix}/lib/sandboxer
+%define pkg_ver 0.5.5.dev__VERSION__SUFFIX__
+
+Name:           sandboxer
+Version:        %{pkg_ver}
+Release:        0
+License:        MIT
+Summary:        Application isolation suite
+Url:            https://github.com/DarkCaster/Sandboxer
+Group:          System/Management
+Source0:        sandboxer-%{version}.tar.xz
+BuildRequires:  cmake
+BuildRequires:  bash
+BuildRequires:  dash
+BuildRequires:  fdupes
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+Requires:       bash
+Recommends:     bash-loadables
+Requires:       dash
+Requires:       Lua(API) >= 5.1
+Suggests:       lua
+Requires:       sed
+Requires:       grep
+Requires:       coreutils
+Requires:       util-linux
+
+%description
+Simple and customizable application sandboxing/isolation suite
+
+%prep
+%setup -q
+
+%build
+pushd Executor
+%cmake -DCMAKE_INSTALL_PREFIX="%{target_prefix}/bin"
+%make_jobs
+popd
+pushd X11Util
+%cmake -DCMAKE_INSTALL_PREFIX="%{target_prefix}/bin"
+%make_jobs
+popd
+
+%install
+./install-sandboxer.sh "%{buildroot}%{target_prefix}" "%{buildroot}%{_bindir}"
+pushd Executor
+%cmake_install
+popd
+pushd X11Util
+%cmake_install
+popd
+%fdupes "%{buildroot}%{_prefix}"
+
+%files
+%defattr(-,root,root)
+%doc LICENSE README.md
+%{_bindir}/sandboxer
+%{_bindir}/sandboxer-desktop-file-creator
+%{_bindir}/sandboxer-download-extra
+%{_bindir}/sandboxer-kill
+%{_bindir}/sandboxer-stop-all
+%{_bindir}/sandboxer-term
+%{target_prefix}
+
+%changelog
+* Sat Feb 17 2018 fwdsbs.to.11df@xoxy.net
+- Sandboxer package, version %{pkg_ver}
