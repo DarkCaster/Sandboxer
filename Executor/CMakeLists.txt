@@ -151,12 +151,14 @@ add_executable(test.bin${ARCHSUFFIX} helper_macro.h logger.c test.c)
 set_property(TARGET test.bin${ARCHSUFFIX} PROPERTY LINK_FLAGS)
 target_link_libraries(test.bin${ARCHSUFFIX} ${CMAKE_THREAD_LIBS_INIT})
 
-#executor util, static
-add_executable(executor.static helper_macro.h cmd_defs.h comm_helper.c hash.c message.c logger.c pid_list.c executor.c)
-set_property(TARGET executor.static PROPERTY LINK_FLAGS "-static")
-target_link_libraries(executor.static ${CMAKE_THREAD_LIBS_INIT} -lutil)
+if(BUILD_STATIC_EXECUTOR)
+  #executor util, static
+  add_executable(executor.static helper_macro.h cmd_defs.h comm_helper.c hash.c message.c logger.c pid_list.c executor.c)
+  set_property(TARGET executor.static PROPERTY LINK_FLAGS "-static")
+  target_link_libraries(executor.static ${CMAKE_THREAD_LIBS_INIT} -lutil)
+endif(BUILD_STATIC_EXECUTOR)
 
-#executor util, static
+#executor util
 add_executable(executor helper_macro.h cmd_defs.h comm_helper.c hash.c message.c logger.c pid_list.c executor.c)
 target_link_libraries(executor ${CMAKE_THREAD_LIBS_INIT} -lutil)
 install(TARGETS executor DESTINATION "executor")
