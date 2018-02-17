@@ -19,6 +19,8 @@ BuildRequires:  cmake
 BuildRequires:  bash
 BuildRequires:  dash
 BuildRequires:  fdupes
+BuildRequires:  systemd-rpm-macros
+BuildRequires:  systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       bash
 Recommends:     bash-loadables
@@ -34,6 +36,7 @@ Requires:       desktop-file-utils
 Requires:       shared-mime-info
 Requires:       bubblewrap
 Suggests:       sandboxer-fakeroot
+%{?systemd_requires}
 
 %description
 Simple and customizable application sandboxing/isolation suite
@@ -59,7 +62,21 @@ popd
 pushd X11Util
 %cmake_install
 popd
+install -D -m 644 sandboxer.service %{buildroot}%{_unitdir}/sandboxer.service
 %fdupes "%{buildroot}%{_prefix}"
+
+%pre
+%service_add_pre sandboxer.service
+
+%post
+%service_add_post sandboxer.service
+systemctl enable sandboxer.service
+
+%preun
+%service_del_preun sandboxer.service
+
+%postun
+%service_del_postun sandboxer.service
 
 %files
 %defattr(-,root,root)
@@ -70,6 +87,7 @@ popd
 %{_bindir}/sandboxer-kill
 %{_bindir}/sandboxer-stop-all
 %{_bindir}/sandboxer-term
+%{_unitdir}/sandboxer.service
 %{target_prefix}
 
 %changelog

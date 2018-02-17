@@ -24,6 +24,7 @@ else
 fi
 
 cp "$curdir/sandboxer.spec.template" "$target/sandboxer.spec"
+mv "$target/sandboxer/debian/sandboxer.service" "$target/sandboxer"
 rm -rf "$target/sandboxer/debian"
 rm -f "$target/sandboxer/create-rpm-source.sh"
 rm -f "$target/sandboxer/create-debian-source.sh"
