@@ -26,7 +26,7 @@ sandbox.features={
   --"x11host",
   "xpra",
   "envfix",
-},
+}
 
 -- remove some mounts from base config
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount) -- remove line, to enable direct alsa support (alsa-pulse may work without it).
