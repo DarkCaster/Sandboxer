@@ -3,7 +3,7 @@
 #
 
 %define target_prefix %{_prefix}/lib/sandboxer
-%define pkg_ver 0.5.5.dev__VERSION__SUFFIX__
+%define pkg_ver 0.6.0__VERSION__SUFFIX__
 
 Name:           sandboxer
 Version:        %{pkg_ver}
