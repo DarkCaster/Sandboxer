@@ -37,7 +37,9 @@ esac
 
 arch="$2"
 [[ -z $arch ]] && arch="amd64"
-[[ $arch != amd64 && $arch != i386 ]] && "selected arch $arch is not supported for now and may not work with sandboxer!"
+[[ $arch != amd64 && $arch != i386 ]] && \
+  echo "selected arch $arch is not supported for now and may not work with sandboxer!" && \
+  exit 1
 
 echo "downloading debian $name with $arch arch from docker repository"
 "$script_dir/download-image-from-docker-repo.sh" debian "$name" "$arch"
