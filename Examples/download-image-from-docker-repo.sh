@@ -21,7 +21,6 @@ arch="$3"
 [[ $arch = none ]] && arch=""
 
 rootfs="$4"
-[[ -z $rootfs ]] && rootfs="rootfs.tar.xz"
 
 output="$5"
 [[ -z $output ]] && output="$script_dir/${target}_chroot"
@@ -129,6 +128,19 @@ elif [[ -z $git_commit ]]; then
 fi
 
 fi # [[ -z "$direct_download_complete" ]]
+
+if [[ -z $rootfs ]]; then
+  echo "trying to autodetect rootfs archive filename"
+  if [[ -f $image_git/$directory/Dockerfile ]]; then
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+      if [[ $line =~ ^"ADD"[[:space:]](.*)[[:space:]]"/"$ ]]; then
+        rootfs="${BASH_REMATCH[1]}"
+      fi
+    done < "$image_git/$directory/Dockerfile"
+  fi
+fi
+
+[[ -z $rootfs ]] && echo "failed to detect root-fs archive name, falling back to default rootfs.tar.xz" && rootfs="rootfs.tar.xz"
 
 mkdir -p "$output" && cd "$output"
 xz -d -c "$image_git/$directory/$rootfs" | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
