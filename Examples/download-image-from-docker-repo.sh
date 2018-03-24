@@ -133,5 +133,14 @@ fi # [[ -z "$direct_download_complete" ]]
 mkdir -p "$output" && cd "$output"
 xz -d -c "$image_git/$directory/$rootfs" | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
 
+# write arch-label file
+[[ ! -z $arch ]] && echo "$arch" > "arch-label"
+
+# create boot directory if missing
+mkdir -p ./boot
+
+# remove machine-id, will be generated automatically
+rm -f ./etc/machine-id
+
 # cleanup temporary files from direct download if any
 [[ ! -z $direct_tmp ]] && echo "cleaning-up" && rm -rf "$direct_tmp"
