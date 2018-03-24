@@ -24,40 +24,16 @@ case "$prefix" in
     prefix="trusty"
     name="trusty"
   ;;
-  "14.10")
-    prefix="unsupported/utopic"
-    name="utopic"
-  ;;
-  "15.04")
-    prefix="unsupported/vivid"
-    name="vivid"
-  ;;
-  "15.10")
-    prefix="unsupported/wily"
-    name="wily"
-  ;;
   "16.04")
     prefix="xenial"
     name="xenial"
-  ;;
-  "16.10")
-    prefix="unsupported/yakkety"
-    name="yakkety"
-  ;;
-  "17.04")
-    prefix="unsupported/zesty"
-    name="zesty"
-  ;;
-  "17.10")
-    prefix="artful"
-    name="artful"
   ;;
   "18.04")
     prefix="bionic"
     name="bionic"
   ;;
   *)
-    echo "selected ubuntu distro version currently is not supported"
+    echo "selected ubuntu distro version is not supported. for now supported versions include 12.04;14.04;16.04;18.04"
     show_usage
   ;;
 esac
@@ -69,14 +45,16 @@ arch="$2"
   exit 1
 
 # download and extract rootfs archive
-wget -O /tmp/ubuntu-root.tar.gz "https://partner-images.canonical.com/core/$prefix/current/ubuntu-$name-core-cloudimg-$arch-root.tar.gz"
+wget -q --show-progress -O /tmp/ubuntu-root.tar.gz "https://partner-images.canonical.com/core/$prefix/current/ubuntu-$name-core-cloudimg-$arch-root.tar.gz"
 mkdir "$script_dir/debian_chroot"
 cd "$script_dir/debian_chroot"
 gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
 rm /tmp/ubuntu-root.tar.gz
 
-# deploy minimal setup script
-cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
+if [[ $name = xenial || $name = bionic ]]; then
+  # deploy minimal setup script
+  cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
+fi
 
 if [[ $name = bionic ]]; then
   # modify config for apt, to make it work under fakeroot
