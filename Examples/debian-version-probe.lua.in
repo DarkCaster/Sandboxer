@@ -32,6 +32,18 @@ function read_os_arch()
 end
 os_arch=read_os_arch()
 
+-- read fs-layout marker
+function read_fs_layout()
+  local layout_file = io.open(loader.path.combine(tunables.chrootdir,"fs-layout"), "r")
+  local layout="normal"
+  if layout_file then
+    layout = layout_file:read()
+    layout_file:close()
+  end
+  return layout
+end
+fs_layout=read_fs_layout()
+
 if os_id=="debian" and os_arch=="amd64" then
   os_oldfs_ver=8 -- for now, only amd64 debian build (version 9 and up) use new fs layout
 elseif os_id=="ubuntu" then
