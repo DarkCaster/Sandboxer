@@ -87,14 +87,12 @@ echo "******************************"
 if [[ $git_repo =~ ^"https://github.com" ]]; then
   direct_tmp=`mktemp -d --tmpdir "$target.direct.XXXXXX"`
   (
-  set -e
   echo "trying to download commit-archive directly from github"
   prefix="$git_repo"
   [[ $prefix =~ ^("https://github.com".*)".git"$ ]] && prefix="${BASH_REMATCH[1]}"
-  wget -q --show-progress -O "$direct_tmp/direct.tar.gz" "$prefix/archive/$git_commit.tar.gz"
-  cd "$direct_tmp"
-  mkdir "direct"
-  gzip -c -d "direct.tar.gz" | tar xf - -C "direct" --strip-components=1
+  wget -q --show-progress -O "$direct_tmp/direct.tar.gz" "$prefix/archive/$git_commit.tar.gz" || exit 1
+  cd "$direct_tmp" && mkdir "direct" || exit 1
+  ( gzip -c -d "direct.tar.gz" | tar xf - -C "direct" --strip-components=1 ) || exit 1
   ) && direct_download_complete="true" || direct_download_complete="false"
   [[ $direct_download_complete != true ]] \
     && echo "direct download from github was failed, falling back to full git-repo fetch" \
