@@ -142,5 +142,16 @@ mkdir -p ./boot
 # remove machine-id, will be generated automatically
 rm -f ./etc/machine-id
 
+# check for merged root-fs layout, and mark it
+# see https://wiki.debian.org/UsrMerge for more info
+fs_layout="merged"
+[[ -d ./bin && ! -L ./bin ]] && fs_layout="normal"
+[[ -d ./sbin && ! -L ./sbin ]] && fs_layout="normal"
+[[ -d ./lib && ! -L ./lib ]] && fs_layout="normal"
+[[ -d ./lib32 && ! -L ./lib32 ]] && fs_layout="normal"
+[[ -d ./lib64 && ! -L ./lib64 ]] && fs_layout="normal"
+[[ -d ./libx32 && ! -L ./libx32 ]] && fs_layout="normal"
+echo "$fs_layout" > "fs-layout"
+
 # cleanup temporary files from direct download if any
 [[ ! -z $direct_tmp ]] && echo "cleaning-up" && rm -rf "$direct_tmp"
