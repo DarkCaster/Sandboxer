@@ -3,7 +3,6 @@
 # simple script to download and extract rootfs image from docker git repository
 # by parsing description file from https://github.com/docker-library/official-images/tree/master/library/<target>
 # then, it perform clone of target git repo with rootfs archives, checkout to target commit and extract rootfs archive
-# TODO: direct download target rootfs.tar.xz from selected github repo and commit by using raw.githubusercontent.com
 
 script_dir="$( cd "$( dirname "$0" )" && pwd )"
 
@@ -30,23 +29,17 @@ output="$5"
 image_git="$6"
 [[ -z $image_git ]] && image_git="$script_dir/${target}_docker_repo"
 
-check_errors () {
-  local status="$?"
-  local msg="$@"
-  if [[ $status != 0 ]]; then
-    echo "ERROR: operation finished with error code $status"
-    [[ ! -z $msg ]] && echo "$msg"
-    exit "$status"
-  fi
-}
+set -e
 
-[[ ! -d "$output" ]] || check_errors "directory $output already exist!"
+if [[ -d "$output" ]]; then
+  echo "directory $output already exist!"
+  exit 1
+fi
 
 image_list=`mktemp --tmpdir "$target.XXXXXX.list"`
 
-# download description
-wget -O "$image_list" "https://raw.githubusercontent.com/docker-library/official-images/master/library/$target"
-check_errors
+echo "downloading description"
+wget -q --show-progress -O "$image_list" "https://raw.githubusercontent.com/docker-library/official-images/master/library/$target"
 
 git_repo=""
 tags=""
@@ -91,45 +84,56 @@ echo "******************************"
 
 [[ -z $git_repo || -z $tags || -z $git_commit || -z $directory ]] && echo "failed to detect repo parameters for selected tag: $tag" && exit 1
 
+if [[ $git_repo =~ ^"https://github.com" ]]; then
+  direct_tmp=`mktemp -d --tmpdir "$target.direct.XXXXXX"`
+  (
+  set -e
+  echo "trying to download commit-archive directly from github"
+  prefix="$git_repo"
+  [[ $prefix =~ ^("https://github.com".*)".git"$ ]] && prefix="${BASH_REMATCH[1]}"
+  wget -q --show-progress -O "$direct_tmp/direct.tar.gz" "$prefix/archive/$git_commit.tar.gz"
+  cd "$direct_tmp"
+  mkdir "direct"
+  gzip -c -d "direct.tar.gz" | tar xf - -C "direct" --strip-components=1
+  ) && direct_download_complete="true" || direct_download_complete="false"
+  [[ $direct_download_complete != true ]] \
+    && echo "direct download from github was failed, falling back to full git-repo fetch" \
+    || image_git="$direct_tmp/direct"
+fi
+
+if [[ -z $direct_download_complete || $direct_download_complete != true ]]; then
+
 if [[ ! -d "$image_git" ]]; then
   mkdir -p "$image_git" && cd "$image_git"
-  check_errors
   git init
-  check_errors
   git remote add ext "$git_repo"
-  check_errors
 fi
 
 cd "$image_git"
-check_errors
 
 if [[ ! -z `git branch` ]]; then
   git checkout -f --orphan "${target}_${tag}_dump"
-  check_errors
   if [[ ! -z `git for-each-ref --format '%(refname:short)' refs/heads` ]]; then
     git for-each-ref --format '%(refname:short)' refs/heads | xargs git branch -D
-    check_errors
   fi
 fi
 
 git fetch -f --all
-check_errors
-
 git checkout -f "$git_commit" || git_commit=""
 
 if [[ -z $git_commit && ! -z $git_fetch ]]; then
   echo "failed to checkout requested commit, trying to use branch $git_fetch instead"
   git branch -f "${target}_${tag}" "ext/$git_fetch"
-  check_errors
   git checkout -f "${target}_${tag}"
-  check_errors
 elif [[ -z $git_commit ]]; then
   echo "failed to prepare repo"
   exit 1
 fi
 
-mkdir -p "$output" && cd "$output"
-check_errors
+fi # [[ -z "$direct_download_complete" ]]
 
+mkdir -p "$output" && cd "$output"
 xz -d -c "$image_git/$directory/$rootfs" | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
-check_errors
+
+# cleanup temporary files from direct download if any
+[[ ! -z $direct_tmp ]] && echo "cleaning-up" && rm -rf "$direct_tmp"
