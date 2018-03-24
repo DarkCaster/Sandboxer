@@ -44,13 +44,10 @@ function read_fs_layout()
 end
 fs_layout=read_fs_layout()
 
-if os_id=="debian" and os_arch=="amd64" then
-  os_oldfs_ver=8 -- for now, only amd64 debian build (version 9 and up) use new fs layout
-elseif os_id=="ubuntu" then
-  os_oldfs_ver=999 -- for now, cloudimg for 17.04 use old fs layout without symlinks for /bin /sbin /lib, etc ...
-  -- os_oldfs_ver=17.04001
-else
-  os_oldfs_ver=999
+-- os_oldfs_ver now deprecated, set it depending on fs_layout
+os_oldfs_ver=999
+if fs_layout=="merged" then
+  os_oldfs_ver=0
 end
 
 -- set x11 test utility version
@@ -58,7 +55,7 @@ tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 
 -- service function for adding debian chroot mounts depending on detected os_version
 function add_debian_mounts()
-  if os_version > os_oldfs_ver then
+  if fs_layout=="merged" then
     table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
     table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
     table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})
