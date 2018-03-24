@@ -135,12 +135,14 @@ if [[ -z $rootfs ]]; then
     while IFS='' read -r line || [[ -n "$line" ]]; do
       if [[ $line =~ ^"ADD"[[:space:]](.*)[[:space:]]"/"$ ]]; then
         rootfs="${BASH_REMATCH[1]}"
+        break
       fi
     done < "$image_git/$directory/Dockerfile"
   fi
 fi
 
 [[ -z $rootfs ]] && echo "failed to detect root-fs archive name, falling back to default rootfs.tar.xz" && rootfs="rootfs.tar.xz"
+echo "using root-fs archive name: $rootfs"
 
 mkdir -p "$output" && cd "$output"
 xz -d -c "$image_git/$directory/$rootfs" | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
