@@ -49,3 +49,10 @@ rm "$script_dir/debian_chroot/etc/apt/apt.conf.d/docker-"*
 
 # deploy minimal setup script
 cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
+
+if [[ $name = sid || $name = buster ]]; then
+  # modify config for apt, to make it work under fakeroot
+  echo "modifying apt config options to make it work with sandboxer/fakeoot restrictions"
+  echo "APT::Sandbox::Seccomp::Allow { \"socket\" };" > "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
+  echo "APT::Sandbox::Seccomp::Allow { \"connect\" };" >> "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
+fi
