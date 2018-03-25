@@ -56,14 +56,31 @@ if [[ $name = xenial || $name = bionic ]]; then
   cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
 fi
 
+cd "$script_dir/debian_chroot"
+
+# make dpkg a lillte bit faster
+echo "force-unsafe-io" > "etc/dpkg/dpkg.cfg.d/force-unsafe-io"
+
+# create exclude rules for dpkg if missing
+if [[ ! -f etc/dpkg/dpkg.cfg.d/excludes ]]; then
+  echo "creating rule for dpkg to exclude manuals and docs when installing packages"
+  echo "path-exclude=/usr/share/man/*" > "etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-exclude=/usr/share/doc/*" >> "etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-include=/usr/share/doc/*/copyright" >> "etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-include=/usr/share/doc/*/changelog.Debian.*" >> "etc/dpkg/dpkg.cfg.d/excludes"
+fi
+
 if [[ $name = bionic ]]; then
   # modify config for apt, to make it work under fakeroot
   echo "modifying apt config options to make it work with sandboxer/fakeoot restrictions"
-  echo "APT::Sandbox::Seccomp::Allow { \"socket\" };" > "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
-  echo "APT::Sandbox::Seccomp::Allow { \"connect\" };" >> "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
+  echo "APT::Sandbox::Seccomp::Allow { \"socket\" };" > "etc/apt/apt.conf.d/99sandboxer"
+  echo "APT::Sandbox::Seccomp::Allow { \"connect\" };" >> "etc/apt/apt.conf.d/99sandboxer"
 fi
 
-cd "$script_dir/debian_chroot"
+if [[ $name = trusty || $name = xenial || $name = bionic ]]; then
+  echo "modifying apt config options to use gzipped indexes"
+  echo "Acquire::GzipIndexes \"true\";" >> "etc/apt/apt.conf.d/99sandboxer"
+fi
 
 # write arch-label file
 [[ ! -z $arch ]] && echo "$arch" > "arch-label"
