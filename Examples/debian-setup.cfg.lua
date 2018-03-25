@@ -94,7 +94,7 @@ sandbox={
 }
 
 -- add remaining mounts, depending on detected debian version
-if os_version > os_oldfs_ver then
+if fs_layout=="merged" then
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/bin","bin"})
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib","lib"})
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/lib32","lib32"})

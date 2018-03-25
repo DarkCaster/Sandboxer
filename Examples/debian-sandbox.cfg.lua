@@ -151,7 +151,7 @@ sandbox={
 add_debian_mounts()
 
 -- add sbin mounts
-if os_version > os_oldfs_ver then
+if fs_layout=="merged" then
   table.insert(sandbox.setup.mounts, {prio=15,"symlink","usr/sbin","sbin"})
 else
   table.insert(sandbox.setup.mounts, defaults.mounts.sbin_ro_mount)
