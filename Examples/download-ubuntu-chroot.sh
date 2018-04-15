@@ -45,7 +45,8 @@ arch="$2"
   exit 1
 
 # download and extract rootfs archive
-wget -q --show-progress -O /tmp/ubuntu-root.tar.gz "https://partner-images.canonical.com/core/$prefix/current/ubuntu-$name-core-cloudimg-$arch-root.tar.gz"
+wget --help | grep -q '\--show-progress' && wget_opts="-q --show-progress" || wget_opts=""
+wget $wget_opts -O /tmp/ubuntu-root.tar.gz "https://partner-images.canonical.com/core/$prefix/current/ubuntu-$name-core-cloudimg-$arch-root.tar.gz"
 mkdir "$script_dir/debian_chroot"
 cd "$script_dir/debian_chroot"
 gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'

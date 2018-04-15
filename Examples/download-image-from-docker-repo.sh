@@ -38,7 +38,8 @@ fi
 image_list=`mktemp --tmpdir "$target.XXXXXX.list"`
 
 echo "downloading description"
-wget -q --show-progress -O "$image_list" "https://raw.githubusercontent.com/docker-library/official-images/master/library/$target"
+wget --help | grep -q '\--show-progress' && wget_opts="-q --show-progress" || wget_opts=""
+wget $wget_opts -O "$image_list" "https://raw.githubusercontent.com/docker-library/official-images/master/library/$target"
 
 git_repo=""
 tags=""
@@ -89,7 +90,7 @@ if [[ $git_repo =~ ^"https://github.com" ]]; then
   echo "trying to download commit-archive directly from github"
   prefix="$git_repo"
   [[ $prefix =~ ^("https://github.com".*)".git"$ ]] && prefix="${BASH_REMATCH[1]}"
-  wget -q --show-progress -O "$direct_tmp/direct.tar.gz" "$prefix/archive/$git_commit.tar.gz" || exit 1
+  wget $wget_opts -O "$direct_tmp/direct.tar.gz" "$prefix/archive/$git_commit.tar.gz" || exit 1
   cd "$direct_tmp" && mkdir "direct" || exit 1
   ( gzip -c -d "direct.tar.gz" | tar xf - -C "direct" --strip-components=1 ) || exit 1
   ) && direct_download_complete="true" || direct_download_complete="false"
