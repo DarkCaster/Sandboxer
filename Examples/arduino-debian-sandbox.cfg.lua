@@ -30,6 +30,10 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 
+-- add host /dev mount for acces to arduino devices, not secure!
+table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
+table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyACM0","/dev/ttyACM0"})
+
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
