@@ -34,15 +34,15 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
 arduino_install={
-  exec="/home/sandboxer/arduino/install.sh",
-  path="/home/sandboxer/arduino",
+  exec="/home/sandboxer/arduino-ide/install.sh",
+  path="/home/sandboxer/arduino-ide",
   attach=true,
   pty=false,
 }
 
 arduino={
-  exec="/home/sandboxer/arduino/arduino",
-  path="/home/sandboxer/arduino",
+  exec="/home/sandboxer/arduino-ide/arduino",
+  path="/home/sandboxer/arduino-ide",
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
   attach=false,
