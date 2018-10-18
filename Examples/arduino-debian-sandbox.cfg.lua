@@ -33,6 +33,7 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 -- add host /dev mount for acces to arduino devices, not secure!
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyACM0","/dev/ttyACM0"})
+table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"}) -- needed for QtCreator online installer to work
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -58,5 +59,40 @@ arduino={
     terminal = false,
     startupnotify = false,
     categories="Development;IDE;Electronics",
+  },
+}
+
+qtcreator_installer={
+  exec="/home/sandboxer/Qt/MaintenanceTool",
+  path="/home/sandboxer/Qt",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+  desktop={
+    name = "QtCreator Maintenance Tool (in sandbox)",
+    comment = "QtCreator Maintenance Tool, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/Qt/QtIcon.png"),
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;Qt",
+  },
+}
+
+qtcreator={
+  exec="/home/sandboxer/Qt/Tools/QtCreator/bin/qtcreator",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  desktop={
+    name = "QtCreator IDE (in sandbox)",
+    comment = "QtCreator IDE, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/.local/share/icons/hicolor/128x128/apps/QtProject-qtcreator.png"),
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;Qt;Electronics",
   },
 }
