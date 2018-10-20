@@ -20,8 +20,8 @@ loader.table.remove_value(sandbox.features,"pulse")
 
 -- remove some mounts from base config
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
+--loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
+--loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
