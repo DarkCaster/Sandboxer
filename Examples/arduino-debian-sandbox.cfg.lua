@@ -33,6 +33,7 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 -- add host /dev mount for acces to arduino devices, not secure!
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyACM0","/dev/ttyACM0"})
+table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/ttyUSB0"})
 table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"}) -- needed for QtCreator online installer to work
 
 -- remove unshare_ipc bwrap param
