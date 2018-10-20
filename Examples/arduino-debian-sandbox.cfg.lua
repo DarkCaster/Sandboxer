@@ -97,3 +97,27 @@ qtcreator={
     categories="Development;IDE;Qt;Electronics",
   },
 }
+
+minicom_ttyACM0={
+  exec="/usr/bin/minicom",
+  path="/home/sandboxer",
+  args={"-c","off","115200_8N1","-D","/dev/ttyACM0"},
+  term_signal=defaults.signals.SIGTERM,
+  env_unset={"TERM"},
+  env_set={{"TERM",os.getenv("TERM")}},
+  attach=true,
+  pty=true,
+  exclusive=true,
+}
+
+minicom_ttyUSB0={
+  exec="/usr/bin/minicom",
+  path="/home/sandboxer",
+  args={"-c","off","115200_8N1","-D","/dev/ttyUSB0"},
+  term_signal=defaults.signals.SIGTERM,
+  env_unset={"TERM"},
+  env_set={{"TERM",os.getenv("TERM")}},
+  attach=true,
+  pty=true,
+  exclusive=true,
+}
