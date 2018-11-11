@@ -78,10 +78,11 @@ if [[ $name = bionic ]]; then
   echo "APT::Sandbox::Seccomp::Allow { \"connect\" };" >> "etc/apt/apt.conf.d/99sandboxer"
 fi
 
-if [[ $name = trusty || $name = xenial || $name = bionic ]]; then
-  echo "modifying apt config options to use gzipped indexes"
-  echo "Acquire::GzipIndexes \"true\";" >> "etc/apt/apt.conf.d/99sandboxer"
-fi
+# cause huge slowdown for synaptic search
+# if [[ $name = trusty || $name = xenial || $name = bionic ]]; then
+#   echo "modifying apt config options to use gzipped indexes"
+#   echo "Acquire::GzipIndexes \"true\";" >> "etc/apt/apt.conf.d/99sandboxer"
+# fi
 
 # write arch-label file
 [[ ! -z $arch ]] && echo "$arch" > "arch-label"
