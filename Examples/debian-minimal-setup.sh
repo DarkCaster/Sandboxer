@@ -20,3 +20,5 @@ apt-get dist-upgrade -y
 # additional packages for dbus, x11, mesa, pulse integration and package management gui (synaptic) with minimal x11 stack
 apt-get install -y net-tools mc libpulse0 mesa-utils lsb-release wget adwaita-icon-theme synaptic xauth gnupg2 apt-transport-https
 apt-get install -y adwaita-icon-theme-full || true
+apt-get install -y apt-xapian-index || true
+update-apt-xapian-index || true
