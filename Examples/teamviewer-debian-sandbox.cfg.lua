@@ -1,14 +1,21 @@
 -- example config for teamviewer sandbox.
--- you need to use i386-based debian chroot downloaded with download-debian-stretch-i386-chroot.sh script and prepared with debian-setup.cfg.lua config.
--- using debian-sandbox.cfg.lua config file as base
 
+-- for teamviewer 12 and earlier:
+-- you need to use i386-based debian chroot downloaded with download-debian-chroot.sh script and prepared with debian-setup.cfg.lua config.
+-- using debian-sandbox.cfg.lua config file as base
 -- if using x86_64 host env you must also use i386 session management utilities by running "sandboxer-download-extra" command.
 -- you must also manually install libpng12-0 package from debian jessie (it was removed in stretch distro).
 -- see https://packages.debian.org/jessie/libpng12-0 for download links, and install package into debian chroot manually with "dpkg -i" command.
 
+-- for teamviewer 13 and up:
+-- tested with "teamviewer 14 preview" on ubuntu 18.04 x86_64 chroot downloaded with download-ubuntu-chroot.sh script.
+-- external chroot must be prepared with debian-setup.cfg.lua config (using "sandboxer debian-setup.cfg.lua fakeroot_shell" command)
+-- use "tv-setup checklibs" to find out what dependencies must be installed in chroot to run teamviewer
+
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
+  tunables.datadir=loader.path.combine(loader.workdir,"userdata-teamviewer")
   defaults.recalculate_orig()
   defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
@@ -44,4 +51,13 @@ teamviewer={
     startupnotify = false,
     categories="Network;Application;"
   },
+}
+
+teamviewer_checklibs={
+  exec="/home/sandboxer/teamviewer/tv-setup",
+  path="/home/sandboxer/teamviewer",
+  args={"checklibs"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
 }
