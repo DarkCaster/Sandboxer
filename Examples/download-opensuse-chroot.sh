@@ -23,11 +23,7 @@ name="$1"
 name=`echo "$name" | tr '[:upper:]' '[:lower:]'`
 
 case "$name" in
-  "42.2")
-    name="42.2"
-    arch="amd64"
-  ;;
-  "42.3"|"stretch")
+  "42.3")
     name="42.3"
     arch="amd64"
   ;;
@@ -35,7 +31,7 @@ case "$name" in
     name="tumbleweed"
   ;;
   *)
-    echo "selected opensuse distro name or version is not supported. supported versions include: 42.2, 42.3, tumbleweed"
+    echo "selected opensuse distro name or version is not supported. supported versions include: 42.3, tumbleweed"
     show_usage
   ;;
 esac
