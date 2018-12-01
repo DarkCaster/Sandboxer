@@ -121,3 +121,15 @@ minicom_ttyUSB0={
   pty=true,
   exclusive=true,
 }
+
+minicom_ttyUSB0_38400={
+  exec="/usr/bin/minicom",
+  path="/home/sandboxer",
+  args={"-c","off","38400_8N1","-D","/dev/ttyUSB0"},
+  term_signal=defaults.signals.SIGTERM,
+  env_unset={"TERM"},
+  env_set={{"TERM",os.getenv("TERM")}},
+  attach=true,
+  pty=true,
+  exclusive=true,
+}
