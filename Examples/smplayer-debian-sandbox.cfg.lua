@@ -61,3 +61,33 @@ smplayer={
     categories="Qt;AudioVideo;Video;Player;"
   },
 }
+
+svp_manager={
+  exec="/home/sandboxer/SVP4/SVPManager",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+  desktop={
+    name = "SVP 4 Linux (in sandbox)",
+    comment = "SVP 4 Linux, sandbox uid "..config.sandbox_uid,
+    field_code="%f",
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/SVP4","svp-manager4-128.png"),
+    mimetype = "video/x-msvideo;video/x-matroska;video/webm;video/mpeg;video/mp4;",
+    terminal = false,
+    startupnotify = false,
+    categories="Multimedia;AudioVideo;Video;Player;"
+  },
+}
+
+svp_manager_log={
+  exec="/home/sandboxer/SVP4/SVPManager",
+  path="/home/sandboxer",
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true, -- for now it is needed for logging to work
+  log_stderr=loader.path.combine(loader.workdir,"svp_dbg.err.log"),
+  log_stdout=loader.path.combine(loader.workdir,"svp_dbg.out.log"),
+}
