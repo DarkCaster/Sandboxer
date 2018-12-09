@@ -70,3 +70,16 @@ steam={
     startupnotify = false,
   },
 }
+
+steam_bionic={
+  exec="/usr/games/steam",
+  path="/home/sandboxer",
+  env_set=steam.env_set,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+  log_stderr=steam.log_stderr,
+  log_stdout=steam.log_stdout,
+  desktop=steam.desktop,
+}
