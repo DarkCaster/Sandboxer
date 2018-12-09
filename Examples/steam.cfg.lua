@@ -49,6 +49,7 @@ shell={
   },
 }
 
+-- following profile tested on debian jessie based sandbox, see steam-howto.txt for more info about sandbox preparation
 steam={
   exec="/usr/bin/steam",
   path="/home/sandboxer",
@@ -69,6 +70,27 @@ steam={
     terminal = false,
     startupnotify = false,
   },
+}
+
+-- profiles for running steam on ubuntu_bionic, see steam-howto.txt for more info about sandbox preparation
+copy_missing_libs_bionic={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","\
+  ln -s /lib/i386-linux-gnu/libudev.so.1 ~/libs/i386/libudev.so.0;\
+  ln -s /lib/x86_64-linux-gnu/libudev.so.1 ~/libs/x86_64/libudev.so.0;\
+  find ~/.steam/ubuntu12_32/steam-runtime/i386 -type f,l -name libappindicator.so.1* -exec cp -v {} ~/libs/i386 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/i386 -type f,l -name libindicator.so.7* -exec cp -v {} ~/libs/i386 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/i386 -type f,l -name libpng12.so.0* -exec cp -v {} ~/libs/i386 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/i386 -type f,l -name libva.so.1* -exec cp -v {} ~/libs/i386 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/i386 -type f,l -name libva-x11.so.1* -exec cp -v {} ~/libs/i386 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/amd64 -type f,l -name libappindicator.so.1* -exec cp -v {} ~/libs/x86_64 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/amd64 -type f,l -name libindicator.so.7* -exec cp -v {} ~/libs/x86_64 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/amd64 -type f,l -name libpng12.so.0* -exec cp -v {} ~/libs/x86_64 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/amd64 -type f,l -name libva.so.1* -exec cp -v {} ~/libs/x86_64 \\;\
+  find ~/.steam/ubuntu12_32/steam-runtime/amd64 -type f,l -name libva-x11.so.1* -exec cp -v {} ~/libs/x86_64 \\;\
+  "},
+  attach=true,
 }
 
 steam_bionic={
