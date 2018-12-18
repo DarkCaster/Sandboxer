@@ -146,6 +146,7 @@ defaults.bwrap.unshare_all={prio=0,tag="unshare-all","unshare-all"}
 defaults.mounts.run_dir={prio=10,tag="run","dir","/run"}
 defaults.mounts.tmp_dir={prio=10,tag="tmp","dir","/tmp"}
 defaults.mounts.var_dir={prio=10,tag="var","dir","/var"}
+defaults.mounts.var_run={prio=15,tag="varrun","symlink","/run","/var/run"}
 defaults.mounts.proc_mount={prio=10,tag="proc","proc","/proc"}
 defaults.mounts.dev_mount={prio=10,tag="dev","dev","/dev"}
 defaults.mounts.system_group={
@@ -153,6 +154,7 @@ defaults.mounts.system_group={
   defaults.mounts.run_dir,
   defaults.mounts.tmp_dir,
   defaults.mounts.var_dir,
+  defaults.mounts.var_run,
   defaults.mounts.proc_mount,
   defaults.mounts.dev_mount,
 }
