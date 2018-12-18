@@ -28,6 +28,9 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 table.insert(sandbox.setup.commands,{'mkdir -p "${cfg[tunables.auto.user_path]}/libs/i386"'})
 table.insert(sandbox.setup.commands,{'mkdir -p "${cfg[tunables.auto.user_path]}/libs/x86_64"'})
 
+-- add connection to system dbus service. used by steam at startup to detect network-manager status
+table.insert(sandbox.setup.mounts,defaults.mounts.dbus_system_mount)
+
 shell={
   exec="/bin/bash",
   args={"-l"},
