@@ -66,7 +66,7 @@ novnc_standalone={
   exclusive=true,
 }
 
-novnc={
+novnc_view={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c","teardown () {\
@@ -76,7 +76,7 @@ novnc={
     }\
     trap 'teardown' TERM HUP INT\
     cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
-    x11vnc &\
+    x11vnc -shared -viewonly -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer -o $HOME/x11vnc.log &\
     vncpid=$!\
     novnc/utils/launch.sh --ssl-only --listen 63001 --cert $HOME/keys/cert+key &\
     novncpid=$!\
