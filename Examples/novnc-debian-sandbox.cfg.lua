@@ -95,18 +95,63 @@ acmesh_install={
   rm -rf ./acme.sh\
   git clone https://github.com/Neilpang/acme.sh.git acme.sh\
   pushd ./acme.sh\
-  ./acme.sh --install --force\
+  ./acme.sh --install --nocron\
   popd\
+  rm -rf ./acme.sh\
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
 }
 
-acmesh={
+acmesh_upgrade={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"--login","-c","$HOME/.acme.sh/acme.sh --issue --standalone --tlsport 65001 --httpport 65000 -d " .. loader.args[1]},
+  args={"--login","-c","$HOME/.acme.sh/acme.sh --upgrade"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+}
+
+function concat_nil(str,k)
+  if k ~= nil then
+    return str .. k
+  else
+    return str
+  end
+end
+
+acmesh_issue={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"--login","-c",concat_nil("mkdir -p $HOME/keys && $HOME/.acme.sh/acme.sh --cert-file $HOME/keys/cert --key-file $HOME/keys/key --ca-file $HOME/keys/ca --fullchain-file $HOME/keys/fullchain --days 180 --keylength 4096 --accountkeylength 4096 --issue --standalone --tlsport 63001 --httpport 63000 -d ",loader.args[1])},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+}
+
+acmesh_test_issue={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"--login","-c",concat_nil("mkdir -p $HOME/keys && $HOME/.acme.sh/acme.sh --cert-file $HOME/keys/cert --key-file $HOME/keys/key --ca-file $HOME/keys/ca --fullchain-file $HOME/keys/fullchain --days 180 --keylength 4096 --accountkeylength 4096 --staging --issue --standalone --tlsport 63001 --httpport 63000 -d ",loader.args[1])},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+}
+
+acmesh_renew={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"--login","-c","$HOME/.acme.sh/acme.sh --force --renew-all --standalone --tlsport 63001 --httpport 63000"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+}
+
+acmesh_test_renew={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"--login","-c","$HOME/.acme.sh/acme.sh --force --renew-all --staging --standalone --tlsport 63001 --httpport 63000"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
