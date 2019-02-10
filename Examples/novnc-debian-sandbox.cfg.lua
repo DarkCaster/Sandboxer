@@ -75,9 +75,10 @@ novnc={
       [[ ! -z $novncpid ]] && echo terminating novnc && kill -SIGHUP $novncpid\
     }\
     trap 'teardown' TERM HUP INT\
+    cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
     x11vnc &\
     vncpid=$!\
-    novnc/utils/launch.sh &\
+    novnc/utils/launch.sh --ssl-only --listen 63001 --cert $HOME/keys/cert+key &\
     novncpid=$!\
     wait $novncpid\
     wait $vncpid\
