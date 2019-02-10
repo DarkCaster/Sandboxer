@@ -87,3 +87,27 @@ novnc={
   pty=true,
   exclusive=true, -- for now it is needed for logging to work
 }
+
+acmesh_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","set -e\
+  rm -rf ./acme.sh\
+  git clone https://github.com/Neilpang/acme.sh.git acme.sh\
+  pushd ./acme.sh\
+  ./acme.sh --install --force\
+  popd\
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+}
+
+acmesh={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"--login","-c","$HOME/.acme.sh/acme.sh --issue --standalone --tlsport 65001 --httpport 65000 -d " .. loader.args[1]},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+}
