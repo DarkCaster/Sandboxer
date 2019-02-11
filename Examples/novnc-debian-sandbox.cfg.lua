@@ -69,16 +69,43 @@ novnc_standalone={
 novnc_view={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","teardown () {\
-      trap 'teardown' TERM HUP INT\
-      [[ ! -z $vncpid ]] && echo terminating vnc server && kill -SIGTERM $vncpid\
-      [[ ! -z $novncpid ]] && echo terminating novnc && kill -SIGHUP $novncpid\
+  args={"-c","wait_with_timeout () {\
+      local child_pid=$1\
+      local comm_wait=100\
+      while [[ -d /proc/$child_pid ]]\
+      do\
+        [[ $comm_wait -lt 1 ]] && return 1\
+        sleep 0.025\
+        comm_wait=$((comm_wait-1))\
+      done\
+      return 0\
+    }\
+    teardown () {\
+      trap '' TERM HUP INT\
+      echo waiting for vnc server\
+      wait_with_timeout $vncpid || ( echo asking vnc server to terminate && kill -SIGINT $vncpid )\
+      echo waiting for novnc\
+      wait_with_timeout $novncpid || ( echo asking novnc to terminate && kill -SIGINT $novncpid )\
+      wait_with_timeout $vncpid || ( echo terminating vnc server && kill -SIGKILL $vncpid )\
+      wait_with_timeout $novncpid || ( echo terminating novnc && kill -SIGKILL $novncpid )\
+      exit 0\
     }\
     trap 'teardown' TERM HUP INT\
-    cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
-    x11vnc -shared -viewonly -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer -o $HOME/x11vnc.log &\
+    pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
+    view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
+    echo \"$pass\" > /tmp/x11vnc.passwd\
+    echo __BEGIN_VIEWONLY__ >> /tmp/x11vnc.passwd\
+    echo \"$view_pass\" >> /tmp/x11vnc.passwd\
+    echo \"Password: $pass\"\
+    echo \"View-only password: $view_pass\"\
+    0</dev/null &>$HOME/x11vnc.log nohup x11vnc -passwdfile /tmp/x11vnc.passwd -shared -viewonly -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer &\
     vncpid=$!\
-    novnc/utils/launch.sh --ssl-only --listen 63001 --cert $HOME/keys/cert+key &\
+    if [[ -f $HOME/keys/cert && -f $HOME/keys/key ]]; then\
+       cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
+       0</dev/null &>$HOME/novnc.log nohup ./novnc/utils/launch.sh --ssl-only --listen 63003 --cert $HOME/keys/cert+key &\
+     else\
+       0</dev/null &>$HOME/novnc.log nohup ./novnc/utils/launch.sh --listen 63002 &\
+    fi\
     novncpid=$!\
     wait $novncpid\
     wait $vncpid\
