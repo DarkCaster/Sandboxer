@@ -319,6 +319,9 @@ int main(int argc, char* argv[])
         else
             err=operation_8(op_param[0]);
         break;
+    case 103:
+        terminate_session_on_exit=true;
+        //no brake, fall to the next case
     case 100:
         if(p_count<1)
             err=operation_100_200(0,&child_ec,0,NULL,NULL);
@@ -342,6 +345,9 @@ int main(int argc, char* argv[])
         else
             err=60;
         break;
+    case 203:
+        terminate_session_on_exit=true;
+        //no brake, fall to the next case
     case 200:
         if(p_count<1)
             err=operation_100_200(1,&child_ec,0,NULL,NULL);

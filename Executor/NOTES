@@ -20,10 +20,12 @@ command mode:
 7 <0/1> - set child_only_terminate mode, when gracefully terminating (command 253 with arg 1) by user-defined signal (set by command 5)
 8 <0/1> - set or unset orphans terminate mode. if set to 1 - master will terminate all orphans if no slave executors running (after timeout)
 253 <1\0> - perform shutdown. if param is 1 - user signal send to child processes (set by command 5), sigkill otherwise
-100 - start process in captive mode without new session startup (and pty allocation).
+100 - start process in captive mode without new session startup (and pty allocation). detach from sandboxed session on commander-binary termination
 101 - same as 100, but start in detached mode instead, commander will exit after successfull start
-200 - start process in captive mode, perform pty-device allocation and create new session. useful for shells inside sandbox
+103 - start process in captive mode, try to terminate sandbox-session on commander-binary termination (via sigterm, sighup, sigint signals).
+200 - start process in captive mode, perform pty-device allocation and create new session. useful for shells inside sandbox. detach from sandboxed session on commander-binary termination
 201 - same as 200, but start in detached mode instead, commander will exit after successfull start
+203 - start process in captive mode, try to terminate sandbox-session on commander-binary termination (via sigterm, sighup, sigint signals).
 240 - request source checksum verification (provide commmander's source checksum value to master, and receive verification result)
 
 control mode:
