@@ -50,27 +50,39 @@ novnc_install={
   sed -i 's|encs.push(encodings.pseudoEncodingQualityLevel0 + 6)|encs.push(encodings.pseudoEncodingQualityLevel0 + 2)|g' novnc/core/rfb.js\
   sed -i 's|encs.push(encodings.pseudoEncodingCompressLevel0 + 2)|encs.push(encodings.pseudoEncodingCompressLevel0 + 6)|g' novnc/core/rfb.js\
   sed -i 's|encs.push(encodings.pseudoEncodingCursor)|if(!this._viewOnly)encs.push(encodings.pseudoEncodingCursor)|g' novnc/core/rfb.js\
-  echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=./vnc.html?show_dot=1&resize=scale\\\"/></head>\" > novnc/index.html\
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
 }
 
-novnc_standalone={
-  exec="/home/sandboxer/novnc/utils/launch.sh",
-  path="/home/sandboxer",
-  args=loader.args,
-  term_signal=defaults.signals.SIGTERM,
-  attach=true,
-  pty=false,
-  exclusive=true,
-}
+view_only_pwd_script="echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=./vnc.html?view_only=1&show_dot=1&resize=scale\\\"/></head>\" > novnc/index.html\
+view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
+echo __BEGIN_VIEWONLY__ > /tmp/x11vnc.passwd\
+echo \"$view_pass\" >> /tmp/x11vnc.passwd\
+echo *** View-only mode ***\
+echo \"view-only password: $view_pass\"\
+"
 
-novnc_view={
-  exec="/bin/bash",
-  path="/home/sandboxer",
-  args={"-c","set -m\
+full_access_pwd_script="echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=./vnc.html?view_only=0&show_dot=1&resize=scale\\\"/></head>\" > novnc/index.html\
+pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
+view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
+echo \"$pass\" > /tmp/x11vnc.passwd\
+echo __BEGIN_VIEWONLY__ >> /tmp/x11vnc.passwd\
+echo \"$view_pass\" >> /tmp/x11vnc.passwd\
+echo *** full-access mode ***\
+echo \"password: $pass\"\
+echo \"view-only password: $view_pass\"\
+"
+view_only_vnc_script="0</dev/null &>$HOME/x11vnc.log x11vnc -passwdfile rm:/tmp/x11vnc.passwd -shared -viewonly -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer &\
+vncpid=$!\
+"
+
+full_access_vnc_script="0</dev/null &>$HOME/x11vnc.log x11vnc -passwdfile rm:/tmp/x11vnc.passwd -shared -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer &\
+vncpid=$!\
+"
+
+script_header="set -m\
     wait_with_timeout () {\
       local child_pid=$1\
       local comm_wait=100\
@@ -93,25 +105,24 @@ novnc_view={
       exit 0\
     }\
     trap 'teardown' TERM HUP INT\
-    pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
-    view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
-    echo \"$pass\" > /tmp/x11vnc.passwd\
-    echo __BEGIN_VIEWONLY__ >> /tmp/x11vnc.passwd\
-    echo \"$view_pass\" >> /tmp/x11vnc.passwd\
-    0</dev/null &>$HOME/x11vnc.log x11vnc -passwdfile rm:/tmp/x11vnc.passwd -shared -viewonly -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer &\
-    vncpid=$!\
-    if [[ -f $HOME/keys/cert && -f $HOME/keys/key ]]; then\
+"
+
+novnc_script="if [[ -f $HOME/keys/cert && -f $HOME/keys/key ]]; then\
        cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
        0</dev/null &>$HOME/novnc.log ./novnc/utils/launch.sh --ssl-only --listen 63003 --cert $HOME/keys/cert+key &\
      else\
        0</dev/null &>$HOME/novnc.log ./novnc/utils/launch.sh --listen 63002 &\
     fi\
     novncpid=$!\
-    echo \"Password: $pass\"\
-    echo \"View-only password: $view_pass\"\
     wait $novncpid\
     wait $vncpid\
-  "},
+    exit 1\
+"
+
+novnc_view={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", script_header .. view_only_pwd_script .. view_only_vnc_script .. novnc_script},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
