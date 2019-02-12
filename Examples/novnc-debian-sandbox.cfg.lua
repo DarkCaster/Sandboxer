@@ -1,7 +1,7 @@
--- example config for novnc sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
+-- example config for novnc sandbox, which is created on top of external debian/ubuntu chroot, prepared by debian-setup.cfg.lua
 -- using debian-sandbox.cfg.lua config file as base
-
--- you need to install python 2.7 and git inside sandbox in order to run novnc_install and novnc profiles
+-- tested with ubuntu 18.04 chroot, created with download-ubuntu-chroot.sh script
+-- you need to install the following packages inside ubuntu chroot: python (v2.7), x11vnc, socat, git
 
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
@@ -40,16 +40,10 @@ novnc_install={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c","set -e\
-  if [[ ! -e novnc ]]; then\
-    git clone https://github.com/novnc/noVNC.git novnc\
-  else\
-    (cd novnc && git pull)\
-  fi\
-  if [[ ! -e novnc/utils/websockify ]]; then\
-    git clone https://github.com/novnc/websockify novnc/utils/websockify\
-  else\
-    (cd novnc/utils/websockify && git pull)\
-  fi\
+  rm -rf ./novnc\
+  git clone https://github.com/novnc/noVNC.git novnc\
+  git clone https://github.com/novnc/websockify novnc/utils/websockify\
+  sed -i 's|<option value=\"off\">None</option>||g' novnc/vnc.html\
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
@@ -62,14 +56,15 @@ novnc_standalone={
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
   attach=true,
-  pty=true,
+  pty=false,
   exclusive=true,
 }
 
 novnc_view={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","wait_with_timeout () {\
+  args={"-c","set -m\
+    wait_with_timeout () {\
       local child_pid=$1\
       local comm_wait=100\
       while [[ -d /proc/$child_pid ]]\
@@ -85,9 +80,9 @@ novnc_view={
       echo waiting for vnc server\
       wait_with_timeout $vncpid || ( echo asking vnc server to terminate && kill -SIGINT $vncpid )\
       echo waiting for novnc\
-      wait_with_timeout $novncpid || ( echo asking novnc to terminate && kill -SIGINT $novncpid )\
-      wait_with_timeout $vncpid || ( echo terminating vnc server && kill -SIGKILL $vncpid )\
-      wait_with_timeout $novncpid || ( echo terminating novnc && kill -SIGKILL $novncpid )\
+      wait_with_timeout $novncpid || ( echo asking novnc to terminate; kill -SIGINT $novncpid )\
+      wait_with_timeout $vncpid || ( echo terminating vnc server && pkill -g $vncpid -SIGKILL )\
+      wait_with_timeout $novncpid || ( echo terminating novnc && pkill -g $novncpid -SIGKILL )\
       exit 0\
     }\
     trap 'teardown' TERM HUP INT\
@@ -96,17 +91,17 @@ novnc_view={
     echo \"$pass\" > /tmp/x11vnc.passwd\
     echo __BEGIN_VIEWONLY__ >> /tmp/x11vnc.passwd\
     echo \"$view_pass\" >> /tmp/x11vnc.passwd\
-    echo \"Password: $pass\"\
-    echo \"View-only password: $view_pass\"\
-    0</dev/null &>$HOME/x11vnc.log nohup x11vnc -passwdfile /tmp/x11vnc.passwd -shared -viewonly -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer &\
+    0</dev/null &>$HOME/x11vnc.log x11vnc -passwdfile rm:/tmp/x11vnc.passwd -shared -viewonly -forever -localhost -nossl -noclipboard -nosetclipboard -threads -safer &\
     vncpid=$!\
     if [[ -f $HOME/keys/cert && -f $HOME/keys/key ]]; then\
        cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
-       0</dev/null &>$HOME/novnc.log nohup ./novnc/utils/launch.sh --ssl-only --listen 63003 --cert $HOME/keys/cert+key &\
+       0</dev/null &>$HOME/novnc.log ./novnc/utils/launch.sh --ssl-only --listen 63003 --cert $HOME/keys/cert+key &\
      else\
-       0</dev/null &>$HOME/novnc.log nohup ./novnc/utils/launch.sh --listen 63002 &\
+       0</dev/null &>$HOME/novnc.log ./novnc/utils/launch.sh --listen 63002 &\
     fi\
     novncpid=$!\
+    echo \"Password: $pass\"\
+    echo \"View-only password: $view_pass\"\
     wait $novncpid\
     wait $vncpid\
   "},
