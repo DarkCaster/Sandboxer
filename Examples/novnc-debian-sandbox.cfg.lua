@@ -50,22 +50,22 @@ novnc_install={
   sed -i 's|encs.push(encodings.pseudoEncodingQualityLevel0 + 6)|encs.push(encodings.pseudoEncodingQualityLevel0 + 2)|g' novnc/core/rfb.js\
   sed -i 's|encs.push(encodings.pseudoEncodingCompressLevel0 + 2)|encs.push(encodings.pseudoEncodingCompressLevel0 + 6)|g' novnc/core/rfb.js\
   sed -i 's|encs.push(encodings.pseudoEncodingCursor)|if(!this._viewOnly)encs.push(encodings.pseudoEncodingCursor)|g' novnc/core/rfb.js\
-  "},
+  echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=./vnc.html?view_only=1&show_dot=1&resize=scale\\\"/></head>\" > novnc/index.html\
+"
+},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
 }
 
-view_only_pwd_script="echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=./vnc.html?view_only=1&show_dot=1&resize=scale\\\"/></head>\" > novnc/index.html\
-view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
+view_only_pwd_script="view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
 echo __BEGIN_VIEWONLY__ > /tmp/x11vnc.passwd\
 echo \"$view_pass\" >> /tmp/x11vnc.passwd\
 echo \"*** View-only mode ***\"\
 echo \"view-only password: $view_pass\"\
 "
 
-full_access_pwd_script="echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=./vnc.html?view_only=0&show_dot=1&resize=scale\\\"/></head>\" > novnc/index.html\
-pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
+full_access_pwd_script="pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
 view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
 echo \"$pass\" > /tmp/x11vnc.passwd\
 echo __BEGIN_VIEWONLY__ >> /tmp/x11vnc.passwd\
@@ -119,14 +119,24 @@ novnc_script="if [[ -f $HOME/keys/cert && -f $HOME/keys/key ]]; then\
     exit 1\
 "
 
-novnc_view={
+novnc_view_only={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c", script_header .. view_only_pwd_script .. view_only_vnc_script .. novnc_script},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
-  exclusive=true, -- for now it is needed for logging to work
+  exclusive=true,
+}
+
+novnc_full_access={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", script_header .. full_access_pwd_script .. full_access_vnc_script .. novnc_script},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
+  exclusive=true,
 }
 
 acmesh_install={
