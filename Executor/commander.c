@@ -103,11 +103,11 @@ int main(int argc, char* argv[])
     log_headline(logger,"Commander startup");
     log_message(logger,LOG_INFO,"Parsing startup params");
 
-    //set sigwinch_signal_handler signal
+    //signal handlers' storage
     struct sigaction act[2];
-    memset(act,2,sizeof(struct sigaction));
+    memset(act,0,sizeof(struct sigaction)*2);
 
-    //termination signals
+    //terminal resize signal
     act[0].sa_sigaction=&sigwinch_signal_handler;
     act[0].sa_flags=SA_SIGINFO;
     if( sigaction(SIGWINCH, &act[0], NULL) < 0 )
@@ -116,6 +116,7 @@ int main(int argc, char* argv[])
         teardown(9);
     }
 
+    //detach signal
     act[1].sa_sigaction=&sigusr2_signal_handler;
     act[1].sa_flags=SA_SIGINFO;
     if( sigaction(SIGUSR2, &act[1], NULL) < 0 )
