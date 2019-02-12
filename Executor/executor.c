@@ -202,6 +202,11 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
         log_message(logger,LOG_INFO,"Ignoring SIGHUP signal");
         return;
     }
+    if(sig==SIGINT)
+    {
+        log_message(logger,LOG_INFO,"Ignoring SIGINT signal");
+        return;
+    }
 
     pid_lock();
 
@@ -214,7 +219,7 @@ static void termination_signal_handler(int sig, siginfo_t* info, void* context)
     if(sig==SIGUSR1 && mode==1)
         _slave_terminate_child(SIGKILL);
 
-    if(sig==SIGTERM || sig==SIGINT)
+    if(sig==SIGTERM)
     {
         if(mode==0)
         {
