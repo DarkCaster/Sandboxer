@@ -805,6 +805,8 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
           cmdhdr_write(data_buf,0,sdcmd);
           *(data_buf+CMDHDRSZ)=1;
           send_data_len+=1;
+          cmdhdr_write(data_buf,send_data_len,dtcmd);
+          send_data_len+=CMDHDRSZ;
         }
         else if(term_size_update_needed && use_pty)
         {
