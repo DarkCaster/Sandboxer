@@ -356,7 +356,7 @@ int main(int argc, char* argv[])
     case 202:
         if(p_count<1)
             err=operation_100_200(1,&child_ec,1,NULL,NULL);
-        else if(p_count<2)
+        else if(p_count<3)
             err=operation_100_200(1,&child_ec,1,op_param[0],NULL);
         else
             err=62;
