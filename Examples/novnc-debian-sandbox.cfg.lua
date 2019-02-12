@@ -115,8 +115,8 @@ novnc_script="if [[ -f $HOME/keys/cert && -f $HOME/keys/key ]]; then\
     fi\
     novncpid=$!\
     wait $novncpid\
-    wait $vncpid\
-    exit 1\
+    echo novnc process was unexpectedly terminated\
+    teardown\
 "
 
 novnc_view_only={
@@ -172,6 +172,9 @@ function concat_nil(str,k)
   end
 end
 
+-- you must provide domain as argument for issuing LetsEcnrypt certificate
+-- example: sandboxer novnc-debian-sandbox.cfg.lua acmesh_issue example.com
+-- also, you must forward port 80 traffic from your domain to local port 63000, and port 443 traffic to local port 63001
 acmesh_issue={
   exec="/bin/bash",
   path="/home/sandboxer",
