@@ -127,6 +127,13 @@ novnc_view_only={
   attach=true,
   pty=true,
   exclusive=true,
+  desktop={
+    name = "noVNC service (view-only)",
+    comment = "noVNC, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/novnc/app/images/icons","novnc-64x64.png"),
+    terminal = true,
+    startupnotify = false,
+  },
 }
 
 novnc_full_access={
@@ -137,6 +144,13 @@ novnc_full_access={
   attach=true,
   pty=true,
   exclusive=true,
+  desktop={
+    name = "noVNC service (full access)",
+    comment = "noVNC, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/novnc/app/images/icons","novnc-64x64.png"),
+    terminal = true,
+    startupnotify = false,
+  },
 }
 
 acmesh_install={
