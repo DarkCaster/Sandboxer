@@ -79,6 +79,11 @@ static void sigusr2_signal_handler(int sig, siginfo_t* info, void* context)
     detach_pending=true;
 }
 
+static void termination_signal_handler(int sig, siginfo_t* info, void* context)
+{
+    detach_pending=true;
+}
+
 #pragma GCC diagnostic pop
 
 //params: <control-dir> <channel-name> <security-key> <operation-code> [operation param] ...
@@ -104,8 +109,8 @@ int main(int argc, char* argv[])
     log_message(logger,LOG_INFO,"Parsing startup params");
 
     //signal handlers' storage
-    struct sigaction act[2];
-    memset(act,0,sizeof(struct sigaction)*2);
+    struct sigaction act[5];
+    memset(act,0,sizeof(struct sigaction)*5);
 
     //terminal resize signal
     act[0].sa_sigaction=&sigwinch_signal_handler;
@@ -122,6 +127,29 @@ int main(int argc, char* argv[])
     if( sigaction(SIGUSR2, &act[1], NULL) < 0 )
     {
         log_message(logger,LOG_ERROR,"Failed to set SIGUSR2 signal handler");
+        teardown(8);
+    }
+
+    //termination signals
+    act[2].sa_sigaction=&termination_signal_handler;
+    act[2].sa_flags=SA_SIGINFO;
+    if( sigaction(SIGHUP, &act[2], NULL) < 0 )
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGHUP signal handler");
+        teardown(8);
+    }
+    act[3].sa_sigaction=&termination_signal_handler;
+    act[3].sa_flags=SA_SIGINFO;
+    if( sigaction(SIGINT, &act[3], NULL) < 0 )
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGINT signal handler");
+        teardown(8);
+    }
+    act[4].sa_sigaction=&termination_signal_handler;
+    act[4].sa_flags=SA_SIGINFO;
+    if( sigaction(SIGTERM, &act[4], NULL) < 0 )
+    {
+        log_message(logger,LOG_ERROR,"Failed to set SIGTERM signal handler");
         teardown(8);
     }
 
