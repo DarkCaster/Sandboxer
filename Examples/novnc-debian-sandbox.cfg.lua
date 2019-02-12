@@ -42,9 +42,14 @@ novnc_install={
   args={"-c","set -e\
   rm -rf ./novnc\
   git clone https://github.com/novnc/noVNC.git novnc\
+  ###uncomment next line if you have any problems with the latest commit\
+  ###( cd novnc && git reset --hard 36bfcb0714ddeb0107933589bc4fc108ad54cd8d )\
   git clone https://github.com/novnc/websockify novnc/utils/websockify\
+  ###uncomment next line if you have any problems with the latest commit\
+  ###( cd novnc/utils/websockify && git reset --hard f0bdb0a621a4f3fb328d1410adfeaff76f088bfd )\
   sed -i 's|encs.push(encodings.pseudoEncodingQualityLevel0 + 6)|encs.push(encodings.pseudoEncodingQualityLevel0 + 2)|g' novnc/core/rfb.js\
   sed -i 's|encs.push(encodings.pseudoEncodingCompressLevel0 + 2)|encs.push(encodings.pseudoEncodingCompressLevel0 + 6)|g' novnc/core/rfb.js\
+  sed -i 's|encs.push(encodings.pseudoEncodingCursor)|if(!this._viewOnly)encs.push(encodings.pseudoEncodingCursor)|g' novnc/core/rfb.js\
   echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=./vnc.html?show_dot=1&resize=scale\\\"/></head>\" > novnc/index.html\
   "},
   term_signal=defaults.signals.SIGTERM,
