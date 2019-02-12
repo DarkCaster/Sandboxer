@@ -60,7 +60,7 @@ view_only_pwd_script="echo \"<head><meta http-equiv=\\\"refresh\\\" content=\\\"
 view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
 echo __BEGIN_VIEWONLY__ > /tmp/x11vnc.passwd\
 echo \"$view_pass\" >> /tmp/x11vnc.passwd\
-echo *** View-only mode ***\
+echo \"*** View-only mode ***\"\
 echo \"view-only password: $view_pass\"\
 "
 
@@ -70,7 +70,7 @@ view_pass=`< /dev/urandom tr -cd '[:alnum:]' | head -c12`\
 echo \"$pass\" > /tmp/x11vnc.passwd\
 echo __BEGIN_VIEWONLY__ >> /tmp/x11vnc.passwd\
 echo \"$view_pass\" >> /tmp/x11vnc.passwd\
-echo *** full-access mode ***\
+echo \"*** full-access mode ***\"\
 echo \"password: $pass\"\
 echo \"view-only password: $view_pass\"\
 "
