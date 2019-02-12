@@ -105,10 +105,10 @@ script_header="set -m\
       exit 0\
     }\
     trap 'teardown' TERM HUP INT\
+    [[ -f $HOME/keys/cert && -f $HOME/keys/key ]] && cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
 "
 
-novnc_script="if [[ -f $HOME/keys/cert && -f $HOME/keys/key ]]; then\
-       cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
+novnc_script="if [[ -f $HOME/keys/cert+key ]]; then\
        0</dev/null &>$HOME/novnc.log ./novnc/utils/launch.sh --ssl-only --listen 63003 --cert $HOME/keys/cert+key &\
      else\
        0</dev/null &>$HOME/novnc.log ./novnc/utils/launch.sh --listen 63002 &\
