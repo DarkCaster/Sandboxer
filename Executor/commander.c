@@ -41,6 +41,8 @@ static volatile bool term_size_update_needed;
 
 //detach pending flag
 static volatile bool detach_pending;
+static volatile bool shutdown_pending;
+static volatile bool terminate_session_on_exit;
 
 //proto
 static void teardown(int code);
@@ -81,7 +83,10 @@ static void sigusr2_signal_handler(int sig, siginfo_t* info, void* context)
 
 static void termination_signal_handler(int sig, siginfo_t* info, void* context)
 {
-    detach_pending=true;
+    if(terminate_session_on_exit)
+      shutdown_pending=true;
+    else
+      detach_pending=true;
 }
 
 #pragma GCC diagnostic pop
@@ -100,6 +105,8 @@ int main(int argc, char* argv[])
 
     term_size_update_needed=true;
     detach_pending=false;
+    shutdown_pending=false;
+    terminate_session_on_exit=false;
     comm_shutdown(0u);
     //logger
     logger=log_init();
@@ -712,6 +719,12 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
             log_message(logger,LOG_INFO,"Created %s file as stdout log",LS(err_filename));
     }
 
+    CMDHDR dtcmd;
+    dtcmd.cmd_type=251;
+
+    CMDHDR sdcmd;
+    sdcmd.cmd_type=253;
+
     CMDHDR cmd;
     cmd.cmd_type=reconnect?(use_pty?255:254):(use_pty?200:100);
     cmdhdr_write(data_buf,0,cmd);
@@ -777,14 +790,27 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
     {
         //read input
         int32_t send_data_len=CMDHDRSZ;
-        bool term_size_updated=false;
-        if(term_size_update_needed && use_pty)
+        bool detaching=detach_pending;
+        bool shuttingdown=shutdown_pending;
+        if(detaching)
+          cmdhdr_write(data_buf,0,dtcmd);
+        else if(shuttingdown)
+        {
+          cmdhdr_write(data_buf,0,sdcmd);
+          *(data_buf+CMDHDRSZ)=1;
+          send_data_len+=1;
+        }
+        else if(term_size_update_needed && use_pty)
         {
             struct winsize term_size;
             term_size_update_needed=false;
             if(ioctl(STDOUT_FILENO,TIOCGWINSZ,&term_size)==0)
             {
-                term_size_updated=true;
+                //write command header
+                CMDHDR tscmd;
+                tscmd.cmd_type=252;
+                cmdhdr_write(data_buf,0,tscmd);
+                //write new terminal size
                 u16_write(data_buf,CMDHDRSZ,term_size.ws_col);
                 u16_write(data_buf,CMDHDRSZ+2,term_size.ws_row);
                 send_data_len+=4;
@@ -805,41 +831,27 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
                         detach_pending=true;
                         restore_terminal;
                         log_message(logger,LOG_ERROR,"Error while reading stdin");
+                        continue;
                     }
                 }
                 else
                     send_data_len+=(int32_t)rcount;
             }
-        }
-
-        //send input
-        if(detach_pending)
-        {
-            CMDHDR dtcmd;
-            dtcmd.cmd_type=251;
-            cmdhdr_write(data_buf,0,dtcmd);
-        }
-        else if(term_size_updated)
-        {
-            CMDHDR tscmd;
-            tscmd.cmd_type=252;
-            cmdhdr_write(data_buf,0,tscmd);
-        }
-        else
+            //send input
             cmdhdr_write(data_buf,0,cmd);
+        }
 
         uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
-        if(ec!=0)
+        if(ec!=0 || detaching || shuttingdown)
         {
             restore_terminal;
+            if(ec!=0)
+              log_message(logger,LOG_ERROR,"Executor communication failed! ec=%i",LI(ec));
+            else if(shuttingdown)
+              log_message(logger,LOG_INFO,"Session shutdown request sent, commander now exit");
+            else if(detaching)
+              log_message(logger,LOG_INFO,"Commander detach request sent, commander now exit");
             return ec;
-        }
-
-        if(detach_pending)
-        {
-            restore_terminal;
-            log_message(logger,LOG_INFO,"Performing commander disconnect");
-            return 0;
         }
 
         int32_t recv_out_data_len=0;
