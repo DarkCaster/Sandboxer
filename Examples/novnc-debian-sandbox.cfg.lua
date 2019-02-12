@@ -96,12 +96,14 @@ script_header="set -m\
     }\
     teardown () {\
       trap '' TERM HUP INT\
+      echo asking vnc server to terminate && kill -SIGINT $vncpid\
+      echo asking novnc to terminate; kill -SIGINT $novncpid\
       echo waiting for vnc server\
-      wait_with_timeout $vncpid || ( echo asking vnc server to terminate && kill -SIGINT $vncpid )\
+      wait_with_timeout $vncpid\
       echo waiting for novnc\
-      wait_with_timeout $novncpid || ( echo asking novnc to terminate; kill -SIGINT $novncpid )\
-      wait_with_timeout $vncpid || ( echo terminating vnc server && pkill -g $vncpid -SIGKILL )\
-      wait_with_timeout $novncpid || ( echo terminating novnc && pkill -g $novncpid -SIGKILL )\
+      wait_with_timeout $novncpid\
+      echo terminating vnc server && pkill -g $vncpid -SIGKILL\
+      echo terminating novnc && pkill -g $novncpid -SIGKILL\
       exit 0\
     }\
     trap 'teardown' TERM HUP INT\
