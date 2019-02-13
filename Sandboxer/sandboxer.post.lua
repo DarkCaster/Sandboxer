@@ -215,19 +215,21 @@ function loader.check_profile(profile, name)
   loader.check_one_level_string_list(profile.args, name..".args")
   profile.env_unset=loader.transform_env_unset_list(profile.env_unset, name..".env_unset")
   profile.env_set=loader.transform_env_set_list(profile.env_set, name..".env_set")
-  assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", name..".term_signal value is incorrect or missing")
-  assert(type(profile.term_child_only)=="boolean" or type(profile.term_child_only)=="nil", name..".term_child_only value is incorrect or missing")
-  assert(type(profile.term_orphans)=="boolean" or type(profile.term_orphans)=="nil", name..".term_orphans value is incorrect or missing")
+  assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", name..".term_signal value is incorrect")
+  assert(type(profile.term_child_only)=="boolean" or type(profile.term_child_only)=="nil", name..".term_child_only value is incorrect")
+  assert(type(profile.term_orphans)=="boolean" or type(profile.term_orphans)=="nil", name..".term_orphans value is incorrect")
   if type(profile.term_orphans)=="nil" then profile.term_orphans=false end
-  assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", name..".attach value is incorrect or missing")
+  assert(type(profile.term_on_interrupt)=="boolean" or type(profile.term_on_interrupt)=="nil", name..".term_on_interrupt value is incorrect")
+  if type(profile.term_on_interrupt)=="nil" then profile.term_on_interrupt=false end
+  assert(type(profile.attach)=="boolean" or type(profile.attach)=="nil", name..".attach value is incorrect")
   if type(profile.attach)=="nil" then profile.attach=false end
-  assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", name..".pty value is incorrect or missing")
+  assert(type(profile.pty)=="boolean" or type(profile.pty)=="nil", name..".pty value is incorrect")
   if type(profile.pty)=="nil" then profile.pty=false end
-  assert(type(profile.exclusive)=="boolean" or type(profile.exclusive)=="nil", name..".exclusive value is incorrect or missing")
+  assert(type(profile.exclusive)=="boolean" or type(profile.exclusive)=="nil", name..".exclusive value is incorrect")
   if type(profile.exclusive)=="nil" then profile.exclusive=false end
   assert(type(profile.log_stdout)=="string" or type(profile.log_stdout)=="nil", name..".log_stdout value is incorrect")
   assert(type(profile.log_stderr)=="string" or type(profile.log_stderr)=="nil", name..".log_stderr value is incorrect")
-  assert(type(profile.log_overwrite)=="boolean" or type(profile.log_overwrite)=="nil", name..".log_stderr value is incorrect")
+  assert(type(profile.log_overwrite)=="boolean" or type(profile.log_overwrite)=="nil", name..".log_overwrite value is incorrect")
   if type(profile.log_overwrite)=="nil" then profile.log_overwrite=false end
   if profile.pty==true or profile.attach==false then
     profile.log_overwrite=false
@@ -238,12 +240,16 @@ function loader.check_profile(profile, name)
     profile.log_overwrite=false
   end
   -- start command opcode
-  if profile.attach==true and profile.pty==false then
+  if profile.attach==true and profile.pty==false and profile.term_on_interrupt==false then
     profile.start_opcode=100
+  elseif profile.attach==true and profile.pty==false and profile.term_on_interrupt==true then
+    profile.start_opcode=103
   elseif profile.attach==false and profile.pty==false then
     profile.start_opcode=101
-  elseif profile.attach==true and profile.pty==true then
+  elseif profile.attach==true and profile.pty==true and profile.term_on_interrupt==false then
     profile.start_opcode=200
+  elseif profile.attach==true and profile.pty==true and profile.term_on_interrupt==true then
+    profile.start_opcode=203
   elseif profile.attach==false and profile.pty==true then
     profile.start_opcode=201
   end
