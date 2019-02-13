@@ -217,6 +217,7 @@ function loader.check_profile(profile, name)
   profile.env_set=loader.transform_env_set_list(profile.env_set, name..".env_set")
   assert(type(profile.term_signal)=="number" or type(profile.term_signal)=="nil", name..".term_signal value is incorrect")
   assert(type(profile.term_child_only)=="boolean" or type(profile.term_child_only)=="nil", name..".term_child_only value is incorrect")
+  if type(profile.term_child_only)=="nil" then profile.term_child_only=false end
   assert(type(profile.term_orphans)=="boolean" or type(profile.term_orphans)=="nil", name..".term_orphans value is incorrect")
   if type(profile.term_orphans)=="nil" then profile.term_orphans=false end
   assert(type(profile.term_on_interrupt)=="boolean" or type(profile.term_on_interrupt)=="nil", name..".term_on_interrupt value is incorrect")
