@@ -44,7 +44,7 @@ sandbox={
       --disable automatic services startup on package installing
       --(or else dpkg configure stage will fail, because there is no running init daemon inside sandbox)
       {'[[ ! -x usr/sbin/policy-rc.d ]] && echo "exit 101" > "usr/sbin/policy-rc.d" && chmod 755 "usr/sbin/policy-rc.d"; true'},
-      --copy file with dns configuration from host env
+      -- create empty /etc/machine-id file
       {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
       {'mkdir -p "etc/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using debian-setup.cfg.lua
       {'touch "etc/resolv.conf"'}, -- create empty resolv.conf at chroot directory, if missing.
@@ -113,7 +113,7 @@ end
 -- start bash shell with fakeroot utility.
 -- by default, it will use bundled fakeroot utilty - it should be compatible with any recent debian or ubuntu distro.
 -- but it will search and use fakeroot utilty precompiled for particular distro, if present.
--- (this fakeroot builds maybe downloaded by running sandboxer-download-extra.sh script (TODO))
+-- (this fakeroot builds maybe downloaded by running sandboxer-download-extra.sh script)
 -- this profile should be used to perform package management inside sandbox: apt-get, dpkg should work.
 -- but, still there may be some errors, because virtual "root" env running inside regular user sandbox has some very tight restrictions,
 -- that may be not overriden even by using fakeroot utility. so, do not expect that every program that require real root privs will work.
@@ -127,6 +127,7 @@ fakeroot_shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+  term_on_interrupt=true,
   desktop={
     name = "FakeRoot Shell for external chroot",
     comment = "shell for sandbox uid "..config.sandbox_uid,

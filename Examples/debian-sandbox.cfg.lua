@@ -167,6 +167,7 @@ shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+  term_on_interrupt=true,
 }
 
 function trim_args(target)

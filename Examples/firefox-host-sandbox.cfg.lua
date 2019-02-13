@@ -76,6 +76,7 @@ shell={
   term_signal=defaults.signals.SIGHUP,
   attach=true,
   pty=true,
+  term_on_interrupt=true,
   desktop={
     name = "Shell for host-firefox sandbox",
     comment = "shell for sandbox uid "..config.sandbox_uid,

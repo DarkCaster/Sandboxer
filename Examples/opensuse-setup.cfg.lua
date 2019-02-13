@@ -87,6 +87,7 @@ fakeroot_shell={
   term_orphans=true, -- yast2 will spawn dbus process, that will become orphan when you exit from shell and this exec profile is complete.
   attach=true,
   pty=true,
+  term_on_interrupt=true,
   desktop={
     name = "FakeRoot Shell for external opensuse chroot",
     comment = "shell for sandbox uid "..config.sandbox_uid,
