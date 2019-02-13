@@ -805,8 +805,6 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
           cmdhdr_write(data_buf,0,sdcmd);
           *(data_buf+CMDHDRSZ)=1;
           send_data_len+=1;
-          cmdhdr_write(data_buf,send_data_len,dtcmd);
-          send_data_len+=CMDHDRSZ;
         }
         else if(term_size_update_needed && use_pty)
         {
@@ -850,12 +848,21 @@ static uint8_t operation_100_200(uint8_t use_pty, uint8_t* child_ec, uint8_t rec
         }
 
         uint8_t ec=message_send(fdo,tmp_buf,data_buf,0,send_data_len,key,REQ_TIMEOUT_MS);
-        if(ec!=0 || detaching || shuttingdown)
+        if(ec!=0)
         {
             restore_terminal;
-            if(ec!=0)
-              log_message(logger,LOG_ERROR,"Executor communication failed! ec=%i",LI(ec));
-            else if(shuttingdown)
+            log_message(logger,LOG_ERROR,"Executor communication failed! ec=%i",LI(ec));
+            return ec;
+        }
+        else if(shuttingdown && !detaching)
+        {
+            detach_pending=true;
+            continue;
+        }
+        else if(detaching)
+        {
+            restore_terminal;
+            if(shuttingdown)
               log_message(logger,LOG_INFO,"Session shutdown request sent, commander now exit");
             else if(detaching)
               log_message(logger,LOG_INFO,"Commander detach request sent, commander now exit");
