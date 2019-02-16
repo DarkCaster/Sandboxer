@@ -79,7 +79,7 @@ Also this is the only utilities that may run all the time while controlled sandb
 This utilities will be enforced in future with stuff like seccomp, refactored and optimized, or maybe even rewritten in more secure system programming language like Rust.
 Sandboxer suite will handle this utilities internally, it is not intended for direct use - command line parameters and internal logic may change in future releases without any notice.
 
-### Sandbox management and application starup
+### Sandbox management and application startup
 
 To construct a sandboxed environment, we need to perform some preparations like copying some configuration files from host /etc directory (so, sandboxed app will have access only to needed parts of system configs), define mounts for rootfs inside sandbox, define command line options for bubblewrap utility.
 
@@ -152,14 +152,14 @@ You may also pass custom target installation path to install-to-home.sh script a
     For now it is only possible to run sandbox with host networking, or run sandbox with empty network-namespace without any external connectivity.
 *   Improve session management utilities: use unix-sockets instead of pipes, add vsock support (for use with qemu guests), refactor and simplify code
 *   Implement seccomp mechanisms to session management utilities, loading of seccomp rules for application executed inside sandbox.
-*   Add different LXC backends support, virtualization backend support
 *   Rewrite main management utilities-prototypes from bash to some other language to speedup sandbox preparation process.
 
 ### Long term plans
 
+*   Add different LXC backends support, virtualization backend support
 *   Test for selinux support, add helper tools for selinux setup to sandboxes based on external root-fs
 *   Test for apparmor support as alternative, add some helper tools to generate apparmor rules for sandboxes
 *   Add some restrictions for lua config files functionality if it is possible.
     For now when using lua interpreter, it is possible to use all functionality that lua can provide: including disk access and using external modules. There should be some limitations for portable sandbox config files for good.
 
-Copyright (c) 2016-2017 DarkCaster, see LICENSE for details.
+Copyright (c) 2016-2019 DarkCaster, see LICENSE for details.
