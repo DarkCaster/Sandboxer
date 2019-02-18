@@ -1,8 +1,7 @@
--- example config for skype sandbox, which is created on top of external ubuntu chroot, prepared by debian-setup.cfg.lua
+-- example config for skype sandbox, which is created on top of external debian\ubuntu chroot, prepared by debian-setup.cfg.lua
 -- xpra x11-forwarding software (must be installed on host, v2.0 and up) may be optionally used to isolate sanbox from host x11 service.
--- using debian-sandbox.cfg.lua config file as base
 
--- NOTE: tested with ubuntu 16.04 based sandbox, use download-ubuntu-16.04-chroot.sh script to deploy this chroot
+-- NOTE: tested with ubuntu 18.04 based sandbox, use download-ubuntu-chroot.sh script to deploy this chroot
 -- NOTE: you need to install a full pulseaudio package into ubuntu sandbox, in order voice calls to work!
 
 -- redefine defaults.recalculate function, that will be called by base config
@@ -11,7 +10,7 @@ function defaults.recalculate()
   -- redefine some parameters
   tunables.datadir=loader.path.combine(loader.workdir,"userdata-skype")
   -- NOTE: following option may help if you experience voice calls problems, or sound setup problems. Try to install full pulseaudio package inside sandbox first!
-  -- tunables.features.pulse_env_alsa_config="auto"
+  tunables.features.pulse_env_alsa_config="auto"
   defaults.recalculate_orig()
   defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
@@ -26,8 +25,8 @@ sandbox.features={
   "dbus",
   "gvfs_fix",
   "pulse",
-  --"x11host", -- less secure, try this if you do not have xpra software, or if you want "show desktop" feature in skype to work
-  "xpra", -- more secure, you must install xpra software suite with server and client functionality.
+  "x11host", -- less secure, try this if you do not have xpra software, or if you want "show desktop" feature in skype to work
+  --"xpra", -- more secure, you must install xpra software suite with server and client functionality.
   "envfix",
 }
 
@@ -46,7 +45,7 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 
 -- add bwrap unshare_ipc option, remove following 2 lines if you are using x11host feature and skype GUI is not displaying properly
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
-table.insert(sandbox.bwrap,defaults.bwrap.unshare_ipc)
+--table.insert(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
 -- sandbox.setup.cleanup_on_exit=false, -- enable for debug purposes
 
@@ -73,6 +72,39 @@ skype={
     name = "Skype (in sandbox)",
     comment = "Skype, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.chrootdir,"usr","share","pixmaps","skypeforlinux.png"),
+    field_code="%U",
+    terminal = false,
+    mimetype = "x-scheme-handler/skype;",
+    startupnotify = false,
+    categories="Network;Application;"
+  },
+}
+
+skype_install_deb={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","set -e\
+  rm -rf extract && mkdir -p extract\
+  dpkg -x `find $HOME -maxdepth 1 -type f -name *.deb | sort | head -n1` extract\
+  rm -rf skypeforlinux\
+  mv extract/usr/share/skypeforlinux skypeforlinux\
+  mv extract/usr/share/icons/hicolor/256x256/apps/skypeforlinux.png .\
+  rm -rf extract\
+  "},
+  attach=true,
+}
+
+skype_home={
+  exec="/home/sandboxer/skypeforlinux/skypeforlinux",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  desktop={
+    name = "Skype (in sandbox)",
+    comment = "Skype, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer","skypeforlinux.png"),
     field_code="%U",
     terminal = false,
     mimetype = "x-scheme-handler/skype;",
