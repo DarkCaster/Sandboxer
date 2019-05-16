@@ -107,7 +107,7 @@ script_header="set -m\
       exit 0\
     }\
     trap 'teardown' TERM HUP INT\
-    [[ -f $HOME/keys/cert && -f $HOME/keys/key ]] && cat $HOME/keys/cert $HOME/keys/key >> $HOME/keys/cert+key\
+    [[ -f $HOME/keys/cert && -f $HOME/keys/key ]] && cat $HOME/keys/cert $HOME/keys/key > $HOME/keys/cert+key\
 "
 
 novnc_script="if [[ -f $HOME/keys/cert+key ]]; then\
@@ -214,7 +214,7 @@ acmesh_test_issue={
 acmesh_renew={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"--login","-c","$HOME/.acme.sh/acme.sh --force --renew-all --standalone --tlsport 63001 --httpport 63000"},
+  args={"--login","-c","$HOME/.acme.sh/acme.sh --renew-all --standalone --tlsport 63001 --httpport 63000"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
