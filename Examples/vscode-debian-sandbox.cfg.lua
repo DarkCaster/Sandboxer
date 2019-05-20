@@ -5,7 +5,7 @@
 defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
   -- redefine some parameters
-  tunables.datadir=loader.path.combine(loader.workdir,"userdata-vscode")
+  tunables.datadir=loader.path.combine(loader.workdir,"userdata-vscode-"..config.uid)
   defaults.recalculate_orig()
   defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
@@ -29,6 +29,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind","/mnt/data","/mnt/data"})
+table.insert(sandbox.setup.commands,{'[[ ! -L "${cfg[tunables.auto.user_path]}/.local/share/Trash" ]] && mkdir -p "${cfg[tunables.auto.user_path]}/.local/share" && rm -rf "${cfg[tunables.auto.user_path]}/.local/share/Trash" && ln -s "/mnt/data/.Trash-${cfg[tunables.uid]}" "${cfg[tunables.auto.user_path]}/.local/share/Trash"; true'})
 -- table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
 
 -- remove unshare_ipc bwrap param
