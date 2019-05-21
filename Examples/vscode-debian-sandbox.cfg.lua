@@ -46,8 +46,23 @@ vscode={
     name = "VSCode (in sandbox)",
     comment = "VSCode, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"/home/sandboxer/VSCode-linux-x64/resources/app/resources/linux/code.png"),
+    field_code="%f",
     terminal = false,
     startupnotify = false,
     categories="Development;IDE;",
+    mimetype = "text/x-vscode-workspace-sandbox",
+    mime =
+    {
+      -- for each string it will create <stringname>.xml file at ~/.local/share/mime and run update-mime-database
+      test='<?xml version="1.0" encoding="UTF-8"?>\
+      <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">\
+      <mime-type type="text/x-vscode-workspace-sandbox">\
+      <comment>VSCode Workspace</comment>\
+      <icon name="text-x-source"/>\
+      <glob-deleteall/>\
+      <glob pattern="*.code-workspace"/>\
+      </mime-type>\
+      </mime-info>'
+    },
   },
 }
