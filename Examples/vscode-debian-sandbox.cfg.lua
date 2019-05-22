@@ -53,8 +53,7 @@ vscode={
     mimetype = "text/x-vscode-workspace-sandbox",
     mime =
     {
-      -- for each string it will create <stringname>.xml file at ~/.local/share/mime and run update-mime-database
-      test='<?xml version="1.0" encoding="UTF-8"?>\
+      vscode_workspace='<?xml version="1.0" encoding="UTF-8"?>\
       <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">\
       <mime-type type="text/x-vscode-workspace-sandbox">\
       <comment>VSCode Workspace</comment>\
