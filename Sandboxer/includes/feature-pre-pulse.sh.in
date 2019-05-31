@@ -32,7 +32,7 @@ pulse_server="$PULSE_SERVER"
 # TODO: detect and use alternative methods of communication
 pulse_socket=`echo "$pulse_server" | sed -n 's|^unix:\(.*\)$|\1|p'`
 pulse_socket_parse() {
-  pulse_socket=`echo "$@" | grep -m 1 "module-native-protocol-unix" | sed -n 's|^.*\(socket=\)\([a-Z0-9/._-+]*\).*$|\2|p'`
+  pulse_socket=`echo "$@" | grep -m 1 "module-native-protocol-unix" | sed -n 's|^.*\(socket=\)\([a-zA-Z0-9/._\-\+]*\).*$|\2|p'`
 }
 # detect pulse socket location, abort if not found
 # TODO: add more complex parsing, for now it only read simple string without spaces or other special symbols
