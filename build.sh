@@ -51,6 +51,12 @@ if [[ ! -d $curdir/External/Fakeroot-UserNS ]]; then
   patch -p1 -i ./debian/patches/glibc-xattr-types
   patch -p1 -i ./debian/patches/fix-shell-in-fakeroot
   patch -p1 -i ./debian/patches/hide-dlsym-error.patch
+  # disable docs from building
+  sed -i '/doc\//d' ./configure.ac
+  sed -i '/po4a/d' ./preroll
+  sed -i 's|doc||g' ./Makefile.am
+  rm -rf ./doc
+  # autoreconf
   ./preroll
   function process_error() {
     >&2 echo "command at line $1 has failed"
