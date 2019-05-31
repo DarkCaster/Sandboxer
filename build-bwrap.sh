@@ -32,7 +32,7 @@ rm -rf "$curdir/Build/Bwrap-build"
 mkdir -p "$curdir/Build/Bwrap-build" && cd "$curdir/Build/Bwrap-build"
 check_error
 
-"$curdir/External/Bwrap/configure" --prefix="/usr/local" --with-priv-mode=setuid
+"$curdir/External/Bwrap/configure" --prefix="/usr/local" --with-priv-mode=setuid --without-bash-completion-dir
 check_error
 
 make
