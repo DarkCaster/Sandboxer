@@ -42,7 +42,7 @@ sandbox={
     "envfix",
   },
   setup={
-    -- set executor utility build, precompiled executor binaries for various platforms may be downloaded by external script (TODO)
+    -- set executor utility build, precompiled executor binaries for various platforms may be downloaded by external script sandboxer-download-extra.sh
     -- it will be set back to "default" executor binary, if missing
     executor_build=os_id.."-"..os_version.."-"..os_arch,
     --executor_build="default",
