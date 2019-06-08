@@ -29,6 +29,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind","/mnt/data","/mnt/data"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 table.insert(sandbox.setup.commands,{'[[ ! -L "${cfg[tunables.auto.user_path]}/.local/share/Trash" ]] && mkdir -p "${cfg[tunables.auto.user_path]}/.local/share" && rm -rf "${cfg[tunables.auto.user_path]}/.local/share/Trash" && ln -s "/mnt/data/.Trash-${cfg[tunables.uid]}" "${cfg[tunables.auto.user_path]}/.local/share/Trash"; true'})
 -- table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
 
@@ -36,8 +37,8 @@ table.insert(sandbox.setup.commands,{'[[ ! -L "${cfg[tunables.auto.user_path]}/.
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
 vscode={
-  exec="/home/sandboxer/VSCode-linux-x64/code",
-  path="/home/sandboxer/VSCode-linux-x64",
+  exec="/home/sandboxer/VSCode/code",
+  path="/home/sandboxer/VSCode",
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
   attach=false,
@@ -45,7 +46,7 @@ vscode={
   desktop={
     name = "VSCode (in sandbox)",
     comment = "VSCode, sandbox uid "..config.sandbox_uid,
-    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/VSCode-linux-x64/resources/app/resources/linux/code.png"),
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/VSCode/resources/app/resources/linux/code.png"),
     field_code="%f",
     terminal = false,
     startupnotify = false,
@@ -64,4 +65,14 @@ vscode={
       </mime-info>'
     },
   },
+}
+
+vscode_install_targz={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","rm -rf $HOME/VSCode && img=`find ./installs -name \"code-*.tar.gz\"|sort|tail -n1` && ( gunzip -c \"$img\" | tar xvf - ) && mv $HOME/VSCode-* $HOME/VSCode"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
 }
