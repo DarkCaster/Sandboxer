@@ -45,6 +45,7 @@ vscode={
   pty=false,
   desktop={
     name = "VSCode (in sandbox)",
+    generic_name = "Visual Studio Code",
     comment = "VSCode, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"/home/sandboxer/VSCode/resources/app/resources/linux/code.png"),
     field_code="%f",

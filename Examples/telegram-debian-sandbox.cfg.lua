@@ -69,6 +69,7 @@ telegram={
   pty=false,
   desktop={
     name = "Telegram (in sandbox)",
+    generic_name = "IM application",
     comment = "Telegram, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"/home/sandboxer",".local/share/icons","telegram.png"),
     field_code="-- %u",
