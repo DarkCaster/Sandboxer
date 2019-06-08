@@ -29,7 +29,7 @@ done
 
 test -z "$fakeroot" && echo "fakeroot binaries not found! cannot proceed." && exit 1
 
-# Sometimes fakeroot start working correctly in sandboxer only on the second run, so we will use this small and dirty hack for now.
+# In some host/sandbox environments fakeroot utility refuse to work on the first run, so we will use this small and dirty hack for now.
 2>/dev/null "$fakeroot" -- /bin/true
 "$fakeroot" -- "$command" "$@"
 
