@@ -107,7 +107,7 @@ if check_lua_export profile.desktop.name; then
     echo "[Desktop Entry]" >> "$tmp_desktop"
     echo "Type=Application" >> "$tmp_desktop"
     echo "Name=${cfg[profile.desktop.name]}" >> "$tmp_desktop"
-    echo "GenericName=${cfg[profile.desktop.name]}" >> "$tmp_desktop"
+    echo "GenericName=${cfg[profile.desktop.generic_name]}" >> "$tmp_desktop"
     echo "Comment=${cfg[profile.desktop.comment]}" >> "$tmp_desktop"
     if [[ -z ${cfg[profile.desktop.field_code]} ]]; then
       echo "Exec=sandboxer \"$config\" \"$profile\"" >> "$tmp_desktop"
