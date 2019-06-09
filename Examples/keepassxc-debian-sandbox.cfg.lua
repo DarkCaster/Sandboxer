@@ -28,6 +28,7 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 
 -- try to mount directory "secrets" with password-databases (should be located at the same directory as this config file)
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"secrets"),"/home/sandboxer/secrets"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 
 -- add bwrap unshare-net option to cut off sandbox from network
 table.insert(sandbox.bwrap,defaults.bwrap.unshare_net)
@@ -45,6 +46,7 @@ keepassxc={
   pty=false,
   desktop={
     name = "KeePassXC (in sandbox)",
+    generic_name = "Password Manager",
     comment = "KeePassXC Password Manager, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"home","sandboxer","keepassxc",".DirIcon"),
     terminal = false,
@@ -56,7 +58,7 @@ keepassxc={
 keepassxc_install_appimage={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","rm -rf $HOME/keepassxc && img=`find . -name \"KeePassXC*.AppImage\"|sort|head -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/keepassxc"},
+  args={"-c","rm -rf $HOME/keepassxc && img=`find ./installs -name \"KeePassXC*.AppImage\"|sort|tail -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/keepassxc"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
