@@ -9,7 +9,7 @@ fi
 
 if [[ ! -z $x11host_pre_triggered && ${cfg[tunables.features.x11util_enable]} = true ]]; then
   x11util_ok=0
-  for hint in "$HOME/.cache/sandboxer/x11util-${cfg[tunables.features.x11util_build]}" "$script_dir/x11util" "$script_dir/../Build/x11util"
+  for hint in "$HOME/.cache/sandboxer/x11util-${cfg[tunables.features.x11util_build]}" "$HOME/.cache/sandboxer/x11util-${cfg[tunables.features.x11util_build_alt]}" "$script_dir/x11util" "$script_dir/../Build/x11util"
   do
     [[ -z $hint || ! -x $hint/x11util ]] && continue
     cp "$hint"/* "$basedir/extra"

@@ -209,6 +209,7 @@ tunables.features.pulse_skip_sanity_checks=false
 tunables.features.pulse_force_disable_shm=false
 tunables.features.pulse_env_alsa_config=""
 tunables.features.x11util_build="default"
+tunables.features.x11util_build_alt="default"
 tunables.features.x11util_enable=true
 
 -- commands for sandbox chroot construction. rely on dynamic variables, filled by calling defaults.recalculate function

@@ -15,7 +15,6 @@ tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc") -- needed fo
 tunables.user="root"
 tunables.uid=0
 tunables.gid=0
-tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 defaults.recalculate()
 
 sandbox={

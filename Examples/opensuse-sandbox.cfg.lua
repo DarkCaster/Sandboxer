@@ -15,7 +15,6 @@ tunables.etchost_path=loader.path.combine(tunables.chrootdir,"etc")
 tunables.features.dbus_search_prefix=tunables.chrootdir
 tunables.features.xpra_search_prefix=tunables.chrootdir
 tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
-tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
 tunables.features.pulse_env_alsa_config="skip"
 defaults.recalculate()
 

@@ -20,7 +20,7 @@ os_id,os_version=read_os_version()
 assert(type(os_id)=="string", "failed to parse os id from etc/os_release file")
 assert(type(os_version)=="number", "failed to parse os version from etc/os_release file")
 
--- detect debian arch (arch label file created by chroot download script)
+-- detect opensuse arch (arch label file created by chroot download script)
 function read_os_arch()
   local arch_label_file = io.open(loader.path.combine(tunables.chrootdir,"arch-label"), "r")
   local arch_label="amd64"
@@ -31,3 +31,7 @@ function read_os_arch()
   return arch_label
 end
 os_arch=read_os_arch()
+
+-- set x11 test utility version
+tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
+tunables.features.x11util_build_alt=os_id.."-"..os_arch

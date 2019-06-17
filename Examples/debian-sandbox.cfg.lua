@@ -27,7 +27,9 @@ tunables.features.gvfs_fix_search_prefix=tunables.chrootdir
 tunables.features.pulse_env_alsa_config="skip"
 
 -- set x11 test utility build
-tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
+-- values below set by debian-version-probe.lua.in include-script, but you can redefine it
+-- tunables.features.x11util_build=os_id.."-"..os_version.."-"..os_arch
+-- tunables.features.x11util_build_alt=os_id.."-"..os_arch
 
 defaults.recalculate()
 
