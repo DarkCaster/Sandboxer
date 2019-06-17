@@ -80,7 +80,7 @@ sandbox={
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args={os_id,os_version,os_arch,"/bin/bash","--login"},
+  args={tostring(os_id),tostring(os_version),tostring(os_arch),"/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },
@@ -110,7 +110,7 @@ end
 fakeroot_exec={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args=concat_table({os_id,os_version,os_arch},loader.args),
+  args=concat_table({tostring(os_id),tostring(os_version),tostring(os_arch)},loader.args),
   env_set={
     {"TERM",os.getenv("TERM")},
   },
