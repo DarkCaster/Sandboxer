@@ -38,6 +38,7 @@ sandbox={
     -- set executor utility build, precompiled executor binaries for various platforms may be downloaded by external script (TODO)
     -- it will be set back to "default" executor binary, if missing
     executor_build=os_id.."-"..os_version.."-"..os_arch,
+    executor_build_alt=os_id.."-"..os_arch,
     --executor_build="default",
 
     commands={
@@ -120,7 +121,7 @@ end
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/",
-  args={os_id.."-"..os_version.."-"..os_arch,"/bin/bash","--login"},
+  args={os_id,os_version,os_arch,"/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },
@@ -149,7 +150,7 @@ end
 fakeroot_exec={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args=concat_table({os_id.."-"..os_version.."-"..os_arch},loader.args),
+  args=concat_table({os_id,os_version,os_arch},loader.args),
   env_set={
     {"TERM",os.getenv("TERM")},
   },

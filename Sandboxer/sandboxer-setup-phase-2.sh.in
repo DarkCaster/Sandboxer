@@ -27,7 +27,7 @@ source_checksum=`2>/dev/null "$commander"`
 
 # find executor binary
 executor=""
-for hint in "$HOME/.cache/sandboxer/executor-${cfg[sandbox.setup.executor_build]}-$source_checksum" "$script_dir/executor" "$script_dir/../Build/executor"
+for hint in "$HOME/.cache/sandboxer/executor-${cfg[sandbox.setup.executor_build]}-$source_checksum" "$HOME/.cache/sandboxer/executor-${cfg[sandbox.setup.executor_build_alt]}-$source_checksum" "$script_dir/executor" "$script_dir/../Build/executor"
 do
   if [[ -x $hint/executor ]]; then
     executor="$hint/executor"

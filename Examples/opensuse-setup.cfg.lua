@@ -25,6 +25,7 @@ sandbox={
   },
   setup={
     executor_build=os_id.."-"..os_version.."-"..os_arch,
+    executor_build_alt=os_id.."-"..os_arch,
     commands={
       --remove tty system group. this will fix openpty failures
       {'cat etc/group | grep -vE \'^tty:x:[0-9].*:$\' > etc/group.new','mv etc/group.new etc/group'},
@@ -79,7 +80,7 @@ sandbox={
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args={os_id.."-"..os_version.."-"..os_arch,"/bin/bash","--login"},
+  args={os_id,os_version,os_arch,"/bin/bash","--login"},
   env_set={
     {"TERM",os.getenv("TERM")},
   },
@@ -109,7 +110,7 @@ end
 fakeroot_exec={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args=concat_table({os_id.."-"..os_version.."-"..os_arch},loader.args),
+  args=concat_table({os_id,os_version,os_arch},loader.args),
   env_set={
     {"TERM",os.getenv("TERM")},
   },

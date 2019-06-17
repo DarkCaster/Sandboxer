@@ -1,6 +1,10 @@
 #!/bin/sh
 
-fakeroot_build="$1"
+fakeroot_dist="$1"
+shift 1
+fakeroot_version="$1"
+shift 1
+fakeroot_arch="$1"
 shift 1
 command="$1"
 shift 1
@@ -8,15 +12,17 @@ shift 1
 fakeroot_search_dir="/fixups"
 
 show_usage() {
-  echo "usage: fakeroot-session-starter.sh <fakeroot build> <command> [command arguments]"
+  echo "usage: fakeroot-session-starter.sh <dist> <version> <arch> <command> [command arguments]"
   exit 1
 }
 
-test -z "$fakeroot_build" -o -z "$command" && show_usage
+test -z "$fakeroot_dist" -o -z "$command" && show_usage
+test -z "$fakeroot_version" -o -z "$command" && show_usage
+test -z "$fakeroot_arch" -o -z "$command" && show_usage
 
 fakeroot=""
-echo "fakeroot-session-starter: trying to detect requested build '$fakeroot_build' of fakeroot utility"
-for hint in "$fakeroot_search_dir/fakeroot-$fakeroot_build" "$fakeroot_search_dir/fakeroot-host" "$fakeroot_search_dir/fakeroot-fallback"
+echo "fakeroot-session-starter: trying to detect requested build '$fakeroot_dist-$fakeroot_version-$fakeroot_arch' of fakeroot utility"
+for hint in "$fakeroot_search_dir/fakeroot-$fakeroot_dist-$fakeroot_version-$fakeroot_arch" "$fakeroot_search_dir/fakeroot-$fakeroot_dist-$fakeroot_arch" "$fakeroot_search_dir/fakeroot-host"
 do
   if [ -x "$hint/fakeroot" ]; then
     fakeroot="$hint/fakeroot"

@@ -29,6 +29,7 @@ sandbox={
   },
   setup={
     executor_build=os_id.."-"..os_version.."-"..os_arch,
+    executor_build_alt=os_id.."-"..os_arch,
     commands={
       defaults.commands.machineid_static,
       defaults.commands.passwd,
