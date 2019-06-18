@@ -37,8 +37,47 @@ test -z "$fakeroot" && echo "usable fakeroot binary not found! cannot proceed...
 
 # In some host/sandbox environments fakeroot utility refuse to work on the first run, so we will use this small and dirty hack for now.
 2>/dev/null "$fakeroot" -- /bin/true
-"$fakeroot" -- "$command" "$@"
+
+#locking
+
+lock_path="/root/fakeroot.lock"
+lock_entered="false"
+
+lock_enter() {
+  if mkdir "$lock_path" 2>/dev/null; then
+    lock_entered="true"
+  else
+    lock_entered="false"
+  fi
+}
+
+lock_exit() {
+  if test "$lock_entered" = "true"; then
+    rmdir "$lock_path" 2>/dev/null
+    lock_entered="false"
+  fi
+}
+
+fakeroot_db="/root/fakeroot.db"
+
+#only one instance of fakeroot may access permissions database, so use "locking"
+lock_enter
+
+if [ "$lock_entered" != "true" ]; then
+  echo "WARNING: another fakeroot instance running in this sandbox, do not attempt to use permissions database"
+  echo "NOTE: if you sure that no other fakeroot instances running, you may manually remove $lock_path dir inside chroot..."
+  "$fakeroot" -- "$command" "$@"
+elif [ -f "$fakeroot_db" ]; then
+  echo "using permissions database at $fakeroot_db"
+  "$fakeroot" -i "$fakeroot_db" -s "$fakeroot_db" -- "$command" "$@"
+else
+  echo "creating new permissions database at $fakeroot_db"
+  "$fakeroot" -s "$fakeroot_db" -- "$command" "$@"
+fi
 
 ec="$?"
+
+lock_exit
+
 echo "fakeroot utility exit code $ec, fakeroot-session-starter shuting down"
 exit $ec
