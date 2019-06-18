@@ -40,7 +40,7 @@ test -z "$fakeroot" && echo "usable fakeroot binary not found! cannot proceed...
 
 #locking
 
-lock_path="/root/fakeroot.lock"
+lock_path="/root/.fakeroot.lock"
 lock_entered="false"
 
 lock_enter() {
@@ -58,7 +58,7 @@ lock_exit() {
   fi
 }
 
-fakeroot_db="/root/fakeroot.db"
+fakeroot_db="/root/.fakeroot.db"
 
 #only one instance of fakeroot may access permissions database, so use "locking"
 lock_enter
@@ -68,11 +68,13 @@ if [ "$lock_entered" != "true" ]; then
   echo "NOTE: if you sure that no other fakeroot instances running, you may manually remove $lock_path dir inside chroot..."
   "$fakeroot" -- "$command" "$@"
 elif [ -f "$fakeroot_db" ]; then
-  echo "using permissions database at $fakeroot_db"
+  echo "loading permissions database at $fakeroot_db, this may take some time to complete"
   "$fakeroot" -i "$fakeroot_db" -s "$fakeroot_db" -- "$command" "$@"
+  echo "saving permissions database to $fakeroot_db, this may take some time to complete"
 else
   echo "creating new permissions database at $fakeroot_db"
   "$fakeroot" -s "$fakeroot_db" -- "$command" "$@"
+  echo "saving permissions database to $fakeroot_db, this may take some time to complete"
 fi
 
 ec="$?"
