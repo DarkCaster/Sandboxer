@@ -32,6 +32,8 @@ while [ "$suffix" != "--" ]; do
   test -z "$suffix" && show_usage
 done
 
+shift 1
+
 command="$1"
 test -z "$command" && show_usage
 
