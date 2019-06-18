@@ -76,7 +76,17 @@ fi
 
 make
 make install DESTDIR="$curdir/Build"
+
 cd "$curdir"
+
+#remove all surplus stuff
+find "$curdir/Build/fixups" -type f -name "*.a" -print -delete
+find "$curdir/Build/fixups" -type f -name "*.la" -print -delete
+find "$curdir/Build/fixups" -type f -name "faked" -print -exec strip --strip-unneeded {} \;
+find "$curdir/Build/fixups" -type f -name "*.so" -print -exec strip --strip-unneeded {} \;
+find "$curdir/Build/commander" -type f -print -exec strip --strip-unneeded {} \;
+find "$curdir/Build/executor" -type f -print -exec strip --strip-unneeded {} \;
+find "$curdir/Build/x11util" -type f -print -exec strip --strip-unneeded {} \;
 
 [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in && -d $curdir/.git ]] && git submodule update --init
 [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in && ! -d $curdir/.git ]] && git clone "https://github.com/DarkCaster/Bash-Lua-Helper.git" "$curdir/BashLuaHelper"
