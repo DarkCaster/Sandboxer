@@ -79,22 +79,25 @@ sandbox={
 fakeroot_shell={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args={tostring(os_id),tostring(os_version),tostring(os_arch),"/bin/bash","--login"},
-  env_set={
-    {"TERM",os.getenv("TERM")},
-  },
+  args={false,os_id..os_version..os_arch,os_id..os_arch,"--","/bin/bash","--login"},
+  env_set={ {"TERM",os.getenv("TERM")} },
   term_signal=defaults.signals.SIGHUP,
   term_orphans=true, -- yast2 will spawn dbus process, that will become orphan when you exit from shell and this exec profile is complete.
   attach=true,
   pty=true,
   term_on_interrupt=true,
-  desktop={
-    name = "FakeRoot Shell for external opensuse chroot",
-    comment = "shell for sandbox uid "..config.sandbox_uid,
-    icon = "terminal",
-    terminal = true,
-    startupnotify = false,
-  },
+}
+
+fakeroot_shell_db={
+  exec="/fixups/fakeroot-session-starter.sh",
+  path="/root",
+  args={true,os_id..os_version..os_arch,os_id..os_arch,"--","/bin/bash","--login"},
+  env_set={ {"TERM",os.getenv("TERM")} },
+  term_signal=defaults.signals.SIGHUP,
+  term_orphans=true, -- yast2 will spawn dbus process, that will become orphan when you exit from shell and this exec profile is complete.
+  attach=true,
+  pty=true,
+  term_on_interrupt=true,
 }
 
 function concat_table(t1,t2)
@@ -109,10 +112,19 @@ end
 fakeroot_exec={
   exec="/fixups/fakeroot-session-starter.sh",
   path="/root",
-  args=concat_table({tostring(os_id),tostring(os_version),tostring(os_arch)},loader.args),
-  env_set={
-    {"TERM",os.getenv("TERM")},
-  },
+  args=concat_table({false,os_id..os_version..os_arch,os_id..os_arch,"--"},loader.args),
+  env_set={ {"TERM",os.getenv("TERM")} },
+  term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
+  attach=true,
+  pty=false,
+}
+
+fakeroot_exec_db={
+  exec="/fixups/fakeroot-session-starter.sh",
+  path="/root",
+  args=concat_table({true,os_id..os_version..os_arch,os_id..os_arch,"--"},loader.args),
+  env_set={ {"TERM",os.getenv("TERM")} },
   term_signal=defaults.signals.SIGTERM,
   term_orphans=true,
   attach=true,

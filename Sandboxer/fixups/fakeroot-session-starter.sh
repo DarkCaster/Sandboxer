@@ -1,39 +1,50 @@
 #!/bin/sh
 
-fakeroot_dist="$1"
-shift 1
-fakeroot_version="$1"
-shift 1
-fakeroot_arch="$1"
-shift 1
-command="$1"
-shift 1
-
-fakeroot_search_dir="/fixups"
-
 show_usage() {
-  echo "usage: fakeroot-session-starter.sh <dist> <version> <arch> <command> [command arguments]"
+  echo "usage: fakeroot-session-starter.sh <true|false - use perm.db> <util search suffix> <util search suffix> ... -- <command> [arguments]"
   exit 1
 }
 
-test -z "$fakeroot_dist" -o -z "$command" && show_usage
-test -z "$fakeroot_version" -o -z "$command" && show_usage
-test -z "$fakeroot_arch" -o -z "$command" && show_usage
+use_db="$1"
+test -z "$use_db" && show_usage
+[ "$use_db" != "true" ] && [ "$use_db" != "false" ] && show_usage
 
+shift 1
+
+fakeroot_search_dir="/fixups"
 fakeroot=""
-for hint in "$fakeroot_search_dir/fakeroot-$fakeroot_dist-$fakeroot_version-$fakeroot_arch" "$fakeroot_search_dir/fakeroot-$fakeroot_dist-$fakeroot_arch" "$fakeroot_search_dir/fakeroot-host"
-do
-  echo -n "searching for fakeroot utility at $hint dir ... "
-  if [ -x "$hint/fakeroot" ]; then
-    fakeroot="$hint/fakeroot"
-    echo "found!"
-    break
-  else
-    echo "not found..."
+
+suffix="$1"
+test -z "$suffix" && show_usage
+while [ "$suffix" != "--" ]; do
+  if [ -z "$fakeroot" ]; then
+    search_dir="$fakeroot_search_dir/fakeroot-$suffix"
+    echo -n "searching for fakeroot utility at $search_dir dir ... "
+    if [ -x "$search_dir/fakeroot" ]; then
+      fakeroot="$search_dir/fakeroot"
+      echo "found!"
+    else
+      echo "not found..."
+    fi
   fi
+  shift 1
+  suffix="$1"
+  test -z "$suffix" && show_usage
 done
 
-test -z "$fakeroot" && echo "usable fakeroot binary not found! cannot proceed..." && exit 1
+command="$1"
+test -z "$command" && show_usage
+
+shift 1
+
+if [ -z "$fakeroot" ]; then
+  if [ -x "$fakeroot_search_dir/fakeroot-host/fakeroot" ]; then
+      fakeroot="$fakeroot_search_dir/fakeroot-host/fakeroot"
+      echo "using fallback fakeroot util at $fakeroot"
+    else
+      echo "usable fakeroot binary not found! cannot proceed..." && exit 1
+    fi
+fi
 
 # In some host/sandbox environments fakeroot utility refuse to work on the first run, so we will use this small and dirty hack for now.
 2>/dev/null "$fakeroot" -- /bin/true
@@ -63,18 +74,21 @@ fakeroot_db="/root/.fakeroot.db"
 #only one instance of fakeroot may access permissions database, so use "locking"
 lock_enter
 
-if [ "$lock_entered" != "true" ]; then
+if [ "$use_db" = "false" ]; then
+  echo "NOTE: not using permissions database"
+  "$fakeroot" -- "$command" "$@"
+elif [ "$lock_entered" != "true" ]; then
   echo "WARNING: another fakeroot instance running in this sandbox, do not attempt to use permissions database"
   echo "NOTE: if you sure that no other fakeroot instances running, you may manually remove $lock_path dir inside chroot..."
   "$fakeroot" -- "$command" "$@"
 elif [ -f "$fakeroot_db" ]; then
   echo "loading permissions database at $fakeroot_db, this may take some time to complete"
+  echo "NOTE: saving permissions-list on exit may take a long time to complete!"
   "$fakeroot" -i "$fakeroot_db" -s "$fakeroot_db" -- "$command" "$@"
-  echo "saving permissions database to $fakeroot_db, this may take some time to complete"
 else
   echo "creating new permissions database at $fakeroot_db"
+  echo "NOTE: saving permissions-list on exit may take a long time to complete!"
   "$fakeroot" -s "$fakeroot_db" -- "$command" "$@"
-  echo "saving permissions database to $fakeroot_db, this may take some time to complete"
 fi
 
 ec="$?"
