@@ -24,7 +24,7 @@ while [ "$suffix" != "--" ]; do
       fakeroot="$search_dir/fakeroot"
       echo "found!"
     else
-      echo "not found..."
+      echo "not found."
     fi
   fi
   shift 1
