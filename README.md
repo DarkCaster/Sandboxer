@@ -97,6 +97,16 @@ Execution must be performed from regular-user account.
 Running from root is not supported and will be unsecure.
 Bubblewrap utility is also intended to run as normal user.
 
+##### Example: prepare and run sandbox on top of separate debian or ubuntu rootfs
+
+*   Create separate directory (will be used to store files for debian-rootfs)
+*   Copy (or create symlink) following files from "Examples" directory: debian-setup.cfg.lua; debian-sandbox.cfg.lua; debian-version-probe.lua.in; download-debian-chroot.sh; download-image-from-docker-repo.sh; debian-minimal-setup.sh
+*   Download and install debian rootfs by running download-debian-chroot.sh (DO NOT run this as root!): ./download-debian-chroot.sh buster amd64
+*   Run "setup" sandbox on top of downloaded rootfs: sandboxer debian-setup.cfg.lua fakeroot_shell
+*   Install essential packages by running this scrpit inside sandbox shell: /root/debian-minimal-setup.sh
+*   Logout by calling "exit"
+*   Run regular sandbox on top of prepared rootfs: sandboxer debian-sandbox.cfg.lua shell
+
 TODO: detailed description, see "Examples" directory for config files examples.
 Look for more info at "example.cfg.lua", "debian-setup.cfg.lua", "debian-sandbox.cfg.lua" and other example config files.
 
