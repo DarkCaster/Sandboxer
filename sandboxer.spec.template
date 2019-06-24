@@ -3,7 +3,7 @@
 #
 
 %define target_prefix %{_prefix}/lib/sandboxer
-%define pkg_ver 0.7.0__VERSION__SUFFIX__
+%define pkg_ver 0.7.5.dev__VERSION__SUFFIX__
 
 Name:           sandboxer
 Version:        %{pkg_ver}
@@ -91,6 +91,9 @@ systemctl enable sandboxer.service
 %{target_prefix}
 
 %changelog
+* Mon Jun 24 2019 fwdsbs.to.11df@xoxy.net
+- Version 0.7.5.dev
+
 * Mon Jun 24 2019 fwdsbs.to.11df@xoxy.net
 - Version 0.7.0
 
