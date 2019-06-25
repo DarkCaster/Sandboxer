@@ -32,6 +32,8 @@ table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
+shell.term_orphans=true
+
 shell.desktop={
   name = "openSUSE shell",
   generic_name= "openSUSE development env",
