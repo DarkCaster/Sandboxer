@@ -1,4 +1,5 @@
--- experimental. basic sandbox with various development software on top of external opensuse rootfs.
+-- basic sandbox with various development software on top of external opensuse rootfs.
+-- this experimental config may be changed or removed in future.
 
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
@@ -28,6 +29,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 -- mounts
 table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"}) -- needed for QtCreator online installer to work
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
+table.insert(sandbox.setup.mounts,{prio=98,"dev-bind-try","/dev/log","/dev/log"})
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -42,6 +44,19 @@ shell.desktop={
   terminal = true,
   startupnotify = false,
   categories="Development;Utility;",
+}
+
+-- install "tftp" package and configure port-forwarding from port 69 to port 6969 to use this profile
+tftpd={
+  exec="/usr/sbin/in.tftpd",
+  path="/home/sandboxer/tftp_root",
+  args={"--foreground","--address","0.0.0.0:6969","--user","sandboxer","--permissive","--verbose"},
+  term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
+  term_on_interrupt=true,
+  attach=true,
+  exclusive=true,
+  pty=false
 }
 
 -- using monodeveop from this obs project: https://build.opensuse.org/project/show/home:Warhammer40k:Mono:Factory
