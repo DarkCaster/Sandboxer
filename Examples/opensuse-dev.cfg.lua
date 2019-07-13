@@ -15,8 +15,9 @@ defaults.recalculate()
 -- load base config
 dofile(loader.path.combine(loader.workdir,"opensuse-sandbox.cfg.lua"))
 
--- remove some unneded features and mounts
+-- modify default features
 loader.table.remove_value(sandbox.features,"pulse")
+table.insert(sandbox.features,"rootfixups")
 
 -- remove some mounts from base config
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount)
@@ -24,12 +25,11 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
 -- mounts
 table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"}) -- needed for QtCreator online installer to work
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
-table.insert(sandbox.setup.mounts,{prio=98,"dev-bind-try","/dev/log","/dev/log"})
+table.insert(sandbox.setup.mounts,{prio=98,"dev-bind-try","/dev/log","/dev/log"}) -- needed for atftp
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -46,11 +46,14 @@ shell.desktop={
   categories="Development;Utility;",
 }
 
--- install "tftp" package and configure port-forwarding from port 69 to port 6969 to use this profile
+-- install "atftp" package and configure redirection from port 69 to port 6969 to use this profile
+-- fakeroot is required to run tftpd inside sandbox
+-- iptables example: iptables -t nat -A PREROUTING -d <ip addr> -p udp -m udp --dport 69 -j DNAT --to-destination <ip addr>:6969
 tftpd={
-  exec="/usr/sbin/in.tftpd",
+  exec="/fixups/fakeroot-session-starter.sh",
   path="/home/sandboxer/tftp_root",
-  args={"--foreground","--address","0.0.0.0:6969","--user","sandboxer","--permissive","--verbose"},
+  args={"false",os_id.."-"..os_version.."-"..os_arch,os_id.."-"..os_arch,"--",
+  "/usr/sbin/atftpd","--daemon","--no-fork","--user","root.root","--port","6969","--verbose","/home/sandboxer/tftp_root"},
   term_signal=defaults.signals.SIGTERM,
   term_orphans=true,
   term_on_interrupt=true,
