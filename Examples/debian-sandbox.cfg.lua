@@ -80,6 +80,8 @@ sandbox={
       -- will be placed to dynamic (temporary) etc directory and will not overwrite files inside "etc" directory managed by debian-setup.cfg.lua
       defaults.commands.passwd,
       defaults.commands.resolvconf, -- generate resolvconf and place it to dynamic etc directory
+      defaults.commands.hosts, -- generate (copy) hosts file and place it to dynamic etc directory
+      defaults.commands.hostname, -- generate (copy) hostname file and place it to dynamic etc directory
       -- various stuff for userdata
       defaults.commands.home,
       defaults.commands.home_gui_config,
@@ -119,6 +121,8 @@ sandbox={
       defaults.mounts.passwd_mount,
       defaults.mounts.machineid_mount,
       defaults.mounts.resolvconf_mount,
+      defaults.mounts.hosts_mount,
+      defaults.mounts.hostname_mount,
 
       -- optional mounts, may be useful for some programs
       defaults.mounts.devsnd_mount,

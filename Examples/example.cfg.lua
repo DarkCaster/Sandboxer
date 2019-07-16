@@ -156,6 +156,8 @@ sandbox={
       --defaults.commands.machineid_static, -- generate machine id for sandbox, and place it to constructed etc dir. id value rely only on sandbox_uid
       --defaults.commands.machineid_host_etc, -- generate machine id (if missing) and place it to HOST /etc directory. may be used when creating sandbox on top of external chroot.
       defaults.commands.resolvconf, -- generate resolvconf file. for now only copy resolv.conf from /etc. TODO: add options for generation resolv.conf
+      defaults.commands.hosts, -- generate (copy) hosts file and place it to dynamic etc directory
+      defaults.commands.hostname, -- generate (copy) hostname file and place it to dynamic etc directory
 
       -- defaults.commands.machineid_host_etc, -- generate machine id for sandbox if not exist already, and place it to host etc dir specified by tunables.etchost_path tubalble parameter, useful when working with sandbox based on custom rootfs.
       defaults.commands.var_cache, -- create userdata/cache at this config file directory, if missing
@@ -213,6 +215,8 @@ sandbox={
       -- other mounts, also essential for normal operation
       -- defaults.mounts.dbus_system_mount, -- mount dbus system socket from host, may possess a potential security risk.
       -- defaults.mounts.resolvconf_mount, -- mount custom resolv.conf, only needed if you NOT using defaults.mounts.etc_ro_mount
+      -- defaults.mounts.hosts_mount, -- only needed if you NOT using defaults.mounts.etc_ro_mount
+      -- defaults.mounts.hostname_mount, -- only needed if you NOT using defaults.mounts.etc_ro_mount
       defaults.mounts.devsnd_mount, -- mount /dev/snd to allow alsa, may be not needed for pure pulseadio client to work
       defaults.mounts.devdri_mount, -- mount /dev/dri to allow hardware acceleration
       defaults.mounts.devinput_mount, -- mount /dev/input. may be needed for some apps to detect input devices (joystics?)
