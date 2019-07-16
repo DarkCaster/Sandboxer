@@ -234,6 +234,14 @@ defaults.commands.resolvconf={
   'mkdir -p "${cfg[tunables.auto.etc_path]}"',
   'cp "/etc/resolv.conf" "${cfg[tunables.auto.etc_path]}/resolv.conf"',
 }
+defaults.commands.hosts={
+  'mkdir -p "${cfg[tunables.auto.etc_path]}"',
+  'if [[ -f /etc/hosts ]]; then cp "/etc/hosts" "${cfg[tunables.auto.etc_path]}/hosts"; fi',
+}
+defaults.commands.hostname={
+  'mkdir -p "${cfg[tunables.auto.etc_path]}"',
+  'if [[ -f /etc/hostname ]]; then cp "/etc/hostname" "${cfg[tunables.auto.etc_path]}/hostname"; fi',
+}
 defaults.commands.machineid={
   'mkdir -p "${cfg[tunables.auto.etc_path]}"',
   'echo "$config_uid" > "${cfg[tunables.basedir]}/sandbox_uid"',
@@ -314,6 +322,10 @@ function defaults.recalculate()
   }
   defaults.mounts.resolvconf_mount={prio=20,tag="etcresolvconf","ro-bind",loader.path.combine(tunables.auto.etc_path,"resolv.conf"),"/etc/resolv.conf"}
   defaults.mounts.direct_resolvconf_mount={prio=20,tag="etcresolvconf","ro-bind","/etc/resolv.conf","/etc/resolv.conf"}
+  defaults.mounts.hosts_mount={prio=20,tag="etchosts","ro-bind-try",loader.path.combine(tunables.auto.etc_path,"hosts"),"/etc/hosts"}
+  defaults.mounts.direct_hosts_mount={prio=20,tag="etchosts","ro-bind-try","/etc/hosts","/etc/hosts"}
+  defaults.mounts.hostname_mount={prio=20,tag="etchostname","ro-bind-try",loader.path.combine(tunables.auto.etc_path,"hostname"),"/etc/hostname"}
+  defaults.mounts.direct_hostname_mount={prio=20,tag="etchostname","ro-bind-try","/etc/hostname","/etc/hostname"}
   defaults.mounts.machineid_mount={prio=20,tag="etcmachineid","ro-bind",loader.path.combine(tunables.auto.etc_path,"machine-id"),"/etc/machine-id"}
   defaults.mounts.xdg_runtime_dir={prio=20,tag="xdgrun","dir",loader.path.combine("/run","user",tunables.uid)}
   defaults.mounts.home_mount={prio=20,tag="home","bind",tunables.auto.home_base_path,"/home"}
