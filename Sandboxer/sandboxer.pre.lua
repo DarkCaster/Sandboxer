@@ -141,6 +141,7 @@ defaults.bwrap.unshare_net={prio=0,tag="unshare-net","unshare-net"}
 defaults.bwrap.unshare_uts={prio=0,tag="unshare-uts","unshare-uts"}
 defaults.bwrap.unshare_cgroup={prio=0,tag="unshare-cgroup","unshare-cgroup"}
 defaults.bwrap.unshare_all={prio=0,tag="unshare-all","unshare-all"}
+defaults.bwrap.hostname_sandbox={prio=0,tag="hostname","hostname","sandbox"}
 
 -- defines for mounts
 defaults.mounts.run_dir={prio=10,tag="run","dir","/run"}
