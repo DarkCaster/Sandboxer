@@ -10,16 +10,19 @@
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
-  -- redefine some parameters
+  -- redefine some parameters from "tunables" table that will affect some values from "defaults" table after running recalculate
   tunables.datadir=loader.path.combine(loader.workdir,"userdata-steam")
   defaults.recalculate_orig()
-  defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
 
 defaults.recalculate()
 
 -- load base config
 dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
+
+-- enable resolvconf feature
+table.insert(sandbox.features,"resolvconf")
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})

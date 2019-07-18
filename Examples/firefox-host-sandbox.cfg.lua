@@ -5,6 +5,7 @@
 
 sandbox={
   features={
+    "resolvconf",
     "dbus",
     "gvfs_fix",
     "pulse",
@@ -22,7 +23,7 @@ sandbox={
       defaults.commands.home,
       defaults.commands.home_gui_config,
       defaults.commands.machineid,
-      defaults.commands.resolvconf,
+      -- defaults.commands.resolvconf,
       defaults.commands.var_cache,
       defaults.commands.var_tmp,
     },

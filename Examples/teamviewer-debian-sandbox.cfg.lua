@@ -17,7 +17,6 @@ defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
   tunables.datadir=loader.path.combine(loader.workdir,"userdata-teamviewer")
   defaults.recalculate_orig()
-  defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
 
 defaults.recalculate()
@@ -34,6 +33,10 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
+
+-- enable resolvconf feature
+table.insert(sandbox.features,"resolvconf")
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
 teamviewer={
   exec="/home/sandboxer/teamviewer/teamviewer",

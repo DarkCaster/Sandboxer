@@ -12,7 +12,6 @@ function defaults.recalculate()
   -- NOTE: following option may help if you experience voice calls problems, or sound setup problems. Try to install full pulseaudio package inside sandbox first!
   -- tunables.features.pulse_env_alsa_config="auto"
   defaults.recalculate_orig()
-  defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
 
 defaults.recalculate()
@@ -22,6 +21,7 @@ dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
 
 -- redefine sandbox.features table
 sandbox.features={
+  "resolvconf",
   "dbus",
   "gvfs_fix",
   "pulse",
@@ -39,6 +39,9 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
+
+-- needed for resolvconf feature
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})

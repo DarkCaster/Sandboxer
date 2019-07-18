@@ -7,7 +7,6 @@ function defaults.recalculate()
   -- redefine some parameters
   tunables.datadir=loader.path.combine(loader.workdir,"userdata-vscode-"..config.uid)
   defaults.recalculate_orig()
-  defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
 
 defaults.recalculate()
@@ -25,6 +24,10 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
+
+-- enable resolvconf feature
+table.insert(sandbox.features,"resolvconf")
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
