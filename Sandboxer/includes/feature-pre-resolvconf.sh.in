@@ -25,6 +25,7 @@ if [[ $resolvconf_skip = false ]]; then
   #if there are no servers defined - add fallback nameservers
   resolvconf_nscount=`cat "${cfg[tunables.auto.etc_path]}/resolv.conf" | sed -n '/^nameserver/p' | wc -l`
   if [[ $resolvconf_nscount = 0 ]]; then
+    log "warning: using fallback nameserver ${cfg[tunables.features.resolvconf_fallback_server]}"
     echo "nameserver ${cfg[tunables.features.resolvconf_fallback_server]}" >> "${cfg[tunables.auto.etc_path]}/resolv.conf"
   fi
   #add mounts for resolv.conf
