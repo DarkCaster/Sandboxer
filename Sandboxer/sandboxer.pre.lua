@@ -212,6 +212,7 @@ tunables.features.pulse_env_alsa_config=""
 tunables.features.x11util_build="default"
 tunables.features.x11util_build_alt="default"
 tunables.features.x11util_enable=true
+tunables.features.resolvconf_fallback_server="8.8.8.8"
 
 -- commands for sandbox chroot construction. rely on dynamic variables, filled by calling defaults.recalculate function
 defaults.commands.etc_min={'"$tools_dir/etcgen.sh" "${cfg[tunables.etchost_path]}" "${cfg[tunables.auto.etc_path]}"'}

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# this feature will try to generate /etc/resolv.conf file, that should work with unstable upstream network connection.
+# it will try to use systemd local stub DNS resolver service if available to provide
+# uninterrupted operation regardless of network connection status.
+
+# if systemd-resolved is unavailable, try to construct resolv.conf file from fallback nameservers
+
+resolvconf_skip="false"
+if check_lua_export "sandbox.tags.etcresolvconf"; then
+  log "other /etc/resolv.conf mount detected, skipping feature activation"
+  resolvconf_skip="true"
+fi
+
+if [[ $resolvconf_skip = false ]]; then
+  #check wether we can use systemd-resolved
+  if [[ -f /run/systemd/resolve/stub-resolv.conf ]]; then
+    #copy target file to dynamic-etc location
+    cat "/run/systemd/resolve/stub-resolv.conf" | sed '/^#/d' | sed '/^$/d' > "${cfg[tunables.auto.etc_path]}/resolv.conf"
+  else
+    echo "" > "${cfg[tunables.auto.etc_path]}/resolv.conf"
+  fi
+  #remove search domain options
+  sed -i '/^search/d' "${cfg[tunables.auto.etc_path]}/resolv.conf"
+  #if there are no servers defined - add fallback nameservers
+  resolvconf_nscount=`cat "${cfg[tunables.auto.etc_path]}/resolv.conf" | sed -n '/^nameserver/p' | wc -l`
+  if [[ $resolvconf_nscount = 0 ]]; then
+    echo "nameserver ${cfg[tunables.features.resolvconf_fallback_server]}" >> "${cfg[tunables.auto.etc_path]}/resolv.conf"
+  fi
+  #add mounts for resolv.conf
+  sandbox_bind_ro "${cfg[tunables.auto.etc_path]}/resolv.conf" "/etc/resolv.conf"
+fi
