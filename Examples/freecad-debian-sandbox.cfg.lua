@@ -31,6 +31,7 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 
 -- add host mounts, readonly
 table.insert(sandbox.setup.mounts,{prio=99,"bind","/mnt/data","/mnt/data"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -56,7 +57,7 @@ freecad={
 freecad_install_appimage={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","rm -rf $HOME/Freecad && img=`find . -name \"FreeCAD_*.AppImage\"|sort|head -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/Freecad"},
+  args={"-c","rm -rf $HOME/Freecad && img=`find ./installs -name \"FreeCAD_*.AppImage\"|sort|tail -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/Freecad"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
