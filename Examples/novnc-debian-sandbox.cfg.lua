@@ -196,7 +196,7 @@ end
 acmesh_issue={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"--login","-c",concat_nil("mkdir -p $HOME/keys && $HOME/.acme.sh/acme.sh --cert-file $HOME/keys/cert --key-file $HOME/keys/key --ca-file $HOME/keys/ca --fullchain-file $HOME/keys/fullchain --days 180 --keylength 4096 --accountkeylength 4096 --issue --standalone --tlsport 63001 --httpport 63000 -d ",loader.args[1])},
+  args={"--login","-c",concat_nil("mkdir -p $HOME/keys && $HOME/.acme.sh/acme.sh --cert-file $HOME/keys/cert --key-file $HOME/keys/key --ca-file $HOME/keys/ca --fullchain-file $HOME/keys/fullchain --keylength 4096 --accountkeylength 4096 --issue --standalone --tlsport 63001 --httpport 63000 -d ",loader.args[1])},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
@@ -205,7 +205,7 @@ acmesh_issue={
 acmesh_test_issue={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"--login","-c",concat_nil("mkdir -p $HOME/keys && $HOME/.acme.sh/acme.sh --cert-file $HOME/keys/cert --key-file $HOME/keys/key --ca-file $HOME/keys/ca --fullchain-file $HOME/keys/fullchain --days 180 --keylength 4096 --accountkeylength 4096 --staging --issue --standalone --tlsport 63001 --httpport 63000 -d ",loader.args[1])},
+  args={"--login","-c",concat_nil("mkdir -p $HOME/keys && $HOME/.acme.sh/acme.sh --cert-file $HOME/keys/cert --key-file $HOME/keys/key --ca-file $HOME/keys/ca --fullchain-file $HOME/keys/fullchain --keylength 4096 --accountkeylength 4096 --staging --issue --standalone --tlsport 63001 --httpport 63000 -d ",loader.args[1])},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
