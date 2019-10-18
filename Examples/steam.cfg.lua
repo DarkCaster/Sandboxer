@@ -34,6 +34,10 @@ table.insert(sandbox.setup.commands,{'mkdir -p "${cfg[tunables.auto.user_path]}/
 -- add connection to system dbus service. used by steam at startup to detect network-manager status
 table.insert(sandbox.setup.mounts,defaults.mounts.dbus_system_mount)
 
+-- mount optional user-folder with various helper-stuff
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"winetricks_cache"),"/home/sandboxer/.cache/winetricks"})
+
 shell={
   exec="/bin/bash",
   args={"-l"},
