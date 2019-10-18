@@ -7,8 +7,13 @@
 -- you must also manually install libpng12-0 package from debian jessie (it was removed in stretch distro).
 -- see https://packages.debian.org/jessie/libpng12-0 for download links, and install package into debian chroot manually with "dpkg -i" command.
 
+-- NOTE: teamviewer 13 and up is not fully supported:
+-- teamviewer's complicated online=detection logic is not working as intended inside sandbox env.
+-- this makes it impossible to remote control this computer and login to teamviewer account.
+-- outgoing remote control connections, however, should work.
+
 -- for teamviewer 13 and up:
--- tested with "teamviewer 14 preview" on ubuntu 18.04 x86_64 chroot downloaded with download-ubuntu-chroot.sh script.
+-- tested with "teamviewer 14" on ubuntu 18.04 x86_64 chroot downloaded with download-ubuntu-chroot.sh script.
 -- external chroot must be prepared with debian-setup.cfg.lua config (using "sandboxer debian-setup.cfg.lua fakeroot_shell" command)
 -- use "tv-setup checklibs" to find out what dependencies must be installed in chroot to run teamviewer
 
@@ -38,6 +43,9 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 table.insert(sandbox.features,"resolvconf")
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
+-- optional mount for directory with teamviewer tarxz archives
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
+
 teamviewer={
   exec="/home/sandboxer/teamviewer/teamviewer",
   path="/home/sandboxer/teamviewer",
@@ -63,4 +71,14 @@ teamviewer_checklibs={
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
+}
+
+teamviewer_install_tarxz={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","rm -rf $HOME/teamviewer && img=`find ./installs -name \"teamviewer*.tar.xz\"|sort|tail -n1` && ( xz -d -c \"$img\" | tar xvf - )"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
 }
