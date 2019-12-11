@@ -29,6 +29,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 
 -- add host /dev mount for acces to arduino devices, not secure!
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
@@ -38,13 +39,6 @@ table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"}) -- needed for QtCrea
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
-
-arduino_install={
-  exec="/home/sandboxer/arduino-ide/install.sh",
-  path="/home/sandboxer/arduino-ide",
-  attach=true,
-  pty=false,
-}
 
 arduino={
   exec="/home/sandboxer/arduino-ide/arduino",
@@ -62,6 +56,24 @@ arduino={
     categories="Development;IDE;Electronics",
   },
 }
+
+arduino_install_tarxz={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  arduino_dir=\"$HOME/arduino-ide\"; \
+  [ -d \"$arduino_dir\" ] && cd \"$arduino_dir\" && echo \"uninstalling old arduino installation\" && ./uninstall.sh; \
+  cd $HOME; \
+  [ -d \"$arduino_dir\" ] && echo \"Removing directory $arduino_dir\" && rm -r \"$arduino_dir\"; \
+  img=`find ./installs -name \"arduino-*-linux*.tar.xz\"|sort -V|tail -n1` && ( xz -d -c \"$img\" | tar xf - ) && mv \"$HOME/\"arduino-* \"$arduino_dir\" && echo \"Installing new arduino installation from $img\" && cd \"$arduino_dir\" && ./install.sh; \
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+arduino_install_targz=arduino_install_tarxz
 
 qtcreator_installer={
   exec="/home/sandboxer/Qt/MaintenanceTool",
