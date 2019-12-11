@@ -62,7 +62,7 @@ arduino_install_tarxz={
   path="/home/sandboxer",
   args={"-c", "\
   arduino_dir=\"$HOME/arduino-ide\"; \
-  [ -d \"$arduino_dir\" ] && cd \"$arduino_dir\" && echo \"uninstalling old arduino installation\" && ./uninstall.sh; \
+  [ -d \"$arduino_dir\" ] && cd \"$arduino_dir\" && echo \"Uninstalling old arduino installation\" && ./uninstall.sh; \
   cd $HOME; \
   [ -d \"$arduino_dir\" ] && echo \"Removing directory $arduino_dir\" && rm -r \"$arduino_dir\"; \
   img=`find ./installs -name \"arduino-*-linux*.tar.xz\"|sort -V|tail -n1` && ( xz -d -c \"$img\" | tar xf - ) && mv \"$HOME/\"arduino-* \"$arduino_dir\" && echo \"Installing new arduino installation from $img\" && cd \"$arduino_dir\" && ./install.sh; \
