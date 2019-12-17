@@ -28,6 +28,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -53,7 +54,7 @@ cura={
 cura_install_appimage={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","rm -rf $HOME/Cura && mkdir $HOME/Cura && cd $HOME/Cura && bsdtar xvfp `find .. -name \"Cura-*.AppImage\"|sort|head -n1`"},
+  args={"-c","img=`find \"$HOME/installs\" -name \"Cura-*.AppImage\"|sort -V|tail -n1` && echo \"installing $img\" && rm -rf $HOME/Cura && mkdir $HOME/Cura && cd $HOME/Cura && bsdtar xvfp \"$img\""},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
