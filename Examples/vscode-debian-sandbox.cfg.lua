@@ -36,7 +36,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
-table.insert(sandbox.setup.mounts,{prio=99,"bind","/mnt/data","/mnt/data"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 table.insert(sandbox.setup.commands,{'[[ ! -L "${cfg[tunables.auto.user_path]}/.local/share/Trash" ]] && mkdir -p "${cfg[tunables.auto.user_path]}/.local/share" && rm -rf "${cfg[tunables.auto.user_path]}/.local/share/Trash" && ln -s "/mnt/data/.Trash-${cfg[tunables.uid]}" "${cfg[tunables.auto.user_path]}/.local/share/Trash"; true'})
 -- table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
