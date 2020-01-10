@@ -1,6 +1,11 @@
 -- example config for vscode-ide sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
 -- using debian-sandbox.cfg.lua config file as base
 
+-- on some systems you may need to enable unprivileged user namespaces systemwide with "sysctl kernel.unprivileged_userns_clone=1"
+-- more info at:
+-- https://github.com/microsoft/vscode/issues/81056
+-- https://security.stackexchange.com/questions/209529/what-does-enabling-kernel-unprivileged-userns-clone-do
+
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
