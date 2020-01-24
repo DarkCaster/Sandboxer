@@ -22,10 +22,12 @@ loader.table.remove_value(sandbox.features,"pulse")
 -- remove some mounts from base config
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
+
+-- /sys mount is needed for adb\fastboot to work, uncomment next line to disable it
+-- loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
@@ -34,12 +36,17 @@ table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader
 
 -- add host /dev mount for acces to arduino devices, not secure!
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
+table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev/bus/usb","/dev/bus/usb"})
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyACM0","/dev/ttyACM0"})
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/ttyUSB0"})
 table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"}) -- needed for QtCreator online installer to work
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
+
+-- profiles
+
+shell.term_orphans=true --terminale all running processes when exiting shell profile, comment thils line if needed
 
 arduino={
   exec="/home/sandboxer/arduino-ide/arduino",
