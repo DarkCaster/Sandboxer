@@ -83,6 +83,44 @@ arduino_install_tarxz={
 
 arduino_install_targz=arduino_install_tarxz
 
+-- android sdk manager from https://developer.android.com/studio
+android_studio_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  android_studio=\"$HOME/android-studio\"; \
+  [ -d \"$android_studio\" ] && echo \"Do not attempt to remove old android-studio directory\" && exit 1; \
+  cd $HOME; \
+  [ -d \"$android_studio\" ] && echo \"Removing directory $android_studio\" && rm -r \"$android_studio\"; \
+  img=`find ./installs -name \"android-studio-ide-*-linux.tar.gz\"|sort -V|tail -n1` && ( gunzip -c \"$img\" | tar xf - ); \
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+android_studio_install_tarxz=android_studio_install
+android_studio_install_targz=android_studio_install
+
+android_studio={
+  exec="/home/sandboxer/android-studio/bin/studio.sh",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+  desktop={
+    name = "Android Studio (in sandbox)",
+    comment = "Android Studio, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/android-studio/bin/studio.png"),
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;Android",
+  },
+}
+
 qtcreator_installer={
   exec="/home/sandboxer/Qt/MaintenanceTool",
   path="/home/sandboxer/Qt",
