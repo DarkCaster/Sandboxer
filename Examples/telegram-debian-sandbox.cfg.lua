@@ -46,10 +46,6 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 
--- add bwrap unshare_ipc option, remove following 2 lines if you are using x11host feature and telegram GUI is not displaying properly
-loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
-table.insert(sandbox.bwrap,defaults.bwrap.unshare_ipc)
-
 -- sandbox.setup.cleanup_on_exit=false, -- enable for debug purposes
 
 telegram_install={
@@ -82,3 +78,25 @@ telegram={
     categories="Network;Application;"
   },
 }
+
+-- Profiles for use with cgroups-helper: https://github.com/DarkCaster/Linux-Helper-Tools/tree/master/CGroupsForUser
+-- Unfortunately, telegram-desktop for linux suffers from some severe bugs with ram usage
+-- that may lead OOM-killer to terminate other applications (and wreak chaos, this is true for me at apr.2020).
+-- We can run telegram inside it's own cgroup with tight limits. So, in case of another catastrophic memory leak - telegram will be terminated first.
+
+telegram_limit=telegram
+
+shell_limit=shell
+
+if(config.profile == "shell_limit" or config.profile == "telegram_limit") then
+  -- use in-memory-only media cache to reduce disk io (may help in memory constrained pre-termination condition)
+  table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/home/sandboxer/.local/share/TelegramDesktop/tdata/user_data"})
+  -- use custom wrapper for bubblewrap to run sandbox processes inside dedicated cgroup with tight limits
+  sandbox.bwrap_cmd={
+    "cguser-exec.sh",
+    "-m", "2048M", -- hard limit for ram usage
+    "-msw", "4096M", -- hard limit for ram+swap usage
+    "-c", "30", "-t",
+    "bwrap"
+  }
+end

@@ -23,8 +23,8 @@ sandbox.features={
   "dbus",
   "gvfs_fix",
   "pulse",
-  --"x11host",
-  "xpra",
+  "x11host",
+  --"xpra",
   "envfix",
 }
 
@@ -38,10 +38,6 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
-
--- add bwrap unshare_ipc option, remove following 2 lines if dropbox GUI is not displaying properly
-loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
-table.insert(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
 gmm_log={
   exec="/home/sandboxer/musicmanager/google-musicmanager",
