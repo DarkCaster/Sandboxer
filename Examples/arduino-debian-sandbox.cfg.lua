@@ -65,7 +65,7 @@ arduino={
   },
 }
 
-arduino_install_tarxz={
+arduino_install={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c", "\
@@ -81,7 +81,8 @@ arduino_install_tarxz={
   exclusive=true,
 }
 
-arduino_install_targz=arduino_install_tarxz
+arduino_install_targz=arduino_install
+arduino_install_tarxz=arduino_install
 
 -- android sdk manager from https://developer.android.com/studio
 android_studio_install={
