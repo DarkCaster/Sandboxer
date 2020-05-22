@@ -57,9 +57,41 @@ freecad={
 freecad_install_appimage={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","rm -rf $HOME/Freecad && img=`find ./installs -name \"FreeCAD_*.AppImage\"|sort|tail -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/Freecad"},
+  args={"-c","rm -rf $HOME/Freecad && img=`find ./installs -name \"FreeCAD_*.AppImage\"|sort -V|tail -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/Freecad"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
   exclusive=true,
 }
+
+freecad_install=freecad_install_appimage
+
+openscad={
+  exec="/home/sandboxer/OpenSCAD/AppRun",
+  path="/home/sandboxer/OpenSCAD",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+  desktop={
+    name = "OpenSCAD (in sandbox)",
+    comment = "OpenSCAD, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/OpenSCAD/.DirIcon"),
+    terminal = false,
+    startupnotify = false,
+    categories="Graphics;",
+  },
+}
+
+openscad_install_appimage={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","rm -rf $HOME/OpenSCAD && img=`find ./installs -name \"OpenSCAD-*.AppImage\"|sort -V|tail -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/OpenSCAD"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+openscad_install=openscad_install_appimage
