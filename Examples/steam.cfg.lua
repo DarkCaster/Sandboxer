@@ -36,6 +36,7 @@ table.insert(sandbox.setup.mounts,defaults.mounts.dbus_system_mount)
 
 -- mount optional user-folder with various helper-stuff
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"games"),"/home/sandboxer/games"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"winetricks_cache"),"/home/sandboxer/.cache/winetricks"})
 
 shell={
