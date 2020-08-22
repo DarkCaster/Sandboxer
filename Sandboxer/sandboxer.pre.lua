@@ -180,7 +180,18 @@ defaults.mounts.host_var_lib_mount={prio=20,tag="varlib","ro-bind","/var/lib","/
 -- service mounts
 defaults.mounts.dbus_system_mount={prio=20,tag="dbus","bind","/run/dbus","/run/dbus"}
 defaults.mounts.devsnd_mount={prio=20,tag="devsnd","dev-bind","/dev/snd","/dev/snd"}
-defaults.mounts.devdri_mount={prio=20,tag="devdri","dev-bind","/dev/dri","/dev/dri"}
+defaults.mounts.devdri_mount={
+  prio=20,
+  {tag="devdri","dev-bind-try","/dev/dri","/dev/dri"},
+  {tag="devnvidia0","dev-bind-try","/dev/nvidia0","/dev/nvidia0"},
+  {tag="devnvidia1","dev-bind-try","/dev/nvidia1","/dev/nvidia1"},
+  {tag="devnvidia2","dev-bind-try","/dev/nvidia2","/dev/nvidia2"},
+  {tag="devnvidia3","dev-bind-try","/dev/nvidia3","/dev/nvidia3"},
+  {tag="devnvidiactl","dev-bind-try","/dev/nvidiactl","/dev/nvidiactl"},
+  {tag="devnvidiamodeset","dev-bind-try","/dev/nvidia-modeset","/dev/nvidia-modeset"},
+  {tag="devnvidiauvm","dev-bind-try","/dev/nvidia-uvm","/dev/nvidia-uvm"},
+  {tag="devnvidiauvmtools","dev-bind-try","/dev/nvidia-uvm-tools","/dev/nvidia-uvm-tools"},
+}
 defaults.mounts.devinput_mount={prio=20,tag="devinput","dev-bind","/dev/input","/dev/input"}
 defaults.mounts.devshm_mount={prio=20,tag="devshm","bind","/dev/shm","/dev/shm"}
 
