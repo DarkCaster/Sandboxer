@@ -28,6 +28,7 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 
 -- try to mount directory "secrets" with password-databases (should be located at the same directory as this config file)
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"secrets"),"/home/sandboxer/secrets"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"export"),"/home/sandboxer/export"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 
 -- add bwrap unshare-net option to cut off sandbox from network
