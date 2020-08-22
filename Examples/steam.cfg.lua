@@ -112,7 +112,5 @@ steam_bionic={
   attach=true,
   pty=false,
   exclusive=true,
-  log_stderr=steam.log_stderr,
-  log_stdout=steam.log_stdout,
   desktop=steam.desktop,
 }
