@@ -1,9 +1,8 @@
 -- this is an example config for sandbox that use external debian rootfs as base.
 
 -- this example config is compatible with external root-fs archives that was downloaded and extracted by running:
--- download-ubuntu-*.sh - download selected ubuntu x86_64 distribution (currently supported 12.04, 14.04, 16.04 and 16.10)
--- download-debian-jessie-chroot.sh - download debian 8 (jessie) x86_64 rootfs from docker image repository
--- (debian sid distribution is using different root-fs directory layout - it will be NOT COMPATIBLE with this example config file)
+-- download-ubuntu-chroot.sh - download selected ubuntu x86_64 distribution (currently supported 12.04, 14.04, 16.04 and 18.04)
+-- download-debian-chroot.sh - download debian 8,9 or 10 x86_64 rootfs from docker image repository
 
 -- THIS CONFIG WILL CREATE SANDBOXED ENV THAT SHOULD BE USED ONLY TO PERFORM SETUP PROCEDURES, LIKE INSTALLING PACKAGES OR EDITING /etc/* config files.
 -- all root-subdirectories from external rootfs (debian_chroot directory) will be mounted read-write.

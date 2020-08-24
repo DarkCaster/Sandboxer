@@ -4,8 +4,7 @@
 
 -- using debian-sandbox.cfg.lua config file as base
 
--- there may be some problems with 3d acceleration when using hardware that requires to install external driver and its own version of libGL
--- for now this config is tested with Intel IGP that works with stock driers and libGL library.
+-- 3D acceleration was tested on Intel and NVidia graphics. In order to use acceleration with nvidia cards, you should install nvidia driver components (same version as used at host system) into debian chroot used as base for this sandbox (you can manage chroot with "sandboxer debian-setup.cfg.lua fakeroot_shell" command, see debian-setup.cfg.lua example for more info)
 
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
