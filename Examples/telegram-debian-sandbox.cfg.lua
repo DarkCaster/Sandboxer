@@ -85,7 +85,6 @@ telegram={
 -- We can run telegram inside it's own cgroup with tight limits. So, in case of another catastrophic memory leak - telegram will be terminated first.
 
 telegram_limit=telegram
-
 shell_limit=shell
 
 if(config.profile == "shell_limit" or config.profile == "telegram_limit") then
@@ -99,4 +98,12 @@ if(config.profile == "shell_limit" or config.profile == "telegram_limit") then
     "-c", "30", "-t",
     "bwrap"
   }
+end
+
+telegram_slim=telegram
+shell_slim=shell
+
+if(config.profile == "shell_slim" or config.profile == "telegram_slim") then
+  -- use in-memory-only media cache to reduce disk io
+  table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/home/sandboxer/.local/share/TelegramDesktop/tdata/user_data"})
 end
