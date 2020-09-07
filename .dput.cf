@@ -1,0 +1,6 @@
+[sandboxer]
+fqdn = ppa.launchpad.net
+method = ftp
+incoming = ~dark-caster/ubuntu/sandboxer
+login = anonymous
+allow_unsigned_uploads = 0
