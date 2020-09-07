@@ -11,7 +11,7 @@ git:
 
 jobs:
   include:
-    - stage: "test build"
+    - stage: "Build test"
       script: ./build.sh && ./install-to-home.sh
-    - stage: "deploy"
+    - stage: "Deploy packages"
       script: ./create-debian-source.sh

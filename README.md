@@ -1,5 +1,7 @@
 # Simple desktop application sandboxing tool for GNU/Linux
 
+[![Build Status](https://travis-ci.com/DarkCaster/Sandboxer.svg?branch=master)](https://travis-ci.com/DarkCaster/Sandboxer)
+
 Main goal of this project is to make a simple to configure and yet highly customizable application sandboxing/isolation suite.
 In addition to sandboxing feature, this suite can also be used to run applications inside pre-configured custom environment based on user-made chroot, in a similiar way to how it is done in a server containerization software like libvirt-lxc, LXC, docker, etc.
 
