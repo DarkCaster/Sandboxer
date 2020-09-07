@@ -4,7 +4,7 @@ os: linux
 dist: focal
 
 before_install:
-  - sudo apt-get install -y dput
+  - sudo apt-get install -y acl-dev libx11-dev libxext-dev
 
 git:
   depth: 1
@@ -13,5 +13,6 @@ jobs:
   include:
     - stage: "test build"
       script: ./build.sh
+      script: ./install-to-home.sh
     - stage: "deploy"
       script: ./create-debian-source.sh
