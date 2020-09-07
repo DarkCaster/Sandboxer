@@ -25,6 +25,7 @@ cd "$curdir/Build/Executor-build"
 cmake -DCMAKE_INSTALL_PREFIX="$curdir/Build" -DCMAKE_BUILD_TYPE=Release ../../Executor
 make
 make install
+echo "done: session manager utilities"
 
 # X11Util
 cd "$curdir"
@@ -34,6 +35,7 @@ cd "$curdir/Build/X11Util-build"
 cmake -DCMAKE_INSTALL_PREFIX="$curdir/Build" -DCMAKE_BUILD_TYPE=Release ../../X11Util
 make
 make install
+echo "done: x11 test utility"
 
 # Fakeroot-UserNS
 mkdir -p "$curdir/External"
@@ -76,6 +78,7 @@ fi
 
 make
 make install DESTDIR="$curdir/Build"
+echo "done: fakeroot utility"
 
 cd "$curdir"
 
@@ -87,6 +90,8 @@ find "$curdir/Build/fixups" -type f -name "*.so" -print -exec strip --strip-unne
 find "$curdir/Build/commander" -type f -print -exec strip --strip-unneeded {} \;
 find "$curdir/Build/executor" -type f -print -exec strip --strip-unneeded {} \;
 find "$curdir/Build/x11util" -type f -print -exec strip --strip-unneeded {} \;
+echo "done: post build cleanup"
 
 [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in && -d $curdir/.git ]] && git submodule update --init
 [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in && ! -d $curdir/.git ]] && git clone "https://github.com/DarkCaster/Bash-Lua-Helper.git" "$curdir/BashLuaHelper"
+echo "done: extra deps"
