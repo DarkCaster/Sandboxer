@@ -1,0 +1,17 @@
+language: c
+
+os: linux
+dist: focal
+
+before_install:
+  - sudo apt-get install -y dput
+
+git:
+  depth: 1
+
+jobs:
+  include:
+    - stage: "test build"
+      script: ./build.sh
+    - stage: "deploy"
+      script: ./create-debian-source.sh
