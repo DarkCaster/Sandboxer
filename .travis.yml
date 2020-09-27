@@ -1,17 +1,37 @@
 language: c
 
-os: linux
-dist: focal
-
 before_install:
   - sudo apt-get install -y dput acl-dev libx11-dev libxext-dev libcap-dev
 
 git:
   depth: 1
 
+test: &test
+  stage: "Build test"
+  script: ./build.sh && ./install-to-home.sh
+
+deploy: &deploy
+  stage: "Deploy packages"
+  script: ./create-debian-source.sh
+
 jobs:
   include:
-    - stage: "Build test"
-      script: ./build.sh && ./install-to-home.sh
-    - stage: "Deploy packages"
-      script: ./create-debian-source.sh
+    - <<: *test
+      os: linux
+      dist: focal
+    - <<: *test
+      os: linux
+      dist: bionic
+    - <<: *test
+      os: linux
+      dist: xenial
+
+    - <<: *deploy
+      os: linux
+      dist: focal
+    - <<: *deploy
+      os: linux
+      dist: bionic
+    - <<: *deploy
+      os: linux
+      dist: xenial
