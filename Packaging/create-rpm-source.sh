@@ -3,6 +3,10 @@
 
 set -e
 
+#TODO
+echo "TODO: update this script to use with travis-ci"
+exit 1
+
 curdir="$( cd "$( dirname "$0" )" && pwd )"
 
 target="$1"

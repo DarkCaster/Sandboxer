@@ -2,6 +2,10 @@
 
 # package binary components, build by build.sh script
 
+#TODO
+echo "TODO: update this script to use with travis-ci"
+exit 1
+
 build="$1"
 
 [[ -z $build ]] && echo "usage: <build id>" && exit 1

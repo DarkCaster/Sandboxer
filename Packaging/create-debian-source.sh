@@ -4,6 +4,7 @@
 set -e
 
 curdir="$( cd "$( dirname "$0" )" && pwd )"
+rootdir="$curdir/.."
 
 target="$1"
 key="$2"
@@ -19,12 +20,15 @@ cur_date=`LANG=C date '+%a, %d %b %Y'`
 version="`LANG=C date '+%Y.%m.%d'`$version"
 
 mkdir -p "$target/sandboxer"
-if [[ -d $curdir/.git ]]; then
+if [[ -d $rootdir/.git ]]; then
+  pushd "$rootdir"
   git archive --format tar HEAD | (cd "$target/sandboxer" && tar xf -)
-  [[ ! -f $curdir/BashLuaHelper/lua-helper.bash.in ]] && git submodule update --init
-  (cd "$curdir/BashLuaHelper" && git archive --format tar HEAD) | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
+  [[ ! -f $rootdir/BashLuaHelper/lua-helper.bash.in ]] && git submodule update --init
+  (cd "$rootdir/BashLuaHelper" && git archive --format tar HEAD) | (cd "$target/sandboxer/BashLuaHelper" && tar xf -)
+  popd
 else
-  cp -r "$curdir"/* "$target/sandboxer"
+  cp -r "$rootdir"/* "$target/sandboxer"
+  rm -rf "$target/sandboxer/Packaging"
   [[ ! -f $target/sandboxer/BashLuaHelper/lua-helper.bash.in ]] && git clone "https://github.com/DarkCaster/Bash-Lua-Helper.git" "$target/sandboxer/BashLuaHelper"
   rm -rf "$target/sandboxer/BashLuaHelper"/{.git,.gitignore}
   rm -rf "$target/sandboxer"/{.git,.gitignore,.gitmodules}
