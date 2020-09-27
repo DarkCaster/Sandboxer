@@ -15,6 +15,8 @@ distro="$4"
 [[ $version = none ]] && version=""
 [[ $distro = none ]] && distro=""
 
+cur_date=`LANG=C date '+%a, %d %b %Y'`
+
 mkdir -p "$target/sandboxer"
 if [[ -d $curdir/.git ]]; then
   git archive --format tar HEAD | (cd "$target/sandboxer" && tar xf -)
@@ -30,7 +32,8 @@ fi
 cd "$target/sandboxer"
 [[ -z $distro ]] && sed -i "s|__DISTRO__|unstable|g" "debian/changelog"
 [[ ! -z $distro ]] && sed -i "s|__DISTRO__|""$distro""|g" "debian/changelog"
-sed -i "s|__VERSION__SUFFIX__|""$version""|g" "debian/changelog"
+sed -i "s|__VERSION__|""$version""|g" "debian/changelog"
+sed -i "s|__DATE__|""$cur_date""|g" "debian/changelog"
 
 if [[ -z $key ]]; then
   dpkg-buildpackage -d -S -us -uc
