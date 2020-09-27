@@ -1,4 +1,4 @@
-[sandboxer]
+[launchpad]
 fqdn = ppa.launchpad.net
 method = ftp
 incoming = ~dark-caster/ubuntu/sandboxer

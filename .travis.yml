@@ -14,7 +14,7 @@ stage_test: &test
 
 stage_deploy: &deploy
   stage: "Deploy packages"
-  script: ./Sandboxer/signing/extract-archive.sh ./Sandboxer/signing/dpkg_keys.enc /tmp && gpg --import /tmp/dpkg_keys/launchpad.key && ./create-debian-source.sh /tmp/sandboxer-dpkgs 94EAE4BE1507C792 .ppa$TRAVIS_BUILD_NUMBER~$TRAVIS_DIST $TRAVIS_DIST
+  script: ./Sandboxer/signing/extract-archive.sh ./Sandboxer/signing/dpkg_keys.enc /tmp && gpg --import /tmp/dpkg_keys/launchpad.key && ./create-debian-source.sh /tmp/sandboxer-dpkgs 94EAE4BE1507C792 .ppa$TRAVIS_BUILD_NUMBER~$TRAVIS_DIST $TRAVIS_DIST && dput -c ./.dput.cf launchpad /tmp/sandboxer-dpkgs/sandboxer_*.changes
   env:
     secure: W+JApdnmA6voae9n+hyQqhprs0YlJsuIKSiaWTGG7xDbsifxwCcCvEXCEReAu7L6Mu4kxVHRW7tTcddxafiGvPlWRWP/juBT0Uz1Ozhf/lAt8+ulDOt2/i2EJgQcIJKOKDsEaD2PnYh/vGJUHwZwZvAMTI9kFBVoVrxBCJkh6/WAhDt4UIFZ/arzCLpx6CdpWsXgLL9CQWAtLefvoxWflmN2DVh4bIw7v45qq8DWjCuSQedtzBhixVOGKBF/7cJJnWeenz3MYvr7eBjDnJZBQDG1eP64QbzR8n5UJhQwAwgsBzmY7OrFbrUw3HsxO47p/QnA00lz3evzLQgqOOn8aJijsh6hIJxVhiBKFgPmtRUUt4StWgjtelJyjR8PAY1mrGT46jekG1C7PHE+KlcwFHcCGaW9fnZaB5LfJHJS0955bdIOPnVtXg7jB4r5z99q89bF0WejXQIJc23AxCFpeN4wNfFl9QvirDTHAuIoXJaWWsiS0GS/5zkDuN9/uPpKx5QTzM4XwvikUgsiAze9oSVAkdo6B0mUZTt3B/gb9E43fZw9r7TbH4zOVYNZanz7yemsUfMzQMd8A8OMEVvIBGw7H9JU81RZyP36+TkE021gavHPUsOh9DnOUjfqPBL2JT9PB8sHXR6vRqxFXXZrpZqIdqWbH3NTuz1QB/JiASw=
 
