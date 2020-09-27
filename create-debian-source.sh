@@ -16,6 +16,7 @@ distro="$4"
 [[ $distro = none ]] && distro=""
 
 cur_date=`LANG=C date '+%a, %d %b %Y'`
+version="`LANG=C date '+%Y.%m.%d'`$version"
 
 mkdir -p "$target/sandboxer"
 if [[ -d $curdir/.git ]]; then
