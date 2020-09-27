@@ -8,11 +8,11 @@ before_install:
 git:
   depth: 1
 
-test: &test
+stage_test: &test
   stage: "Build test"
   script: ./build.sh && ./install-to-home.sh
 
-deploy: &deploy
+stage_deploy: &deploy
   stage: "Deploy packages"
   script: ./create-debian-source.sh
 
