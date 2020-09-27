@@ -10,7 +10,7 @@ dist="$2"
 
 [[ -z $suffix || -z $dist ]] && echo "usage: deploy-to-launchpad.sh <package suffix> <dist>" && exit 1
 
-$base="dpkg_private"
+base="dpkg_private"
 
 #cleanup, extract archive with private signing info
 rm -rf "/tmp/$base"
