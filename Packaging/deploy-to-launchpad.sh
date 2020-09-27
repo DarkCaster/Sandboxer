@@ -17,10 +17,10 @@ rm -rf "/tmp/$base"
 "$curdir/extract-archive.sh" "$curdir/$base.enc" /tmp
 
 #launchpad gpg-key id
-key_id=`LANG=C gpg --keyid-format long --import-options show-only --import "/tmp/$base/launchpad.gpg.key" | grep "^sec" | awk '{print $2}' | cut -d'/' -f2`
+key_id=`LANG=C gpg --dry-run --keyid-format long --verbose --import "/tmp/$base/launchpad.gpg.key" 2>&1 | grep "^gpg: sec" | awk '{print $3}' | cut -d'/' -f2`
 [[ -z $key_id ]] && echo "failed to detect launcpad gpg-key id" && exit 1
 gpg --import "/tmp/$base/launchpad.gpg.key"
- 
+
 #create dpkg source files
 "$curdir/create-debian-source.sh" /tmp/sandboxer-dpkgs "$key_id" "$suffix" "$dist"
 
