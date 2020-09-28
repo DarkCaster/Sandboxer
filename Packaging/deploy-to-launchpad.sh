@@ -25,5 +25,5 @@ gpg --import "/tmp/$base/launchpad.gpg.key"
 "$curdir/create-debian-source.sh" /tmp/sandboxer-dpkgs "$key_id" "$suffix" "$dist"
 
 #deploy it to launchpad
-# sed -i "s|ppa.launchpad.net|"`dig +noall +answer A ppa.launchpad.net | awk '{ print $5 }'`"|g" ./.dput.cf && dput -c ./.dput.cf launchpad /tmp/sandboxer-dpkgs/sandboxer_*.changes
-
+sed -i "s|__PRIVATE_SSH_KEY__|/tmp/$base/launchpad.ssh.key|g" "/tmp/$base/dput.config"
+dput -c "/tmp/$base/dput.config" launchpad /tmp/sandboxer-dpkgs/sandboxer_*.changes
