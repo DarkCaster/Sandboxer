@@ -3,7 +3,7 @@ language: c
 os: linux
 
 before_install:
-  - sudo apt-get install --install-recommends -y dnsutils dput-ng acl-dev libx11-dev libxext-dev libcap-dev fakeroot dh-make dh-systemd
+  - sudo apt-get install --install-recommends -y dput-ng acl-dev libx11-dev libxext-dev libcap-dev fakeroot dh-make dh-systemd
 
 git:
   depth: 1
