@@ -26,4 +26,4 @@ gpg --import "/tmp/$base/launchpad.gpg.key"
 
 #deploy it to launchpad
 sed -i "s|__PRIVATE_SSH_KEY__|/tmp/$base/launchpad.ssh.key|g" "/tmp/$base/dput.config"
-dput -c "/tmp/$base/dput.config" launchpad /tmp/sandboxer-dpkgs/sandboxer_*.changes
+yes yes | dput -c "/tmp/$base/dput.config" launchpad /tmp/sandboxer-dpkgs/sandboxer_*.changes
