@@ -159,15 +159,21 @@ You may also pass custom target installation path to install-to-home.sh script a
 
 ### Short term plans
 
+*   Automate testing\building packages for various linux distributions
+*   Add host<->sandbox path conversion tools
+*   Add custom xdg-open (and other) utilities for better integration between host and sandbox
+*   Improve session management utilities: use unix-sockets instead of pipes, add vsock support (for use with qemu guests), refactor and simplify code
+
+### Long term plans
+
 *   Add tools for gathering statistics from running sandboxes
 *   Improve logging from sandboxed applications
 *   Add tools that will perform setup of custom network-namespace and firewalling for sandboxed application.
     For now it is only possible to run sandbox with host networking, or run sandbox with empty network-namespace without any external connectivity.
-*   Improve session management utilities: use unix-sockets instead of pipes, add vsock support (for use with qemu guests), refactor and simplify code
 *   Implement seccomp mechanisms to session management utilities, loading of seccomp rules for application executed inside sandbox.
 *   Rewrite main management utilities-prototypes from bash to some other language to speedup sandbox preparation process.
 
-### Long term plans
+### Very long term plans
 
 *   Add different LXC backends support, virtualization backend support
 *   Test for selinux support, add helper tools for selinux setup to sandboxes based on external root-fs
