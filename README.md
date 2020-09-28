@@ -22,8 +22,9 @@ But, still, i'm trying to do my best to make this tool secure.
 
 ## Packages for various distributions:
 
-*   [Launchpad](https://launchpad.net/~dark-caster/+archive/ubuntu/sandboxer), for ubuntu distributions
-*   [OBS](https://build.opensuse.org/repositories/home:Warhammer40k:sandboxer), for openSUSE, debian and ubuntu distributions
+*   [Launchpad](https://launchpad.net/~dark-caster/+archive/ubuntu/sandboxer), for ubuntu distributions (LTS-only for now)
+
+TODO: more packages for various linux distros
 
 ## Main concepts of this sandboxing suite:
 
@@ -174,4 +175,4 @@ You may also pass custom target installation path to install-to-home.sh script a
 *   Add some restrictions for lua config files functionality if it is possible.
     For now when using lua interpreter, it is possible to use all functionality that lua can provide: including disk access and using external modules. There should be some limitations for portable sandbox config files for good.
 
-Copyright (c) 2016-2019 DarkCaster, see LICENSE for details.
+Copyright (c) 2016-2020 DarkCaster, see LICENSE for details.
