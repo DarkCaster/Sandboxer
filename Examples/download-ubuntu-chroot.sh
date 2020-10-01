@@ -8,7 +8,7 @@
 # 2. you may want to deploy chroot and sandboxer config files in a separate directory, just make sure that following files (or symlinks to it) are there:
 #  - download-ubuntu-chroot.sh - this script, it will download and extract minimal ubuntu-core distro image to "debian_sandbox" subdirectory
 #  - debian-minimal-setup.sh - helper script, may be removed after chroot deploy
-#  - debian-setup.cfg.lua - sandboxer config file that may be used to alter ubuntu_chroot: run apt-get, install new packages, update configuration, etc. NOT FOR REGULAR USE
+#  - debian-setup.cfg.lua - sandboxer config file that may be used to alter ubuntu chroot: run apt-get, install new packages, update configuration, etc. NOT FOR REGULAR USE
 #  - debian-version-probe.lua.in - helper script for debian\ubuntu-based setups, do not remove
 #  - debian-sandbox.cfg.lua - sandboxer config file for running regular applications, chroot-subdirectories will be mounted read-only as if running regular linux session with unpriveleged user
 # 3. run "download-ubuntu-chroot.sh" in order to download supported ubuntu image (run without args in order to see usage info).
