@@ -76,12 +76,12 @@ rm "$script_dir/debian_chroot/etc/apt/apt.conf.d/docker-"*
 cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
 
 # create exclude rules for dpkg if missing
-if [[ ! -f etc/dpkg/dpkg.cfg.d/excludes ]]; then
+if [[ ! -f "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes" ]]; then
   echo "creating rule for dpkg to exclude manuals and docs when installing packages"
-  echo "path-exclude=/usr/share/man/*" > "etc/dpkg/dpkg.cfg.d/excludes"
-  echo "path-exclude=/usr/share/doc/*" >> "etc/dpkg/dpkg.cfg.d/excludes"
-  echo "path-include=/usr/share/doc/*/copyright" >> "etc/dpkg/dpkg.cfg.d/excludes"
-  echo "path-include=/usr/share/doc/*/changelog.Debian.*" >> "etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-exclude=/usr/share/man/*" > "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-exclude=/usr/share/doc/*" >> "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-include=/usr/share/doc/*/copyright" >> "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-include=/usr/share/doc/*/changelog.Debian.*" >> "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes"
 fi
 
 if [[ $name = sid || $name = buster || $name = bullseye ]]; then
