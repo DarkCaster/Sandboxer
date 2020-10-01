@@ -49,10 +49,7 @@ if [[ ! -d $curdir/External/Fakeroot-UserNS ]]; then
   cd "$curdir/External"
   git clone https://github.com/DarkCaster/Fakeroot-UserNS.git
   cd "$curdir/External/Fakeroot-UserNS"
-  patch -p1 -i ./debian/patches/eglibc-fts-without-LFS
-  patch -p1 -i ./debian/patches/glibc-xattr-types
-  patch -p1 -i ./debian/patches/fix-shell-in-fakeroot
-  patch -p1 -i ./debian/patches/hide-dlsym-error.patch
+  QUILT_PATCHES="debian/patches" quilt push -a
   # disable docs from building
   sed -i '/doc\//d' ./configure.ac
   sed -i '/po4a/d' ./preroll
