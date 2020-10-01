@@ -75,6 +75,15 @@ rm "$script_dir/debian_chroot/etc/apt/apt.conf.d/docker-"*
 # deploy minimal setup script
 cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
 
+# create exclude rules for dpkg if missing
+if [[ ! -f etc/dpkg/dpkg.cfg.d/excludes ]]; then
+  echo "creating rule for dpkg to exclude manuals and docs when installing packages"
+  echo "path-exclude=/usr/share/man/*" > "etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-exclude=/usr/share/doc/*" >> "etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-include=/usr/share/doc/*/copyright" >> "etc/dpkg/dpkg.cfg.d/excludes"
+  echo "path-include=/usr/share/doc/*/changelog.Debian.*" >> "etc/dpkg/dpkg.cfg.d/excludes"
+fi
+
 if [[ $name = sid || $name = buster || $name = bullseye ]]; then
   # modify config for apt, to make it work under fakeroot
   echo "modifying apt config options to make it work with sandboxer/fakeoot restrictions"
