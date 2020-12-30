@@ -31,12 +31,14 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/media","/media"})
 
 filezilla={
   exec="/home/sandboxer/filezilla/bin/filezilla",
   path="/home/sandboxer/filezilla",
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
+  env_set={ {"LC_ALL",os.getenv("LANG")} },
   attach=false,
   pty=false,
   desktop={
