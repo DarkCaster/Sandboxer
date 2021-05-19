@@ -1,7 +1,7 @@
 -- config for running custom klipper 3D printer firmware suite
 -- packages need to be installed:
--- for python2 klipper version: virtualenv python-dev libffi-dev build-essential
--- for python3 klipper version (experimental): virtualenv python3-dev libffi-dev build-essential
+-- for python2 klipper version: virtualenv python-dev libffi-dev build-essential cmake
+-- for python3 klipper version (experimental): virtualenv python3-dev libffi-dev build-essential cmake
 
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
