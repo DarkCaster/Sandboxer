@@ -43,39 +43,7 @@ table.insert(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
 -- profiles
 
-klipper_python2_install={
-  exec="/bin/bash",
-  path="/home/sandboxer",
-  args={"-c","set -e;\
-  [[ ! -d klipper_py2 ]] && git clone https://github.com/KevinOConnor/klipper.git klipper_py2;\
-  (cd klipper_py2 && git reset --hard && git clean -dfx --force && git checkout master && git pull --force);\
-  rm -rf klipper_env_py2;\
-  virtualenv -p python2 klipper_env_py2;\
-  klipper_env_py2/bin/pip install -r klipper_py2/scripts/klippy-requirements.txt;\
-  "},
-  term_signal=defaults.signals.SIGTERM,
-  attach=true,
-  pty=false,
-  exclusive=true,
-}
-
--- experimental, may have some issues
-klipper_python3_install={
-  exec="/bin/bash",
-  path="/home/sandboxer",
-  args={"-c","set -e;\
-  [[ ! -d klipper_py3 ]] && git clone https://github.com/Doridian/klipper.git klipper_py3;\
-  (cd klipper_py3 && git reset --hard && git clean -dfx --force && git checkout custom && git pull --force);\
-  rm -rf klipper_env_py3;\
-  virtualenv -p python3 klipper_env_py3;\
-  klipper_env_py3/bin/pip install -r klipper_py3/scripts/klippy-requirements.txt;\
-  "},
-  term_signal=defaults.signals.SIGTERM,
-  attach=true,
-  pty=false,
-  exclusive=true,
-}
-
+-- forward UART port from target MCUs over Ethernet/TCP-IP
 uartclient_install={
   exec="/bin/bash",
   path="/home/sandboxer",
@@ -93,14 +61,19 @@ uartclient_install={
   exclusive=true,
 }
 
--- experimental, may have some issues
-klipper_python3={
-  exec="/home/sandboxer/klipper_env_py3/bin/python3",
-  path="/home/sandboxer/klipper_py3/klippy",
-  args={"klippy.py", "-l", "/home/sandboxer/logs/klipper_py3.log", loader.path.combine("/home/sandboxer/configs",loader.args[1])},
+klipper_python2_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","set -e;\
+  [[ ! -d klipper_py2 ]] && git clone https://github.com/KevinOConnor/klipper.git klipper_py2;\
+  (cd klipper_py2 && git reset --hard && git clean -dfx --force && git checkout master && git pull --force);\
+  rm -rf klipper_env_py2;\
+  virtualenv -p python2 klipper_env_py2;\
+  klipper_env_py2/bin/pip install -r klipper_py2/scripts/klippy-requirements.txt;\
+  "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
-  pty=true,
+  pty=false,
   exclusive=true,
 }
 
@@ -116,19 +89,20 @@ klipper_python2={
 
 -- run the whole suite and wait for ctrl+c, or termination signal:
 -- 1. klipper firmware
--- 2. uart-ethernet-client for connecting to MCU uart port(s) via Ethernet/TCP (see https://github.com/DarkCaster/ArduinoUARTEthernetBridge)
+-- 2. uart-ethernet-client for connecting to MCU uart port(s) via Ethernet/TCP-IP (see https://github.com/DarkCaster/ArduinoUARTEthernetBridge)
 -- 3. octo-pi software
 klipper_suite={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c","\
-  klipper_pid=\"\";uartclient_pid=\"\";octopi_pid=\"\";\
-  collect_logs(){ mv /tmp/klipper.log ~/logs/klipper.log; };\
-  do_exit(){ ec=\"$1\"; [[ -z $ec ]] && ec=\"1\"; [[ $ec != 0 ]] && echo 'stopping with error!' || echo 'stopping'; trap - ERR INT TERM HUP; kill -SIGTERM $klipper_pid 2>/dev/null; kill -SIGTERM $uartclient_pid 2>/dev/null; kill -SIGTERM $octopi_pid 2>/dev/null; collect_logs; exit $ec; };\
+  klipper_pid=\"\"; uartclient_pid=\"\"; octopi_pid=\"\";\
+  collect_logs() { local d=$(date +\"%Y.%m.%d.%H%M.%S\"); cp /tmp/klipper_py2.log ~/logs/klipper.$d.log; };\
+  do_exit() { ec=\"$1\"; [[ -z $ec ]] && ec=\"1\"; [[ $ec != 0 ]] && echo 'stopping with error!' || echo 'stopping'; trap - ERR INT TERM HUP; kill -SIGTERM $klipper_pid 2>/dev/null; kill -SIGTERM $uartclient_pid 2>/dev/null; kill -SIGTERM $octopi_pid 2>/dev/null; collect_logs; exit $ec; };\
   trap 'do_exit' ERR;\
   trap 'do_exit 0' INT TERM HUP;\
+  rm -rf /tmp/klipper_py2.log;\
   cd ~/klipper_py2/klippy;\
-  ~/klipper_env_py2/bin/python2 klippy.py -l /tmp/klipper.log \""..loader.path.combine("/home/sandboxer/configs",loader.args[1]).."\" &\
+  ~/klipper_env_py2/bin/python2 klippy.py -l /tmp/klipper_py2.log \""..loader.path.combine("/home/sandboxer/configs",loader.args[1]).."\" &\
   klipper_pid=\"$!\";\
   ~/uartclient_bin/uartclient -nd 1 -ra ENC28J65E366.lan -rp1 50000 -rp2 50001 -rp3 50002 -lp1 /tmp/ttyETH1 -lp2 /tmp/ttyETH2 -lp3 /tmp/ttyETH3 -ps1 250000 -ps2 250000 -ps3 250000 -pm1 6 -pm2 6 -pm3 6 -rst1 0 -rst2 0 -rst3 0 &\
   uartclient_pid=\"$!\";\
@@ -145,9 +119,36 @@ klipper_suite={
 klipper_log={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","cat /tmp/klipper.log"},
+  args={"-c","cat /tmp/klipper_py2.log"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
   exclusive=false,
+}
+
+-- experimental python3 klipper-build, may have some issues
+klipper_python3_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","set -e;\
+  [[ ! -d klipper_py3 ]] && git clone https://github.com/Doridian/klipper.git klipper_py3;\
+  (cd klipper_py3 && git reset --hard && git clean -dfx --force && git checkout custom && git pull --force);\
+  rm -rf klipper_env_py3;\
+  virtualenv -p python3 klipper_env_py3;\
+  klipper_env_py3/bin/pip install -r klipper_py3/scripts/klippy-requirements.txt;\
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+klipper_python3={
+  exec="/home/sandboxer/klipper_env_py3/bin/python3",
+  path="/home/sandboxer/klipper_py3/klippy",
+  args={"klippy.py", "-l", "/home/sandboxer/logs/klipper_py3.log", loader.path.combine("/home/sandboxer/configs",loader.args[1])},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
+  exclusive=true,
 }
