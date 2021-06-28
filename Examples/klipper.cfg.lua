@@ -70,6 +70,8 @@ moonraker_install={
   rm -rf moonraker_env;\
   virtualenv -p python3 moonraker_env;\
   moonraker_env/bin/pip install -r moonraker/scripts/moonraker-requirements.txt;\
+  [[ ! -f /home/sandboxer/configs/moonraker.conf ]] && echo \"installing sample config file\" && (cd /home/sandboxer/configs && wget \"https://raw.githubusercontent.com/Arksine/moonraker/master/docs/moonraker.conf\");\
+  true;\
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
@@ -96,7 +98,7 @@ klipper_python2_install={
 klipper_python2={
   exec="/home/sandboxer/klipper_env_py2/bin/python2",
   path="/home/sandboxer/klipper_py2/klippy",
-  args={"klippy.py", "-l", "/home/sandboxer/logs/klipper_py2.log", loader.path.combine("/home/sandboxer/configs",loader.args[1])},
+  args={"klippy.py", "-l", "/home/sandboxer/logs/klipper.log", loader.path.combine("/home/sandboxer/configs",loader.args[1])},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
@@ -111,18 +113,23 @@ klipper_suite={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c","\
-  klipper_pid=\"\"; uartclient_pid=\"\"; octopi_pid=\"\";\
-  collect_logs() { local d=$(date +\"%Y.%m.%d.%H%M.%S\"); cp /tmp/klipper_py2.log ~/logs/klipper.$d.log; };\
-  do_exit() { ec=\"$1\"; [[ -z $ec ]] && ec=\"1\"; [[ $ec != 0 ]] && echo 'stopping with error!' || echo 'stopping'; trap - ERR INT TERM HUP; kill -SIGTERM $klipper_pid 2>/dev/null; kill -SIGTERM $uartclient_pid 2>/dev/null; kill -SIGTERM $octopi_pid 2>/dev/null; collect_logs; exit $ec; };\
+  klipper_pid=\"\"; uartclient_pid=\"\"; moonraker_pid=\"\";\
+  collect_logs() { local d=$(date +\"%Y.%m.%d.%H%M.%S\"); cp /tmp/klipper.log ~/logs/klipper.$d.log; };\
+  do_exit() { ec=\"$1\"; [[ -z $ec ]] && ec=\"1\"; [[ $ec != 0 ]] && echo 'stopping with error!' || echo 'stopping'; trap - ERR INT TERM HUP; kill -SIGTERM $klipper_pid 2>/dev/null; kill -SIGTERM $uartclient_pid 2>/dev/null; kill -SIGTERM $moonraker_pid 2>/dev/null; collect_logs; exit $ec; };\
   trap 'do_exit' ERR;\
   trap 'do_exit 0' INT TERM HUP;\
-  rm -rf /tmp/klipper_py2.log;\
-  cd ~/klipper_py2/klippy;\
-  ~/klipper_env_py2/bin/python2 klippy.py -l /tmp/klipper_py2.log \""..loader.path.combine("/home/sandboxer/configs",loader.args[1]).."\" &\
-  klipper_pid=\"$!\";\
   ~/uartclient_bin/uartclient -fc 1 -nd 0 -ra ENC28J65E366.lan -rp1 50000 -rp2 50001 -rp3 50002 -lp1 /tmp/ttyETH1 -lp2 /tmp/ttyETH2 -lp3 /tmp/ttyETH3 -ps1 250000 -ps2 250000 -ps3 250000 -pm1 6 -pm2 6 -pm3 6 -rst1 1 -rst2 1 -rst3 1 &\
   uartclient_pid=\"$!\";\
-  wait $klipper_pid; $uartclient_pid;\
+  rm -rf /tmp/klipper.log;\
+  cd ~/klipper_py2/klippy;\
+  ~/klipper_env_py2/bin/python2 klippy.py -a /tmp/klippy_uds -l /tmp/klipper.log \""..loader.path.combine("/home/sandboxer/configs",loader.args[1]).."\" &\
+  klipper_pid=\"$!\";\
+  cd ~/moonraker;\
+  ~/moonraker_env/bin/python3 moonraker/moonraker.py -c /home/sandboxer/configs/moonraker.conf &>/tmp/moonraker.out.log &\
+  moonraker_pid=\"$!\";\
+  wait $uartclient_pid;\
+  wait $klipper_pid;\
+  wait $moonraker_pid;\
   "},
   term_signal=defaults.signals.SIGHUP,
   attach=true,
@@ -135,7 +142,7 @@ klipper_suite={
 klipper_log={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","cat /tmp/klipper_py2.log"},
+  args={"-c","cat /tmp/klipper.log"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
