@@ -104,7 +104,7 @@ klipper_suite={
   cd ~/klipper_py2/klippy;\
   ~/klipper_env_py2/bin/python2 klippy.py -l /tmp/klipper_py2.log \""..loader.path.combine("/home/sandboxer/configs",loader.args[1]).."\" &\
   klipper_pid=\"$!\";\
-  ~/uartclient_bin/uartclient -nd 1 -ra ENC28J65E366.lan -rp1 50000 -rp2 50001 -rp3 50002 -lp1 /tmp/ttyETH1 -lp2 /tmp/ttyETH2 -lp3 /tmp/ttyETH3 -ps1 250000 -ps2 250000 -ps3 250000 -pm1 6 -pm2 6 -pm3 6 -rst1 0 -rst2 0 -rst3 0 &\
+  ~/uartclient_bin/uartclient -fc 1 -nd 0 -ra ENC28J65E366.lan -rp1 50000 -rp2 50001 -rp3 50002 -lp1 /tmp/ttyETH1 -lp2 /tmp/ttyETH2 -lp3 /tmp/ttyETH3 -ps1 250000 -ps2 250000 -ps3 250000 -pm1 6 -pm2 6 -pm3 6 -rst1 1 -rst2 1 -rst3 1 &\
   uartclient_pid=\"$!\";\
   wait $klipper_pid; $uartclient_pid;\
   "},
