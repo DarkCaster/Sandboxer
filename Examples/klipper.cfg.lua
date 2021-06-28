@@ -61,6 +61,22 @@ uartclient_install={
   exclusive=true,
 }
 
+moonraker_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","set -e;\
+  [[ ! -d moonraker ]] && git clone https://github.com/Arksine/moonraker.git moonraker;\
+  (cd moonraker && git reset --hard && git clean -dfx --force && git checkout master && git pull --force);\
+  rm -rf moonraker_env;\
+  virtualenv -p python3 moonraker_env;\
+  moonraker_env/bin/pip install -r moonraker/scripts/moonraker-requirements.txt;\
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 klipper_python2_install={
   exec="/bin/bash",
   path="/home/sandboxer",
