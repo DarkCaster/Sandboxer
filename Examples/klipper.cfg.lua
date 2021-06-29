@@ -119,16 +119,23 @@ klipper_install={
   exclusive=true,
 }
 
--- avr-gcc from arduino distribution for building firmware for my MCUs
+-- avr-gcc and avrdude from arduino distribution for building firmware for my MCUs
 avr_gcc_install={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c","set -e;\
   rm -rf avr;\
+  rm -rf avrdude;\
+  rm -fv avr-gcc.tar.bz2;\
+  rm -fv avrdude.tar.bz2;\
   wget -O avr-gcc.tar.bz2 \"http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2\";\
+  wget -O avrdude.tar.bz2 \"http://downloads.arduino.cc/tools/avrdude-6.3.0-arduino18-x86_64-pc-linux-gnu.tar.bz2\";\
   bzip2 -d -c avr-gcc.tar.bz2 | tar xf - ;\
+  bzip2 -d -c avrdude.tar.bz2 | tar xf - ;\
   rm -v avr-gcc.tar.bz2;\
+  rm -v avrdude.tar.bz2;\
   [[ ! -d avr ]] && echo \"cannot find extracted 'avr' directory!\" && exit 1 || true;\
+  [[ ! -d avrdude ]] && echo \"cannot find extracted 'avrdude' directory!\" && exit 1 || true;\
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
