@@ -1,5 +1,6 @@
 -- config for running custom klipper 3D printer firmware suite
 -- packages need to be installed:
+-- libsodium-dev
 -- for python2 klipper version: virtualenv python-dev libffi-dev build-essential cmake
 -- for python3 klipper version (experimental): virtualenv python3-dev libffi-dev build-essential cmake
 
