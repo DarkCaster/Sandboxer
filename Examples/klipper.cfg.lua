@@ -1,4 +1,7 @@
--- config for running custom klipper 3D printer firmware suite
+-- config for running klipper 3D printer suite on local (desktop) machine.
+-- i'm using this to simplify debugging of modifications to the klipper source code for my hobby project.
+-- any prodction use of tools/configuration/setup provided here was not tested and cannot be guaranteed.
+
 -- packages need to be installed:
 -- libsodium-dev
 -- for python2 klipper version: virtualenv python-dev libffi-dev build-essential cmake
@@ -43,7 +46,7 @@ table.insert(sandbox.setup.mounts,{prio=99,"bind",loader.path.combine(loader.wor
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 table.insert(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
--- profiles
+-- profiles for installing all needed stuff individually
 
 -- forward UART port from target MCUs over Ethernet/TCP-IP
 uartclient_install={
@@ -63,6 +66,8 @@ uartclient_install={
   exclusive=true,
 }
 
+-- component needed for klipper web-ui
+-- TODO: create moonraker.conf with config sutable for this env, if missing
 moonraker_install={
   exec="/bin/bash",
   path="/home/sandboxer",
@@ -81,6 +86,7 @@ moonraker_install={
   exclusive=true,
 }
 
+-- web UI
 fluidd_install={
   exec="/bin/bash",
   path="/home/sandboxer",
@@ -97,7 +103,7 @@ fluidd_install={
   exclusive=true,
 }
 
-klipper_python2_install={
+klipper_install={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c","set -e;\
@@ -113,6 +119,7 @@ klipper_python2_install={
   exclusive=true,
 }
 
+-- avr-gcc from arduino distribution for building firmware for my MCUs
 avr_gcc_install={
   exec="/bin/bash",
   path="/home/sandboxer",
@@ -129,9 +136,25 @@ avr_gcc_install={
   exclusive=true,
 }
 
+-- run make in klipper source directory
+-- invocation example: sandboxer klipper.cfg.lua klipper_make menuconfig
+klipper_make={
+  exec="/usr/bin/make",
+  path="/home/sandboxer/klipper_py2",
+  args=loader.args,
+  env_unset={"PATH","LANG"},
+  env_set={
+    {"PATH","/home/sandboxer/avr/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"},
+    {"TERM",os.getenv("TERM")},
+  },
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
+  exclusive=true,
+}
 
-
-klipper_python2={
+-- start klipper, provide config file-name placed into "configs" directory as parameter
+klipper={
   exec="/home/sandboxer/klipper_env_py2/bin/python2",
   path="/home/sandboxer/klipper_py2/klippy",
   args={"klippy.py", "-l", "/home/sandboxer/logs/klipper.log", loader.path.combine("/home/sandboxer/configs",loader.args[1])},
@@ -144,7 +167,7 @@ klipper_python2={
 -- run the whole suite and wait for ctrl+c, or termination signal:
 -- 1. klipper firmware
 -- 2. uart-ethernet-client for connecting to MCU uart port(s) via Ethernet/TCP-IP (see https://github.com/DarkCaster/ArduinoUARTEthernetBridge)
--- 3. octo-pi software
+-- 3. moonraker server and fluidd for web UI
 klipper_suite={
   exec="/bin/bash",
   path="/home/sandboxer",
