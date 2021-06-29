@@ -34,6 +34,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
+table.insert(sandbox.setup.mounts,{prio=99,"bind",loader.path.combine(loader.workdir,"gcode"),"/home/sandboxer/gcode"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind",loader.path.combine(loader.workdir,"configs"),"/home/sandboxer/configs"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind",loader.path.combine(loader.workdir,"logs"),"/home/sandboxer/logs"})
 
