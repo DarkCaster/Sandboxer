@@ -113,6 +113,24 @@ klipper_python2_install={
   exclusive=true,
 }
 
+avr_gcc_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","set -e;\
+  rm -rf avr;\
+  wget -O avr-gcc.tar.bz2 \"http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2\";\
+  bzip2 -d -c avr-gcc.tar.bz2 | tar xf - ;\
+  rm -v avr-gcc.tar.bz2;\
+  [[ ! -d avr ]] && echo \"cannot find extracted 'avr' directory!\" && exit 1 || true;\
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+
+
 klipper_python2={
   exec="/home/sandboxer/klipper_env_py2/bin/python2",
   path="/home/sandboxer/klipper_py2/klippy",
