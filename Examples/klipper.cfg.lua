@@ -221,7 +221,7 @@ klipper_suite={
   ~/moonraker_env/bin/python3 moonraker/moonraker.py -c /home/sandboxer/configs/moonraker.conf &>/tmp/moonraker.out.log &\
   moonraker_pid=\"$!\";\
   cd ~/fluidd;\
-  python3 -m http.server 8080 --bind 127.0.0.1 &>/tmp/fluidd.out.log &\
+  python3 -m http.server 8000 --bind 127.0.0.1 &>/tmp/fluidd.out.log &\
   fluidd_pid=\"$!\";\
   wait $uartclient_pid;\
   wait $klipper_pid;\
