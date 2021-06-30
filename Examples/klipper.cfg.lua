@@ -160,6 +160,21 @@ klipper_make={
   exclusive=true,
 }
 
+-- uartclient configured for flashing image via optiboot/uart
+uartclient={
+  exec="/home/sandboxer/uartclient_bin/uartclient",
+  path="/home/sandboxer",
+  args={"-nd","1","-ra","ENC28J65E366.lan","-rp1","50000","-rp2","50001","-rp3","50002","-lp1","/tmp/ttyETH1","-lp2","/tmp/ttyETH2","-lp3","/tmp/ttyETH3","-ps1","115200","-ps2","115200","-ps3","115200","-pm1","6","-pm2","6","-pm3","6","-rst1","1","-rst2","1","-rst3","1"},
+  env_unset={"LANG"},
+  env_set={{"TERM",os.getenv("TERM")}},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
+  exclusive=true,
+}
+
+-- example for flashing image to AVR MCU with optiboot bootloader:
+-- sandboxer klipper.cfg.lua avrdude -P/tmp/ttyETH3 -b115200 -carduino -patmega328p -v -D -Uflash:w:klipper.elf.hex:i
 avrdude={
   exec="/home/sandboxer/avrdude/bin/avrdude",
   path="/home/sandboxer",
