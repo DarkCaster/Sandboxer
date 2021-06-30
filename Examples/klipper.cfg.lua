@@ -160,6 +160,18 @@ klipper_make={
   exclusive=true,
 }
 
+avrdude={
+  exec="/home/sandboxer/avrdude/bin/avrdude",
+  path="/home/sandboxer",
+  args={"-C/home/sandboxer/avrdude/etc/avrdude.conf", table.unpack(loader.args)},
+  env_unset={"LANG"},
+  env_set={{"TERM",os.getenv("TERM")}},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
+  exclusive=true,
+}
+
 -- start klipper, provide config file-name placed into "configs" directory as parameter
 klipper={
   exec="/home/sandboxer/klipper_env_py2/bin/python2",
