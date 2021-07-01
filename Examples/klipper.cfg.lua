@@ -174,7 +174,7 @@ uartclient={
 }
 
 -- example for flashing image to AVR MCU with optiboot bootloader:
--- sandboxer klipper.cfg.lua avrdude -P/tmp/ttyETH3 -b115200 -carduino -patmega328p -v -D -Uflash:w:klipper.elf.hex:i
+-- sandboxer klipper.cfg.lua avrdude -P/tmp/ttyETH3 -b115200 -carduino -patmega328p -v -D -Uflash:w:klipper_py2/out/klipper.elf.hex:i
 avrdude={
   exec="/home/sandboxer/avrdude/bin/avrdude",
   path="/home/sandboxer",
@@ -221,6 +221,7 @@ klipper_suite={
   ~/moonraker_env/bin/python3 moonraker/moonraker.py -c /home/sandboxer/configs/moonraker.conf &>/tmp/moonraker.out.log &\
   moonraker_pid=\"$!\";\
   cd ~/fluidd;\
+  sleep 5;\
   python3 -m http.server 8000 --bind 127.0.0.1 &>/tmp/fluidd.out.log &\
   fluidd_pid=\"$!\";\
   wait $uartclient_pid;\
