@@ -78,6 +78,7 @@ cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-
 # create exclude rules for dpkg if missing
 if [[ ! -f "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes" ]]; then
   echo "creating rule for dpkg to exclude manuals and docs when installing packages"
+  echo "remove debian_chroot/etc/dpkg/dpkg.cfg.d/excludes file manually if you need them"
   echo "path-exclude=/usr/share/man/*" > "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes"
   echo "path-exclude=/usr/share/doc/*" >> "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes"
   echo "path-include=/usr/share/doc/*/copyright" >> "$script_dir/debian_chroot/etc/dpkg/dpkg.cfg.d/excludes"
