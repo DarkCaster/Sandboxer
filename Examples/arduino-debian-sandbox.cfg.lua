@@ -157,6 +157,21 @@ qtcreator={
   },
 }
 
+stm32cubeprog_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  target=\"$HOME/stm32cubeprog\"; \
+  [ -d \"$target\" ] && rm -rf \"$target\"; \
+  mkdir -p \"$target\"; \
+  archive=`find \"$HOME/installs\" -name \"*stm32cubeprg-lin*.zip\"|sort -V|tail -n1` && ( cd \"$target\" && unzip \"$archive\" ); \
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 minicom_ttyACM0={
   exec="/usr/bin/minicom",
   path="/home/sandboxer",
