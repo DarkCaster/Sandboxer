@@ -180,10 +180,11 @@ stm32cubeprog_install={
   exec="/bin/bash",
   path="/home/sandboxer",
   args={"-c", "\
-  target=\"$HOME/stm32cubeprog\"; \
+  target=\"/tmp/stm32cubeprog\"; \
   [ -d \"$target\" ] && rm -rf \"$target\"; \
   mkdir -p \"$target\"; \
   archive=`find \"$HOME/installs\" -name \"*stm32cubeprg-lin*.zip\"|sort -V|tail -n1` && ( cd \"$target\" && unzip \"$archive\" ); \
+  cd \"$target\" && \"$target/SetupSTM32CubeProgrammer-2.8.0.linux\"; \
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
