@@ -192,6 +192,23 @@ stm32cubeprog_install={
   exclusive=true,
 }
 
+stm32cubeprog={
+  exec="/home/sandboxer/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32CubeProgrammer",
+  path="/home/sandboxer/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  desktop={
+    name = "STM32CubeProgrammer",
+    comment = "STM32CubeProgrammer, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/STMicroelectronics/STM32Cube/STM32CubeProgrammer/util/Programmer.ico"),
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;Qt;Electronics",
+  },
+}
+
 minicom_ttyACM0={
   exec="/usr/bin/minicom",
   path="/home/sandboxer",
