@@ -1,14 +1,18 @@
--- experimental, not for regular use!
--- example config for arduino-ide sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
--- using debian-sandbox.cfg.lua config file as base
+-- various IDEs and other development-tools collection that I'm using.
+-- for better integration all the tools was combined in the single sandbox based on external debian chroot (prepared by debian-setup.cfg.lua)
+-- some system paths from host-system exposed into the sandbox.
+
+-- for running electron/chromium based apps (like vscode, or atom) on some systems you may need to enable unprivileged user namespaces systemwide with "sysctl kernel.unprivileged_userns_clone=1"
+-- more info at:
+-- https://github.com/microsoft/vscode/issues/81056
+-- https://security.stackexchange.com/questions/209529/what-does-enabling-kernel-unprivileged-userns-clone-do
 
 -- redefine defaults.recalculate function, that will be called by base config
 defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
   -- redefine some parameters
-  tunables.datadir=loader.path.combine(loader.workdir,"userdata-arduino")
+  tunables.datadir=loader.path.combine(loader.workdir,"userdata-ide-"..config.uid)
   defaults.recalculate_orig()
-  defaults.mounts.resolvconf_mount=defaults.mounts.direct_resolvconf_mount
 end
 
 defaults.recalculate()
@@ -19,7 +23,7 @@ dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
 -- remove some unneded features and mounts
 loader.table.remove_value(sandbox.features,"pulse")
 
--- remove some mounts from base config
+-- remove some unneded mounts from base config
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
@@ -29,22 +33,37 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 -- /sys mount is needed for adb\fastboot to work, uncomment next line to disable it
 -- loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 
+-- enable resolvconf feature
+table.insert(sandbox.features,"resolvconf")
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
+
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
-table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
-table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
-
--- add host /dev mount for acces to arduino devices, not secure!
-table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
-table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev/bus/usb","/dev/bus/usb"})
-table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyACM0","/dev/ttyACM0"})
-table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/ttyUSB0"})
-table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"}) -- needed for QtCreator online installer to work
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
--- profiles
+-----------------
+-- host mounts --
+-----------------
+
+-- directory with ide/tools installers, "installs" dir must be located at the same path as this config file
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
+-- main host-storage
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
+-- "Trash" directory at /mnt/data mountpoint
+table.insert(sandbox.setup.commands,{'[[ -e "/mnt/data/.Trash-${cfg[tunables.uid]}" && ! -L "${cfg[tunables.auto.user_path]}/.local/share/Trash" ]] && mkdir -p "${cfg[tunables.auto.user_path]}/.local/share" && rm -rf "${cfg[tunables.auto.user_path]}/.local/share/Trash" && ln -s "/mnt/data/.Trash-${cfg[tunables.uid]}" "${cfg[tunables.auto.user_path]}/.local/share/Trash"; true'})
+-- mount host /dev into separate directory
+table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
+-- symlinks to usb-uart converter devices for arduino IDE and other tools
+table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyACM0","/dev/ttyACM0"})
+table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/ttyUSB0"})
+-- make usb devices available for sandbox
+table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev/bus/usb","/dev/bus/usb"})
+-- separate /tmp mount needed for QtCreator online installer to work
+table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
+
+-- profiles for IDEs and other helper tools supported with this sandbox
 
 shell.term_orphans=true --terminale all running processes when exiting shell profile, comment thils line if needed
 
