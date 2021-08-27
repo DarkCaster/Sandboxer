@@ -176,6 +176,22 @@ qtcreator={
   },
 }
 
+qt_bootstrap={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  target=\"/tmp/qt-bootstrap\"; \
+  [ -d \"$target\" ] && rm -rf \"$target\"; \
+  mkdir -p \"$target\"; \
+  archive=`find \"$HOME/installs\" -name \"qt-unified-linux-*-online.run\"|sort -V|tail -n1` && ( cd \"$target\" && cp \"$archive\" ./runme && chmod 755 ./runme ); \
+  cd \"$target\" && ./runme; \
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 stm32cubeprog_install={
   exec="/bin/bash",
   path="/home/sandboxer",
