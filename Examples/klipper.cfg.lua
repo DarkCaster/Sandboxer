@@ -164,7 +164,7 @@ klipper_make={
 uartclient={
   exec="/home/sandboxer/uartclient_bin/uartclient",
   path="/home/sandboxer",
-  args={"-nd","1","-ra","ENC28J65E366.lan","-rp1","50000","-rp2","50001","-rp3","50002","-lp1","/tmp/ttyETH1","-lp2","/tmp/ttyETH2","-lp3","/tmp/ttyETH3","-ps1","115200","-ps2","115200","-ps3","115200","-pm1","6","-pm2","6","-pm3","6","-rst1","1","-rst2","1","-rst3","1"},
+  args={"-ra","ENC28J65E366.lan","-tp","50000","-up","1","-pc","3","-pls","50","-rbs","1600","-ptl","4400","-ptr","4400","-lp1","/tmp/ttyETH1","-lp2","/tmp/ttyETH2","-lp3","/tmp/ttyETH3","-ps1","115200","-ps2","115200","-ps3","115200","-pm1","6","-pm2","6","-pm3","6","-rst1","1","-rst2","1","-rst3","1"},
   env_unset={"LANG"},
   env_set={{"TERM",os.getenv("TERM")}},
   term_signal=defaults.signals.SIGTERM,
@@ -211,7 +211,7 @@ klipper_suite={
   do_exit() { ec=\"$1\"; [[ -z $ec ]] && ec=\"1\"; [[ $ec != 0 ]] && echo 'stopping with error!' || echo 'stopping'; trap - ERR INT TERM HUP; kill -SIGTERM $klipper_pid 2>/dev/null; kill -SIGTERM $uartclient_pid 2>/dev/null; kill -SIGTERM $moonraker_pid 2>/dev/null; kill -SIGTERM $fluidd_pid 2>/dev/null; collect_logs; exit $ec; };\
   trap 'do_exit' ERR;\
   trap 'do_exit 0' INT TERM HUP;\
-  ~/uartclient_bin/uartclient -fc 1 -nd 0 -ra ENC28J65E366.lan -rp1 50000 -rp2 50001 -rp3 50002 -lp1 /tmp/ttyETH1 -lp2 /tmp/ttyETH2 -lp3 /tmp/ttyETH3 -ps1 250000 -ps2 250000 -ps3 250000 -pm1 6 -pm2 6 -pm3 6 -rst1 1 -rst2 1 -rst3 1 &\
+  ~/uartclient_bin/uartclient -ra ENC28J65E366.lan -tp 50000 -up 1 -pc 3 -pls 50 -rbs 1600 -ptl 7000 -ptr 7000 -lp1 /tmp/ttyETH1 -lp2 /tmp/ttyETH2 -lp3 /tmp/ttyETH3 -ps1 250000 -pm1 6 -ps2 250000 -pm2 6 -ps3 250000 -pm3 6 -rst1 0 -rst2 0 -rst3 0 &\
   uartclient_pid=\"$!\";\
   rm -rf /tmp/klipper.log;\
   cd ~/klipper_py2/klippy;\
