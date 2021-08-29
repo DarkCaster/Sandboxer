@@ -192,6 +192,42 @@ qt_bootstrap={
   exclusive=true,
 }
 
+stm32cubeide={
+  exec="/home/sandboxer/st/cubeide/stm32cubeide",
+  path="/home/sandboxer/st/cubeide",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  desktop={
+    name = "STM32CubeIDE",
+    comment = "STM32CubeIDE, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"home/sandboxer/st/cubeide/icon.xpm"),
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;Qt;Electronics",
+  },
+}
+
+stm32cubeide_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  target=\"/tmp/stm32cubeide\"; \
+  [ -d \"$target\" ] && rm -rf \"$target\"; \
+  mkdir -p \"$target\"; \
+  archive=`find \"$HOME/installs\" -name \"*st-stm32cubeide*.zip\"|sort -V|tail -n1` && ( cd \"$target\" && unzip \"$archive\" ); \
+  cd \"$target\" && chmod 755 \"$target/st-stm32cubeide\"*.sh && \"$target/st-stm32cubeide\"*.sh; \
+  cd ~/st ;\
+  installation=`find . -type d -name \"stm32cubeide_*\"|sort -V|tail -n1` ;\
+  rm -fv cubeide && ln -s \"$installation\" cubeide ;\
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
+  exclusive=true,
+}
+
 stm32cubeprog_install={
   exec="/bin/bash",
   path="/home/sandboxer",
@@ -204,7 +240,7 @@ stm32cubeprog_install={
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
-  pty=false,
+  pty=true,
   exclusive=true,
 }
 
