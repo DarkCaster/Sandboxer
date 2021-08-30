@@ -66,7 +66,7 @@ table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
 
 -- profiles for IDEs and other helper tools supported with this sandbox
 
-shell.term_orphans=true --terminale all running processes when exiting shell profile, comment thils line if needed
+-- shell.term_orphans=true --terminale all running processes when exiting shell profile, comment thils line if needed
 
 arduino={
   exec="/home/sandboxer/arduino-ide/arduino",
@@ -288,7 +288,6 @@ vscode={
   path="/home/sandboxer/VSCode",
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
-  term_orphans=true,
   attach=false,
   pty=false,
   desktop={
