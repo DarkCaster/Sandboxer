@@ -38,7 +38,8 @@ table.insert(sandbox.features,"resolvconf")
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
 -- modify PATH env
-table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
+path_env="/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
+table.insert(sandbox.setup.env_set,{"PATH",path_env})
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -192,23 +193,6 @@ qt_bootstrap={
   exclusive=true,
 }
 
-stm32cubeide={
-  exec="/home/sandboxer/st/cubeide/stm32cubeide",
-  path="/home/sandboxer/st/cubeide",
-  args=loader.args,
-  term_signal=defaults.signals.SIGTERM,
-  attach=true,
-  pty=false,
-  desktop={
-    name = "STM32CubeIDE",
-    comment = "STM32CubeIDE, sandbox uid "..config.sandbox_uid,
-    icon = loader.path.combine(tunables.datadir,"home/sandboxer/st/cubeide/icon.xpm"),
-    terminal = false,
-    startupnotify = false,
-    categories="Development;IDE;Qt;Electronics",
-  },
-}
-
 stm32cubeide_install={
   exec="/bin/bash",
   path="/home/sandboxer",
@@ -226,6 +210,24 @@ stm32cubeide_install={
   attach=true,
   pty=true,
   exclusive=true,
+}
+
+stm32cubeide={
+  exec="/home/sandboxer/st/cubeide/stm32cubeide",
+  path="/home/sandboxer/st/cubeide",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  env_set={{"PATH","/home/sandboxer/stlink-server:"..path_env}},
+  desktop={
+    name = "STM32CubeIDE",
+    comment = "STM32CubeIDE, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"home/sandboxer/st/cubeide/icon.xpm"),
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;Qt;Electronics",
+  },
 }
 
 stm32cubeprog_install={
@@ -251,6 +253,7 @@ stm32cubeprog={
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
+  env_set={{"PATH","/home/sandboxer/stlink-server:"..path_env}},
   desktop={
     name = "STM32CubeProgrammer",
     comment = "STM32CubeProgrammer, sandbox uid "..config.sandbox_uid,
@@ -259,6 +262,25 @@ stm32cubeprog={
     startupnotify = false,
     categories="Development;IDE;Qt;Electronics",
   },
+}
+
+stlinkserver_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  target=\"/home/sandboxer/stlink-server\"; \
+  [ -d \"$target\" ] && rm -rf \"$target\"; \
+  mkdir -p \"$target\"; \
+  extract=\"/tmp/stlink-server\"; \
+  [ -d \"$extract\" ] && rm -rf \"$extract\"; \
+  mkdir -p \"$extract\"; \
+  archive=`find \"$HOME/installs\" -name \"*st-link-server*.zip\"|sort -V|tail -n1` && ( cd \"$extract\" && unzip \"$archive\" ); \
+  exe=`find \"$extract\" -name \"stlink-server.*\"|sort -V|tail -n1` && ( cd \"$target\" && chmod 755 \"$exe\" && cp \"$exe\" stlink-server ); \
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
 }
 
 minicom_ttyACM0={
