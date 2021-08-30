@@ -81,6 +81,7 @@ sandbox={
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"tmp"),"/tmp"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"var"),"/var"},
       {prio=10,"bind",loader.path.combine(tunables.chrootdir,"home"),"/home"},
+      {prio=10,"bind-try",loader.path.combine(loader.workdir,"installs"),"/installs"},
     }
   },
   bwrap={
