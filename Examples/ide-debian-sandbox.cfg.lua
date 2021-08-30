@@ -76,7 +76,7 @@ arduino={
   attach=false,
   pty=false,
   desktop={
-    name = "Arduino IDE (in sandbox)",
+    name = "Arduino IDE",
     comment = "Arduino IDE, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"/home/sandboxer/.local/share/icons/hicolor/128x128/apps/arduino-arduinoide.png"),
     terminal = false,
@@ -133,7 +133,7 @@ android_studio={
   pty=false,
   exclusive=true,
   desktop={
-    name = "Android Studio (in sandbox)",
+    name = "Android Studio",
     comment = "Android Studio, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"/home/sandboxer/android-studio/bin/studio.png"),
     terminal = false,
@@ -151,7 +151,7 @@ qtcreator_installer={
   pty=false,
   exclusive=true,
   desktop={
-    name = "QtCreator Maintenance Tool (in sandbox)",
+    name = "QtCreator Maintenance Tool",
     comment = "QtCreator Maintenance Tool, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"/home/sandboxer/Qt/QtIcon.png"),
     terminal = false,
@@ -168,7 +168,7 @@ qtcreator={
   attach=true,
   pty=false,
   desktop={
-    name = "QtCreator IDE (in sandbox)",
+    name = "QtCreator IDE",
     comment = "QtCreator IDE, sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.datadir,"/home/sandboxer/.local/share/icons/hicolor/128x128/apps/QtProject-qtcreator.png"),
     terminal = false,
@@ -283,6 +283,49 @@ stlinkserver_install={
   exclusive=true,
 }
 
+vscode={
+  exec="/home/sandboxer/VSCode/code",
+  path="/home/sandboxer/VSCode",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
+  attach=false,
+  pty=false,
+  desktop={
+    name = "VSCode",
+    generic_name = "Visual Studio Code",
+    comment = "VSCode, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/VSCode/resources/app/resources/linux/code.png"),
+    field_code="%f",
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;",
+    mimetype = "text/x-vscode-workspace-sandbox",
+    mime =
+    {
+      vscode_workspace='<?xml version="1.0" encoding="UTF-8"?>\
+      <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">\
+      <mime-type type="text/x-vscode-workspace-sandbox">\
+      <comment>VSCode Workspace</comment>\
+      <icon name="text-x-source"/>\
+      <glob-deleteall/>\
+      <glob pattern="*.code-workspace"/>\
+      </mime-type>\
+      </mime-info>'
+    },
+  },
+}
+
+vscode_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","rm -rf $HOME/VSCode && img=`find ./installs -name \"code-stable-*.tar.gz\"|sort|tail -n1` && ( gunzip -c \"$img\" | tar xvf - ) && mv $HOME/VSCode-* $HOME/VSCode"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 minicom_ttyACM0={
   exec="/usr/bin/minicom",
   path="/home/sandboxer",
@@ -299,18 +342,6 @@ minicom_ttyUSB0={
   exec="/usr/bin/minicom",
   path="/home/sandboxer",
   args={"-c","off","115200_8N1","-D","/dev/ttyUSB0"},
-  term_signal=defaults.signals.SIGTERM,
-  env_unset={"TERM"},
-  env_set={{"TERM",os.getenv("TERM")}},
-  attach=true,
-  pty=true,
-  exclusive=true,
-}
-
-minicom_ttyUSB0_38400={
-  exec="/usr/bin/minicom",
-  path="/home/sandboxer",
-  args={"-c","off","38400_8N1","-D","/dev/ttyUSB0"},
   term_signal=defaults.signals.SIGTERM,
   env_unset={"TERM"},
   env_set={{"TERM",os.getenv("TERM")}},
