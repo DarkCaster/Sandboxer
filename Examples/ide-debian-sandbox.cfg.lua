@@ -25,13 +25,15 @@ loader.table.remove_value(sandbox.features,"pulse")
 
 -- remove some unneded mounts from base config
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devsnd_mount)
-loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
 -- /sys mount is needed for adb\fastboot to work, uncomment next line to disable it
 -- loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
+
+-- /dev/dri mount is needed for hw video acceleration to work
+-- loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 
 -- enable resolvconf feature
 table.insert(sandbox.features,"resolvconf")
