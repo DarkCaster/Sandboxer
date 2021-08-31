@@ -121,9 +121,6 @@ android_studio_install={
   exclusive=true,
 }
 
-android_studio_install_tarxz=android_studio_install
-android_studio_install_targz=android_studio_install
-
 android_studio={
   exec="/home/sandboxer/android-studio/bin/studio.sh",
   path="/home/sandboxer",
@@ -283,6 +280,16 @@ stlinkserver_install={
   exclusive=true,
 }
 
+vscode_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","rm -rf $HOME/VSCode && img=`find ./installs -name \"code-stable-*.tar.gz\"|sort|tail -n1` && ( gunzip -c \"$img\" | tar xvf - ) && mv $HOME/VSCode-* $HOME/VSCode"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 vscode={
   exec="/home/sandboxer/VSCode/code",
   path="/home/sandboxer/VSCode",
@@ -314,10 +321,28 @@ vscode={
   },
 }
 
-vscode_install={
+openscad={
+  exec="/home/sandboxer/OpenSCAD/AppRun",
+  path="/home/sandboxer/OpenSCAD",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+  desktop={
+    name = "OpenSCAD (in sandbox)",
+    comment = "OpenSCAD, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/OpenSCAD/.DirIcon"),
+    terminal = false,
+    startupnotify = false,
+    categories="Graphics;",
+  },
+}
+
+openscad_install={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","rm -rf $HOME/VSCode && img=`find ./installs -name \"code-stable-*.tar.gz\"|sort|tail -n1` && ( gunzip -c \"$img\" | tar xvf - ) && mv $HOME/VSCode-* $HOME/VSCode"},
+  args={"-c","rm -rf $HOME/OpenSCAD && img=`find ./installs -name \"OpenSCAD-*.AppImage\"|sort -V|tail -n1` && chmod 755 $img && $img --appimage-extract && mv $HOME/squashfs-root $HOME/OpenSCAD"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
