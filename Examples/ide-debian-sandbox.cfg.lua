@@ -52,7 +52,7 @@ loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 -- main host-storage
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
--- "Trash" directory at /mnt/data mountpoint
+-- "Trash" directory at /mnt/data mountpoint, you may want to install libglib2.0-bin package with "gio" binary to allow move files to trash in vscode
 table.insert(sandbox.setup.commands,{'[[ -e "/mnt/data/.Trash-${cfg[tunables.uid]}" && ! -L "${cfg[tunables.auto.user_path]}/.local/share/Trash" ]] && mkdir -p "${cfg[tunables.auto.user_path]}/.local/share" && rm -rf "${cfg[tunables.auto.user_path]}/.local/share/Trash" && ln -s "/mnt/data/.Trash-${cfg[tunables.uid]}" "${cfg[tunables.auto.user_path]}/.local/share/Trash"; true'})
 -- mount host /dev into separate directory
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
