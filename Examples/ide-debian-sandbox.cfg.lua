@@ -1,4 +1,4 @@
--- various IDEs and other development-tools collection that I'm using.
+-- various IDEs and other development-tools collection that I'm using, including tools for embedded development
 -- for better integration all the tools was combined in the single sandbox based on external debian chroot (prepared by debian-setup.cfg.lua)
 -- some system paths from host-system exposed into the sandbox.
 
@@ -349,6 +349,43 @@ openscad_install={
   attach=true,
   pty=false,
   exclusive=true,
+}
+
+-- configuration util for mikrotik devices, you will need to install wine64 and icoutils
+winbox64_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  env_set={{"WINEPREFIX","/home/sandboxer/winbox/wineroot"}},
+  args={"-c", "\
+  target=\"/home/sandboxer/winbox\"; \
+  [ -d \"$target\" ] && rm -rf \"$target\"; \
+  mkdir -p \"$target\"; \
+  wget -O \"$target/winbox64.exe\" \"https://mt.lv/winbox64\"; \
+  wrestool -x -t 14 \"$target/winbox64.exe\" -o \"$target/icon.ico\"; \
+  wine64 wineboot"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+winbox64={
+  exec="/usr/bin/wine64",
+  path="/home/sandboxer/winbox",
+  env_set={{"WINEPREFIX","/home/sandboxer/winbox/wineroot"}},
+  args={"winbox64.exe"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+  exclusive=false,
+  desktop={
+    name = "Winbox",
+    comment = "MikroTik router configuration utility",
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/winbox/icon.ico"),
+    terminal = false,
+    startupnotify = false,
+    categories="Network;System;",
+  },
 }
 
 minicom_ttyACM0={
