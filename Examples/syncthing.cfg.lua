@@ -34,7 +34,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 -- modify PATH env
 table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 
--- directory with ide/tools installers, "installs" dir must be located at the same path as this config file
+-- directory with syncthing install-archives, "installs" dir must be located at the same path as this config file
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data/Sync","/sync"})
 
