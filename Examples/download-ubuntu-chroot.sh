@@ -55,8 +55,12 @@ case "$prefix" in
     prefix="focal"
     name="focal"
   ;;
+  "22.04")
+    prefix="jammy"
+    name="jammy"
+  ;;
   *)
-    echo "selected ubuntu distro version is not supported. for now supported versions include 12.04;14.04;16.04;18.04;20.04"
+    echo "selected ubuntu distro version is not supported. for now supported versions include 12.04;14.04;16.04;18.04;20.04;22.04"
     show_usage
   ;;
 esac
@@ -75,7 +79,7 @@ cd "$script_dir/debian_chroot"
 gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
 rm /tmp/ubuntu-root.tar.gz
 
-if [[ $name = xenial || $name = bionic || $name = focal ]]; then
+if [[ $name = xenial || $name = bionic || $name = focal || $name = jammy ]]; then
   # deploy minimal setup script
   cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
 fi
@@ -94,7 +98,7 @@ if [[ ! -f etc/dpkg/dpkg.cfg.d/excludes ]]; then
   echo "path-include=/usr/share/doc/*/changelog.Debian.*" >> "etc/dpkg/dpkg.cfg.d/excludes"
 fi
 
-if [[ $name = bionic || $name = focal ]]; then
+if [[ $name = bionic || $name = focal || $name = jammy ]]; then
   # modify config for apt, to make it work under fakeroot
   echo "modifying apt config options to make it work with sandboxer/fakeoot restrictions"
   echo "APT::Sandbox::Seccomp::Allow { \"socket\" };" > "etc/apt/apt.conf.d/99sandboxer"
