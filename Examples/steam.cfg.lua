@@ -60,7 +60,7 @@ shell={
 }
 
 -- following profile tested on debian jessie based sandbox, see steam-howto.txt for more info about sandbox preparation
-steam={
+steam_native={
   exec="/usr/bin/steam",
   path="/home/sandboxer",
   env_set={
@@ -71,10 +71,31 @@ steam={
   attach=true,
   pty=false,
   exclusive=true, -- for now it is needed for logging to work
-  log_stderr=loader.path.combine(loader.workdir,"steam.err.log"),
-  log_stdout=loader.path.combine(loader.workdir,"steam.out.log"),
+  log_stderr=loader.path.combine(loader.workdir,"steam.native.err.log"),
+  log_stdout=loader.path.combine(loader.workdir,"steam.native.out.log"),
   desktop={
-    name = "Sandboxed Steam Client",
+    name = "Steam Client (native)",
+    comment = "Steam for sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.chrootdir,"usr/share/pixmaps/steam.png"),
+    terminal = false,
+    startupnotify = false,
+  },
+}
+
+steam_runtime={
+  exec="/usr/bin/steam",
+  path="/home/sandboxer",
+  env_set={
+    {"STEAM_RUNTIME","1"},
+  },
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true, -- for now it is needed for logging to work
+  log_stderr=loader.path.combine(loader.workdir,"steam.runtime.err.log"),
+  log_stdout=loader.path.combine(loader.workdir,"steam.runtime.out.log"),
+  desktop={
+    name = "Steam Client (steam runtime)",
     comment = "Steam for sandbox uid "..config.sandbox_uid,
     icon = loader.path.combine(tunables.chrootdir,"usr/share/pixmaps/steam.png"),
     terminal = false,
@@ -103,13 +124,24 @@ copy_missing_libs_bionic={
   attach=true,
 }
 
-steam_bionic={
+steam_ubuntu_native={
   exec="/usr/games/steam",
   path="/home/sandboxer",
-  env_set=steam.env_set,
+  env_set=steam_native.env_set,
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
   exclusive=true,
-  desktop=steam.desktop,
+  desktop=steam_native.desktop,
+}
+
+steam_ubuntu_runtime={
+  exec="/usr/games/steam",
+  path="/home/sandboxer",
+  env_set=steam_runtime.env_set,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+  desktop=steam_runtime.desktop,
 }
