@@ -236,6 +236,40 @@ klipper_suite={
   term_orphans=true,
 }
 
+klipper_suite_slow={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c","\
+  klipper_pid=\"\"; uartclient_pid=\"\"; moonraker_pid=\"\";\
+  collect_logs() { local d=$(date +\"%Y.%m.%d.%H%M.%S\"); cp /tmp/klipper.log ~/logs/klipper.$d.log; };\
+  do_exit() { ec=\"$1\"; [[ -z $ec ]] && ec=\"1\"; [[ $ec != 0 ]] && echo 'stopping with error!' || echo 'stopping'; trap - ERR INT TERM HUP; kill -SIGTERM $klipper_pid 2>/dev/null; kill -SIGTERM $uartclient_pid 2>/dev/null; kill -SIGTERM $moonraker_pid 2>/dev/null; kill -SIGTERM $fluidd_pid 2>/dev/null; collect_logs; exit $ec; };\
+  trap 'do_exit' ERR;\
+  trap 'do_exit 0' INT TERM HUP;\
+  ~/uartclient_bin/uartclient -ra ENC28J65E366.lan -tp 50000 -up 1 -pc 3 -pls 50 -rbs 1600 -ptl 10240 -ptr 10240 -lp1 /tmp/ttyETH1 -lp2 /tmp/ttyETH2 -lp3 /tmp/ttyETH3 -ps1 250000 -pm1 6 -ps2 250000 -pm2 6 -ps3 250000 -pm3 6 -rst1 1 -rst2 1 -rst3 1 &\
+  uartclient_pid=\"$!\";\
+  rm -rf /tmp/klipper.log;\
+  cd ~/klipper_py2/klippy;\
+  ~/klipper_env_py2/bin/python2 klippy.py -a /tmp/klippy_uds -l /tmp/klipper.log \""..loader.path.combine("/home/sandboxer/configs",loader.args[1]).."\" &\
+  klipper_pid=\"$!\";\
+  cd ~/moonraker;\
+  ~/moonraker_env/bin/python3 moonraker/moonraker.py -c /home/sandboxer/configs/moonraker.conf &>/tmp/moonraker.out.log &\
+  moonraker_pid=\"$!\";\
+  cd ~/fluidd;\
+  sleep 5;\
+  python3 -m http.server 8000 --bind 127.0.0.1 &>/tmp/fluidd.out.log &\
+  fluidd_pid=\"$!\";\
+  wait $uartclient_pid;\
+  wait $klipper_pid;\
+  wait $moonraker_pid;\
+  wait $fluidd_pid;\
+  "},
+  term_signal=defaults.signals.SIGHUP,
+  attach=true,
+  pty=true,
+  exclusive=true,
+  term_orphans=true,
+}
+
 -- display klipper log from container's tmpfs
 klipper_log={
   exec="/bin/bash",
