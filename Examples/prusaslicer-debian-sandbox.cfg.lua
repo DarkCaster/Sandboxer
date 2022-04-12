@@ -63,7 +63,7 @@ prusaslicer={
 prusaslicer_install_appimage={
   exec="/bin/bash",
   path="/home/sandboxer",
-  args={"-c","rm -rf $HOME/prusaslicer && imgarc=`find $HOME/installs -name \"prusa3d_linux_*.zip\"|sort -V|tail -n1` && rm -rf /tmp/extract && mkdir -p /tmp/extract && cd /tmp/extract && unzip \"$imgarc\" && chmod 755 *.AppImage && ./*.AppImage --appimage-extract && mv squashfs-root $HOME/prusaslicer"},
+  args={"-c","rm -rf $HOME/prusaslicer && imgarc=`find $HOME/installs -name \"PrusaSlicer-*-x64-*.AppImage\"|sort -V|tail -n1` && chmod 755 $imgarc && $imgarc --appimage-extract && mv squashfs-root $HOME/prusaslicer"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
