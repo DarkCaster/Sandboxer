@@ -8,11 +8,10 @@ defaults.recalculate()
 -- load base config
 dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
 
--- redefine sandbox.features table
-sandbox.features={
-  "x11host",
-  "envfix",
-}
+-- remove some unneded features
+loader.table.remove_value(sandbox.features,"dbus")
+loader.table.remove_value(sandbox.features,"gvfs_fix")
+loader.table.remove_value(sandbox.features,"pulse")
 
 -- remove some mounts from base config
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
