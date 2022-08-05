@@ -307,3 +307,5 @@ klipper_python3={
   pty=true,
   exclusive=true,
 }
+
+--sandbox.bwrap_cmd={ "rt-runner.sh", "99", "taskset", "-c", "10,22,11,23", "bwrap" }
