@@ -282,6 +282,16 @@ stlinkserver_install={
   exclusive=true,
 }
 
+go_install={
+  exec="/bin/bash",
+  path="/tmp",
+  args={"-c","rm -rf $HOME/go_dist && img=`find $HOME/installs -name \"go*linux-amd64.tar.gz\"|sort|tail -n1` && ( gunzip -c \"$img\" | tar xf - ) && mv /tmp/go $HOME/go_dist"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 vscode_install={
   exec="/bin/bash",
   path="/home/sandboxer",
@@ -299,6 +309,7 @@ vscode={
   term_signal=defaults.signals.SIGTERM,
   attach=false,
   pty=false,
+  env_set={{"GOROOT","/home/sandboxer/go_dist"}},
   desktop={
     name = "Visual Studio Code",
     comment = "VSCode (IDE sandbox)",
