@@ -64,6 +64,8 @@ table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
 -- symlinks to usb-uart converter devices for arduino IDE and other tools
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyACM0","/dev/ttyACM0"})
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/ttyUSB0"})
+-- symlink to /dev/kvm
+table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/kvm","/dev/kvm"})
 -- make usb devices available for sandbox
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev/bus/usb","/dev/bus/usb"})
 -- separate /tmp mount needed for QtCreator online installer to work
