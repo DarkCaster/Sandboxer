@@ -43,6 +43,9 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 path_env="/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
 table.insert(sandbox.setup.env_set,{"PATH",path_env})
 
+-- needed for flutter
+table.insert(sandbox.setup.env_set,{"CHROME_EXECUTABLE","/usr/bin/chromium"})
+
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
@@ -276,6 +279,17 @@ stlinkserver_install={
   archive=`find \"$HOME/installs\" -name \"*st-link-server*.zip\"|sort -V|tail -n1` && ( cd \"$extract\" && unzip \"$archive\" ); \
   exe=`find \"$extract\" -name \"stlink-server.*\"|sort -V|tail -n1` && ( cd \"$target\" && chmod 755 \"$exe\" && cp \"$exe\" stlink-server ); \
   "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+flutter_install={
+  exec="/bin/bash",
+  path="/tmp",
+  args={"-c","rm -rf $HOME/flutter && img=`find $HOME/installs -name \"flutter_linux_*.tar.xz\"|sort|tail -n1` && echo \"extracting $img\" && tar xf \"$img\" && mv /tmp/flutter $HOME/flutter && \
+        echo \"modifying PATH env var\" && ( grep -qxF 'PATH=\"$HOME/flutter/bin:$PATH\"' $HOME/.profile || echo 'PATH=\"$HOME/flutter/bin:$PATH\"' >> $HOME/.profile )"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
