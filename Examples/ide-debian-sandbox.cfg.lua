@@ -118,7 +118,7 @@ android_studio_install={
   [ -d \"$android_studio\" ] && echo \"Do not attempt to remove old android-studio directory\" && exit 1; \
   cd $HOME; \
   [ -d \"$android_studio\" ] && echo \"Removing directory $android_studio\" && rm -r \"$android_studio\"; \
-  img=`find ./installs -name \"android-studio-ide-*-linux.tar.gz\"|sort -V|tail -n1` && ( gunzip -c \"$img\" | tar xf - ); \
+  img=`find ./installs -name \"android-studio-*-linux.tar.gz\"|sort -V|tail -n1` && echo \"extracting $img\" && ( gunzip -c \"$img\" | tar xf - ); \
   "},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
