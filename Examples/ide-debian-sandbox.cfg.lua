@@ -285,6 +285,8 @@ stlinkserver_install={
   exclusive=true,
 }
 
+-- you may need to install and configure android studio into this sandbox by running:
+-- sandboxer ide-debian-sandbox.cfg.lua android_studio_install; sandboxer ide-debian-sandbox.cfg.lua android_studio
 flutter_install={
   exec="/bin/bash",
   path="/tmp",
