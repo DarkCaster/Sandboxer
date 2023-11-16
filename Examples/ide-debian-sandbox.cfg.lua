@@ -325,6 +325,7 @@ vscode={
   path="/home/sandboxer/VSCode",
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
   attach=false,
   pty=false,
   env_set={{"GOROOT","/home/sandboxer/go_dist"}},
