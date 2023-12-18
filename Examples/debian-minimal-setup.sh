@@ -21,6 +21,12 @@ dpkg-reconfigure dialog
 dpkg-reconfigure apt-utils
 apt-get install tzdata -y
 dpkg-reconfigure tzdata
+
+# try remove snapd
+apt-get remove --purge snapd -y || true
+apt-get autoremove --purge -y || true
+
+# dist-upgrade
 apt-get dist-upgrade -y
 
 # additional packages for dbus, x11, mesa, pulse integration and package management gui (synaptic) with minimal x11 stack

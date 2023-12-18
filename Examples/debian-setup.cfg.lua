@@ -47,6 +47,7 @@ sandbox={
       -- create empty /etc/machine-id file
       {'[[ ! -f "etc/machine-id" ]] && touch "etc/machine-id"; true'},
       {'mkdir -p "etc/pulse"'}, -- we need pulse directory for pulse feature to work if it is not already installed in sandbox by using debian-setup.cfg.lua
+      {'[[ ! -e "etc/resolv.conf" ]] && rm -f "etc/resolv.conf" || true'}, -- try force remove non existent etc/resolv.conf, because it may be a broken symlink
       {'touch "etc/resolv.conf"'}, -- create empty resolv.conf at chroot directory, if missing.
       defaults.commands.resolvconf, -- create resolv.conf at dynamic etc directory
     },

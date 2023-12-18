@@ -59,8 +59,12 @@ case "$prefix" in
     prefix="jammy"
     name="jammy"
   ;;
+  "24.04")
+    prefix="noble"
+    name="noble"
+  ;;
   *)
-    echo "selected ubuntu distro version is not supported. for now supported versions include 12.04;14.04;16.04;18.04;20.04;22.04"
+    echo "selected ubuntu distro version is not supported. for now supported versions include 12.04;14.04;16.04;18.04;20.04;22.04;24.04"
     show_usage
   ;;
 esac
@@ -71,15 +75,28 @@ arch="$2"
   echo "selected arch $arch is not supported for now and may not work with sandboxer!" && \
   exit 1
 
-# download and extract rootfs archive
-wget --help | grep -q '\--show-progress' && wget_opts="-q --show-progress" || wget_opts=""
-wget $wget_opts -O /tmp/ubuntu-root.tar.gz "https://partner-images.canonical.com/core/$prefix/current/ubuntu-$name-core-cloudimg-$arch-root.tar.gz"
-mkdir "$script_dir/debian_chroot"
-cd "$script_dir/debian_chroot"
-gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
-rm /tmp/ubuntu-root.tar.gz
+# try to download from docker repo
+if [[ $name = noble ]]; then
+  [[ $arch = i386 ]] && echo "selected arch $arch is not supported for this ubuntu release!" && exit 1
+  echo "downloading ubuntu $name with $arch arch from dayly-builds cloud-img repository"
+  # download and extract rootfs archive
+  wget --help | grep -q '\--show-progress' && wget_opts="-q --show-progress" || wget_opts=""
+  wget $wget_opts -O /tmp/ubuntu-root.tar.xz "https://cloud-images.ubuntu.com/minimal/daily/$name/current/$name-minimal-cloudimg-amd64-root.tar.xz"
+  mkdir "$script_dir/debian_chroot"
+  cd "$script_dir/debian_chroot"
+  tar xJf /tmp/ubuntu-root.tar.xz --no-same-owner --preserve-permissions --exclude='dev'
+  rm /tmp/ubuntu-root.tar.xz
+else
+  # download and extract rootfs archive
+  wget --help | grep -q '\--show-progress' && wget_opts="-q --show-progress" || wget_opts=""
+  wget $wget_opts -O /tmp/ubuntu-root.tar.gz "https://partner-images.canonical.com/core/$prefix/current/ubuntu-$name-core-cloudimg-$arch-root.tar.gz"
+  mkdir "$script_dir/debian_chroot"
+  cd "$script_dir/debian_chroot"
+  gunzip -c /tmp/ubuntu-root.tar.gz | tar xf - --no-same-owner --preserve-permissions --exclude='dev'
+  rm /tmp/ubuntu-root.tar.gz
+fi
 
-if [[ $name = xenial || $name = bionic || $name = focal || $name = jammy ]]; then
+if [[ $name = xenial || $name = bionic || $name = focal || $name = jammy || $name = noble ]]; then
   # deploy minimal setup script
   cp "$script_dir/debian-minimal-setup.sh" "$script_dir/debian_chroot/root/debian-minimal-setup.sh"
 fi
