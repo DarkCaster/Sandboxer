@@ -28,6 +28,7 @@ table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/lo
 -- add host mounts, readonly
 table.insert(sandbox.setup.mounts,{prio=99,"ro-bind","/mnt/data","/mnt/data"})
 table.insert(sandbox.setup.mounts,{prio=99,"ro-bind","/mnt/nas","/mnt/nas"})
+table.insert(sandbox.setup.mounts,{prio=99,"ro-bind","/media","/media"})
 
 -- add bwrap unshare-net option to cut off sandbox from network
 table.insert(sandbox.bwrap,defaults.bwrap.unshare_net)
