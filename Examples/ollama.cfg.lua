@@ -41,7 +41,7 @@ loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 ollama_install={
   exec="/bin/bash",
   path="/tmp",
-  args={"-c","img=`find $HOME/installs -name \"ollama-linux-amd64*\"|sort -V|tail -n1` && mkdir -p $HOME/ollama && cp $img $HOME/ollama/ollama && chmod -v 755 $HOME/ollama/ollama"},
+  args={"-c","img=`find $HOME/installs -name \"ollama-linux-amd64*\"|sort -V|tail -n1` && rm -rf $HOME/ollama && mkdir -p $HOME/ollama && cp $img $HOME/ollama/ollama && chmod -v 755 $HOME/ollama/ollama"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
@@ -61,8 +61,8 @@ ollama_service={
 }
 
 ollama={
-  exec="/home/sandboxer/ollama_dist/ollama",
-  path="/home/sandboxer/ollama_dist",
+  exec="/home/sandboxer/ollama/ollama",
+  path="/home/sandboxer/ollama",
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
   attach=true,
