@@ -24,7 +24,7 @@ table.insert(sandbox.features,"resolvconf")
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 
 -- modify PATH env
-table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
+table.insert(sandbox.setup.env_set,{"PATH","/home/sandboxer/xdg:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 
 -- insert sandbox build commands
 table.insert(sandbox.setup.commands,{'mkdir -p "${cfg[tunables.auto.user_path]}/libs/i386"'})
