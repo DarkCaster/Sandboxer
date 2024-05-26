@@ -29,11 +29,14 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devinput_mount)
 loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 
 -- modify PATH env
-table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
+table.insert(sandbox.setup.env_set,{"PATH","/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
 
 -- directory with ollama install-archives, "installs" dir must be located at the same path as this config file
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader.workdir,"installs"),"/home/sandboxer/installs"})
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
+
+table.insert(sandbox.setup.mounts,{prio=99,"dev-bind-try","/dev/kfd","/dev/kfd"})
+
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -41,7 +44,7 @@ loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 ollama_install={
   exec="/bin/bash",
   path="/tmp",
-  args={"-c","img=`find $HOME/installs -name \"ollama-linux-amd64*\"|sort -V|tail -n1` && rm -rf $HOME/ollama && mkdir -p $HOME/ollama && cp $img $HOME/ollama/ollama && chmod -v 755 $HOME/ollama/ollama"},
+  args={"-c","img=`find $HOME/installs -name \"ollama-*\"|sort -V|tail -n1` && rm -rf $HOME/ollama && mkdir -p $HOME/ollama && cp $img $HOME/ollama/ollama && chmod -v 755 $HOME/ollama/ollama"},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=false,
