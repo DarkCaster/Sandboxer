@@ -41,6 +41,9 @@ table.insert(sandbox.setup.mounts,{prio=99,"dev-bind-try","/dev/kfd","/dev/kfd"}
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
 
+-- add bwrap unshare-net option to cut off sandbox from network
+-- table.insert(sandbox.bwrap,defaults.bwrap.unshare_net)
+
 ollama_install={
   exec="/bin/bash",
   path="/tmp",
@@ -63,6 +66,32 @@ ollama_service={
   term_orphans=true,
 }
 
+ollama_service_avx2={
+  exec="/home/sandboxer/ollama/ollama",
+  path="/home/sandboxer/ollama",
+  args={"serve"},
+  env_set={{"OLLAMA_LLM_LIBRARY","cpu_avx2"}},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true, -- for gathering stdio-logs via external service manager like systemd
+  pty=false, -- pty not needed
+  exclusive=true,
+  term_on_interrupt=true,
+  term_orphans=true,
+}
+
+ollama_service_avx2_debug={
+  exec="/home/sandboxer/ollama/ollama",
+  path="/home/sandboxer/ollama",
+  args={"serve"},
+  env_set={{"OLLAMA_LLM_LIBRARY","cpu_avx2"},{"OLLAMA_DEBUG","1"}},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true, -- for gathering stdio-logs via external service manager like systemd
+  pty=false, -- pty not needed
+  exclusive=true,
+  term_on_interrupt=true,
+  term_orphans=true,
+}
+
 ollama={
   exec="/home/sandboxer/ollama/ollama",
   path="/home/sandboxer/ollama",
@@ -72,6 +101,8 @@ ollama={
   pty=true,
   exclusive=true
 }
+
+table.insert(shell.env_set,{"HF_HUB_DISABLE_TELEMETRY","1"})
 
 --[[
 Below is an example service file for starting this via systemd --user
@@ -85,6 +116,52 @@ StartLimitBurst=4
 ExecStart=sandboxer <path to ollama.cfg.lua> ollama_service
 ExecStop=sandboxer-term <path to ollama.cfg.lua> 60
 ExecStop=sandboxer-kill <path to ollama.cfg.lua>
+Restart=on-failure
+RestartSec=1
+TimeoutStopSec=80
+TimeoutStartSec=30
+
+[Install]
+WantedBy=desktop.target
+]]--
+
+anyllm_install={
+	exec="/bin/bash",
+	path="/home/sandboxer",
+	args={"-c", "\
+	echo \"removing current anythingllm installation\" && rm -rf \"$HOME/anythingllm\"; \
+	cd $HOME; \
+	img=`find ./installs -name \"anythingllm-linux-x64-*.tar.xz\"|sort -V|tail -n1` && tar -xf \"$img\" && echo \"Extract complete!\"; \
+	"},
+	term_signal=defaults.signals.SIGTERM,
+	attach=true,
+	pty=false,
+	exclusive=true,
+}
+
+anyllm_service={
+	exec="/home/sandboxer/anythingllm/run-x64.sh",
+	path="/home/sandboxer/anythingllm",
+	term_signal=defaults.signals.SIGTERM,
+	attach=true, -- for gathering stdio-logs via external service manager like systemd
+	pty=false, -- pty not needed
+	exclusive=true,
+	term_on_interrupt=true,
+	term_orphans=true,
+}
+
+--[[
+Below is an example service file for starting this via systemd --user
+
+[Unit]
+Description=anythingllm
+StartLimitIntervalSec=60
+StartLimitBurst=4
+
+[Service]
+ExecStart=sandboxer <path to anyllm.cfg.lua> anyllm_service
+ExecStop=sandboxer-term <path to anyllm.cfg.lua> 60
+ExecStop=sandboxer-kill <path to anyllm.cfg.lua>
 Restart=on-failure
 RestartSec=1
 TimeoutStopSec=80
