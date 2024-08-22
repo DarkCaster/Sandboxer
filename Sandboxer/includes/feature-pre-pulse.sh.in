@@ -15,6 +15,9 @@ done
 if [[ ${cfg[tunables.features.pulse_skip_sanity_checks]} != true ]]; then
   #get host pulseaudio version
   [[ `2>/dev/null pulseaudio --version` =~ ^"pulseaudio"[[:space:]]([0-9]*)".".*$ ]] && pulseaudio_version=( "${BASH_REMATCH[1]}" )
+  if [[ -z $pulseaudio_version ]]; then
+    [[ ! -z `2>/dev/null which pipewire-pulse` ]] && pulseaudio_version="99" && log "trying pipewire-pulse instead of pulseaudio"
+  fi
   [[ -z $pulseaudio_version ]] && log "cannot determine pulseaudio version, sanity check failed." && teardown 1
   # pulseaudio < 9.0 has some bugs, that may lead to it's crash when using with sandboxed env with some options combinations
   if [[ $pulseaudio_version -lt 9 ]]; then
