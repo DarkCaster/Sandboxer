@@ -1,0 +1,21 @@
+# optional apparmor rule for bwrap, if having problems with it. probably, overkill.
+# may require additional editing for your system.
+# seem to be working fine with ubuntu 24.04, install it to /etc/apparmor.d/bwrap
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile bwrap /usr/bin/bwrap flags=(complain,attach_disconnected) {
+ # Allow all rules
+ capability,
+ network,
+ mount,
+ remount,
+ umount,
+ pivot_root,
+ ptrace,
+ signal,
+ dbus,
+ unix,
+ file,
+}
