@@ -99,21 +99,39 @@ parseopts () {
 
 parseopts "$@"
 
-#try to enable some loadables (optional)
-bash_version=`echo "$BASH_VERSION" | cut -f1-2 -d"."`
-loadables_dir=""
+# try newer method to enable loadable first
+loadables_dir=$(pkg-config bash --variable=loadablesdir 2>/dev/null)
+loadables_failed="true"
 
-#find loadables_dir
-for target in "/lib64/bash/$bash_version" "/usr/lib64/bash/$bash_version" "/lib/bash/$bash_version" "/usr/lib/bash/$bash_version"
-do
-  [[ -d $target ]] && loadables_dir="$target" && break
-done
-
-if [[ ! -z $loadables_dir ]]; then
+if [[ ! -z $BASH_LOADABLES_PATH || ! -z $loadables_dir ]]; then
+  loadables_failed="false"
+  [[ -z $BASH_LOADABLES_PATH ]] && BASH_LOADABLES_PATH = "$loadables_dir"
   for loadable in "sleep" "mkdir" "rmdir"
   do
-    2>/dev/null enable -f "$loadables_dir/$loadable.so" "$loadable"
+    #debug
+    #echo "enabling $loadable loadable"
+    2>/dev/null enable -f "$loadable" "$loadable" || loadables_failed="true"
   done
+  #[[ $loadables_failed = "true" ]] && echo "loading failed"
+fi
+
+# try older method for enabling loadables
+if [[ $loadables_failed = "true" ]]; then
+  bash_version=`echo "$BASH_VERSION" | cut -f1-2 -d"."`
+  loadables_dir=""
+  #find loadables_dir
+  for target in "/lib64/bash/$bash_version" "/usr/lib64/bash/$bash_version" "/lib/bash/$bash_version" "/usr/lib/bash/$bash_version"
+  do
+    [[ -d $target ]] && loadables_dir="$target" && break
+  done
+  if [[ ! -z $loadables_dir ]]; then
+    for loadable in "sleep" "mkdir" "rmdir"
+    do
+      #debug
+      #echo "enabling $loadable loadable"
+      2>/dev/null enable -f "$loadables_dir/$loadable.so" "$loadable"
+    done
+  fi
 fi
 
 watchdog_lock_enter() {
