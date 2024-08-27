@@ -11,8 +11,11 @@ if [[ ! -z $BASH_LOADABLES_PATH || ! -z $loadables_dir ]]; then
   [[ -z $BASH_LOADABLES_PATH ]] && BASH_LOADABLES_PATH = "$loadables_dir"
   for loadable in "cut" "sleep" "mkdir" "rmdir" "ln" "id"
   do
+    #debug
+    #echo "enabling $loadable loadable"
     2>/dev/null enable -f "$loadable" "$loadable" || loadables_failed="true"
   done
+  #[[ $loadables_failed = "true" ]] && echo "loading failed"
 fi
 
 # try older method for enabling loadables
@@ -27,6 +30,8 @@ if [[ $loadables_failed = "true" ]]; then
   if [[ ! -z $loadables_dir ]]; then
     for loadable in "cut" "sleep" "mkdir" "rmdir" "ln" "id"
     do
+      #debug
+      #echo "enabling $loadable loadable"
       2>/dev/null enable -f "$loadables_dir/$loadable.so" "$loadable"
     done
   fi
