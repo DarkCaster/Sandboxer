@@ -67,7 +67,7 @@ table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/t
 -- symlink to /dev/kvm
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/kvm","/dev/kvm"})
 -- make usb devices available for sandbox
-table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev/bus/usb","/dev/bus/usb"})
+table.insert(sandbox.setup.mounts,{prio=98,"dev-bind-try","/dev/bus/usb","/dev/bus/usb"})
 -- separate /tmp mount needed for QtCreator online installer to work
 table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
 
