@@ -91,3 +91,12 @@ if [[ $name = sid || $name = buster || $name = bullseye ]]; then
   echo "APT::Sandbox::Seccomp::Allow { \"socket\" };" > "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
   echo "APT::Sandbox::Seccomp::Allow { \"connect\" };" >> "$script_dir/debian_chroot/etc/apt/apt.conf.d/99-sandboxer"
 fi
+
+echo "download complete"
+echo ""
+echo "to finish setup or install packages inside sandbox, run:"
+echo "sandboxer debian-setup.cfg.lua fakeroot_shell"
+echo "this will run bash session wrapped with fakeroot tool with RW access to debian_chroot dir, so you will be able to install packages into the sandbox using apt-get tool"
+echo ""
+echo "to run regular sandbox with RO access to debian_chroot dir and RW access to dedicated home dir, run:"
+echo "sandboxer debian-sandbox.cfg.lua shell"
