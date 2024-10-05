@@ -1,5 +1,22 @@
 # Application sandboxing tool for GNU/Linux
 
+## Deprecation notice
+
+This tool is no longer in active development due to limited time for maintenance. While it will still be maintained when possible, updates will be less frequent. I continue to use it for some of my everyday tasks, but I cannot extensively test it with different Linux distributions and systems.
+
+Since its initial conception in 2012 and creation in 2016, the landscape of application isolation and containerization has changed significantly. It has become challenging to keep up with these changes and compete with newer solutions.
+
+The original purpose of this suite was to run highly outdated and customized development tools and environments on modern Linux distributions more conveniently than using virtualization or simple chroot. Desktop application support was added later, but it was never fully optimized. Currently it seem to run X11 apps relatively well (even with HW acceleration), but it cannot properly run inside pure wayland host sessions, and I simply do not have time to implement this fuinctionality. Audio integration seem to be working fine via PulseAudio, and it seem to be also working with hosts that run Pipewire.
+
+For those seeking alternatives:
+
+- For desktop, consider using Flatpak, which offers a more robust and production-ready solution.
+- For server, options like Docker and various hosted web-app providers are now available and widely used.
+
+It is recommended to explore these modern solutions before trying Sandboxer. However, if Sandboxer still meets your specific needs, you are welcome to use and contribute to it.
+
+## Description
+
 The main goal of this project is to create a customizable application sandboxing/isolation suite. In addition to sandboxing, this suite can also be used to run applications inside pre-configured custom environments based on user-made chroots, similar to server containerization software like libvirt-lxc, LXC, docker, etc.
 
 This project relies on the "bubblewrap" utility (<https://github.com/projectatomic/bubblewrap>) to perform application isolation. The authors of bwrap implemented only minimal and essential functionality in their sandboxing utility. While this is good for security and ease of maintenance, it can be challenging to configure and prepare a sandboxed environment. That's where the sandboxer suite comes in. It is a configuration wrapper and set of service utilities built on top of bubblewrap.
