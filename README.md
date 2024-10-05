@@ -2,16 +2,16 @@
 
 ## Deprecation notice
 
-This tool is no longer in active development due to limited time for maintenance. While it will still be maintained when possible, updates will be less frequent. I continue to use it for some of my everyday tasks, but I cannot extensively test it with different Linux distributions and systems. Packages for different host linux-distributions are also no longer updated, becase this process was heavily dependent on Travis service, that I'm not able to use anymore. So the only way to use Sandboxer suite is to build it manually from source.
+This tool is no longer in active development due to time constraints. While maintenance will continue when possible, updates will be less frequent. I still using it for some daily tasks but cannot extensively test it across various Linux distributions. Package updates for different host Linux distributions have ceased, as this process relied heavily on the Travis service, which is no longer available. The only way to use the Sandboxer suite now is to build it manually from source.
 
-Since its initial conception in 2012 and creation in 2016, the landscape of application isolation and containerization has changed significantly. It has become challenging to keep up with these changes and compete with newer solutions.
+Since its inception in 2012 and creation in 2016, the landscape of application isolation and containerization has evolved significantly, making it challenging to keep pace with these changes and compete with newer solutions.
 
-The original purpose of this suite was to run highly outdated and customized development tools and environments on modern Linux distributions more conveniently than using virtualization or simple chroot. Desktop application support was added later, but it was never fully optimized. Currently it seems to run X11 apps relatively well (even with HW acceleration), but it cannot properly run inside pure Wayland host sessions, and I simply do not have time to implement this functionality. Audio integration seems to be working fine via PulseAudio, and it seems to be also working with hosts that run Pipewire.
+The suite was originally designed to run outdated and customized development tools on modern Linux distributions more conveniently than using virtualization or simple chroot. Desktop application support was added later but was never fully optimized. It currently runs X11 apps relatively well (even with hardware acceleration) but lacks proper support for pure Wayland host sessions. Audio integration also still working with PulseAudio in sandbox and PulseAudio/Pipewire on host.
 
 For those seeking alternatives:
 
-- For desktop, consider using Flatpak, which offers a more robust and production-ready solution.
-- For server, options like Docker and various hosted web-app providers are now available and widely used.
+- For desktop use, consider Flatpak, which offers a more robust and production-ready solution.
+- For server use, options like Docker and various hosted web-app providers are now widely available.
 
 It is recommended to explore these modern solutions before trying Sandboxer. However, if Sandboxer still meets your specific needs, you are welcome to use and contribute to it.
 
