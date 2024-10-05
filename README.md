@@ -1,33 +1,14 @@
-# Simple desktop application sandboxing tool for GNU/Linux
+# Application sandboxing tool for GNU/Linux
 
-Main goal of this project is to make a simple to configure and yet highly customizable application sandboxing/isolation suite.
-In addition to sandboxing feature, this suite can also be used to run applications inside pre-configured custom environment based on user-made chroot, in a similiar way to how it is done in a server containerization software like libvirt-lxc, LXC, docker, etc.
+Main goal of this project is to make a customizable application sandboxing/isolation suite. In addition to sandboxing feature, this suite can also be used to run applications inside pre-configured custom environment based on user-made chroot, in a similiar way to how it is done in a server containerization software like libvirt-lxc, LXC, docker, etc.
 
-For now, this project is relying on "bubblewrap" utility (<https://github.com/projectatomic/bubblewrap>) to perform application isolation.
-Authors of bwrap implemented only minimal and essential functionality in its sandboxing utility.
-While it is good in terms of security, easy to maintain and fix bugs, it is also hard to configure and perform a preparation of sandboxed environment.
-That where this sandboxer suite comes in.
-It is just a configuration wrapper and set of service utilities that made on top of bubblewrap.
+This project is relying on "bubblewrap" utility (<https://github.com/projectatomic/bubblewrap>) to perform application isolation. Authors of bwrap implemented only minimal and essential functionality in its sandboxing utility. While it is good in terms of security, easy to maintain and fix bugs, it is also hard to configure and perform a preparation of sandboxed environment. That where this sandboxer suite comes in. It is just a configuration wrapper and set of service utilities that made on top of bubblewrap.
 
-For now it is in highly experimental state and possibly not so secure that it is intended to be.
-Do not rely on it to achive a 100% secutity with application isolation.
-It is impossible to achive with LXC-like containerization that provided by bubblewrap utility and linux kernel namespaces.
-Also, this software may contain some security bugs because I have a very limited time recources to maintain and enhance it and i'm the only one developer working on it right now.
-Even more mature software like firejail contain bugs and security vulnerabilities that discovered on a regular basis.
-So, proceed at your own risk.
-If you need more secure isolation - use virtualization solutions like qemu-kvm, virtualbox, etc.
-But, still, i'm trying to do my best to make this tool secure.
+This software may contain some security bugs because I have a very limited time recources to maintain and enhance it and i'm the only one developer working on it right now. Proceed at your own risk. If you need more secure isolation - use virtualization solutions like qemu-kvm, virtualbox, etc.
 
-## Packages for various distributions:
+## Main concepts of this sandboxing suite
 
-*   [Launchpad](https://launchpad.net/~dark-caster/+archive/ubuntu/sandboxer), for ubuntu distributions (LTS-only for now)
-
-TODO: more packages for various linux distros
-
-## Main concepts of this sandboxing suite:
-
-There is an environment constructed by your OS, used in your normal user-session and DE.
-It is called there - a host environment (or simply - "host").
+There is an environment constructed by your OS, used in your normal user-session. It is called there - a host environment (or simply - "host").
 Usually it does not have any tight security restrictions - applications may interact with each other and read/write user-data.
 When you run malicious or broken app inside unprotected host env - it may damage, delete or steal your data and/or break other running applications.
 
@@ -51,15 +32,9 @@ Core information about sandbox configuration options for now provided in example
 See example config files in "Examples" directory for more info.
 
 Sandbox config file must define at least two root-tables:
-*   "sandbox" table.
-    It describes general sandbox env setup: mounts inside sandbox, persistent-user data location, isolation options, commands used at sandbox construction stage to prepare it's env.
-*   One or more "execution profiles".
-    Exec profile describe application that may be started inside sandbox by user.
-    This may be an interactive shell, or some desktop application.
-    All exec profiles described in a single config file - will be executed in a sanbox shared between them, so they may interact to each other.
-    Exec profile also describe other options for target application, like working directory, cmd line parameters, pty allocation, logging of stdout/stderr, etc.
 
-TODO: make more detailed howto about config files.
+* "sandbox" table. It describes general sandbox env setup: mounts inside sandbox, persistent-user data location, isolation options, commands used at sandbox construction stage to prepare it's env.
+* One or more "execution profiles". Exec profile describe application that may be started inside sandbox by user. This may be an interactive shell, or some desktop application. All exec profiles described in a single config file - will be executed in a sanbox shared between them, so they may interact to each other. Exec profile also describe other options for target application, like working directory, cmd line parameters, pty allocation, logging of stdout/stderr, etc.
 
 ### Session management
 
@@ -91,55 +66,45 @@ Anyway, this utilities is intended to perform only initial coniguration tasks, a
 It may be also rewritten in future with other programming language.
 
 #### Usage
-```
+
+```sh
 sandboxer <sandbox config file> <exec profile> [parameters for application inside sandbox]
 ```
+
 Execution must be performed from regular-user account.
 Running from root is not supported and will be unsecure.
 Bubblewrap utility is also intended to run as normal user.
 
-##### Example: prepare and run sandbox on top of separate debian or ubuntu rootfs
+##### Example: prepare and run sandbox on top of separate ubuntu rootfs
 
-*   Create separate directory (will be used to store files for debian-rootfs)
-*   Copy (or create symlink) following files from "Examples" directory: debian-setup.cfg.lua; debian-sandbox.cfg.lua; debian-version-probe.lua.in; download-debian-chroot.sh; download-image-from-docker-repo.sh; debian-minimal-setup.sh
-*   Download and install debian rootfs by running download-debian-chroot.sh (DO NOT run this as root!): ./download-debian-chroot.sh buster amd64
-*   Run "setup" sandbox on top of downloaded rootfs: sandboxer debian-setup.cfg.lua fakeroot_shell
-*   Install essential packages by running this scrpit inside sandbox shell: /root/debian-minimal-setup.sh
-*   Logout by calling "exit"
-*   Run regular sandbox on top of prepared rootfs: sandboxer debian-sandbox.cfg.lua shell
-
-TODO: detailed description, see "Examples" directory for config files examples.
-Look for more info at "example.cfg.lua", "debian-setup.cfg.lua", "debian-sandbox.cfg.lua" and other example config files.
+* Create separate directory (will be used to store files for ubuntu-rootfs)
+* Copy (or create symlink) following files from "Examples" directory: debian-setup.cfg.lua; debian-sandbox.cfg.lua; debian-version-probe.lua.in; download-ubuntu-chroot.sh; debian-minimal-setup.sh
+* Download and install debian rootfs by running download-ubuntu-chroot.sh (DO NOT run this as root!): ./download-ubuntu-chroot.sh 24.04
+* Run "setup" sandbox on top of downloaded rootfs: sandboxer debian-setup.cfg.lua fakeroot_shell
+* Install essential packages by running this scrpit inside sandbox shell: /root/debian-minimal-setup.sh
+* Logout by calling "exit"
+* Run regular sandbox on top of prepared rootfs: sandboxer debian-sandbox.cfg.lua shell
 
 ## System requirements and installation
 
-In order to use sandboxer suite your system should meet a minimum system requirements to run a bubblewrap utility:
-*   A decent linux kernel with various namespaces support: PID, UID, NET and IPC namespace support is highly recommended.
-
 Sandboxer suite also requires the following in order to run:
-*   A decent x86_64 linux distro.
-    Sandboxer suite may work with 32bit x86 OS'es (and with non x86 systems), but it is not tested right now.
-    Some modifications to config system (but not the user config files) and main logic may be required.
-*   Official standalone lua interpreter (<https://www.lua.org>) to parse and transform config files and it's options.
-    System is tested with lua versions 5.1, 5.2 and 5.3. Other lua implementations like lua-jit is not supported right now (but may be supported in future).
-*   Bash version 4.0 and up.
-    Required by components that perform sandbox preparation tasks.
-*   Optional: posix compliant shell/interpreter (tested with bash, dash, busybox) to consume less system resources when running some components.
-    This requirement is optional, bash will be used as fallback.
-*   Optional: Xpra software (<https://xpra.org/>), version 2.0 and up.
-    Both server and client components must be installed.
-    If using sandbox based on exernal root-fs, then xpra server components must be installed there.
-    May be used to perform secure X11 integration for sandboxed application.
+
+* x86_64 linux distro. Sandboxer suite may work with 32bit x86 OS'es (and with non x86 systems), but it is not tested right now. Some modifications to config system (but not the user config files) and main logic may be required.
+* bubblewrap (`bwrap`) utility installed, which originally comes with Flatpak. Use one provided by your package manager.
+* For apparmor-enabled systems: you may need to manually install extra apparmor rules for bwrap in order to make it work with sandboxer. Use this example `bwrap-apparmor-rule`.
+* Official standalone lua interpreter (<https://www.lua.org>) to parse and transform config files and it's options. System is tested with lua versions 5.1, 5.2, 5.3 and 5.4. Other lua implementations like lua-jit is not supported right now (but may be supported in future).
+* Bash version 4.0 and up. Required by components that perform sandbox preparation tasks.
+* Optional: posix compliant shell/interpreter (tested with bash, dash) to consume less system resources when running some components. This requirement is optional, bash will be used as fallback.
 
 In order to build and install sandboxer suite you also need:
-*   Git VCS. It is required in order to download some external dependencies and extra utilities.
-*   GCC compiler and CMAKE is required to build all internal binary components.
-*   Autotools is required to build FakeRoot-UserNS external helper utility.
+
+* Git VCS. It is required in order to download some external dependencies and extra utilities.
+* GCC compiler and CMAKE is required to build all internal binary components.
+* Autotools is required to build FakeRoot-UserNS external helper utility.
 
 ### Building/installing bubblewrap utility
 
-Check your package manager, maybe bubblewrap utility is already available there.
-It may be also included in "flatpak" package.
+Check your package manager, maybe bubblewrap utility is already available there. If so, it is strictly recommended to use it.
 
 To build and install bubblewrap manually, run "build-bwrap.sh" script - it will download, compile and install bwrap binary to /usr/local, sudo will prompt for password at install stage, no need to run this script as root.
 
@@ -155,28 +120,13 @@ You may also pass custom target installation path to install-to-home.sh script a
 
 ## Project status
 
-### Short term plans
-
-*   Automate testing\building packages for various linux distributions
-*   Add host<->sandbox path conversion tools
-*   Add custom xdg-open (and other) utilities for better integration between host and sandbox
-*   Improve session management utilities: use unix-sockets instead of pipes, add vsock support (for use with qemu guests), refactor and simplify code
-
 ### Long term plans
 
-*   Add tools for gathering statistics from running sandboxes
-*   Improve logging from sandboxed applications
-*   Add tools that will perform setup of custom network-namespace and firewalling for sandboxed application.
-    For now it is only possible to run sandbox with host networking, or run sandbox with empty network-namespace without any external connectivity.
-*   Implement seccomp mechanisms to session management utilities, loading of seccomp rules for application executed inside sandbox.
-*   Rewrite main management utilities-prototypes from bash to some other language to speedup sandbox preparation process.
+* Add host<->sandbox path conversion tools for better integration into the host system.
+* Create xdg-open wrapper for better integration, to allow sanbox execute xdg-open with files/protocols from sandbox in the host system.
 
-### Very long term plans
+### Very long term plans (probably never)
 
-*   Add different LXC backends support, virtualization backend support
-*   Test for selinux support, add helper tools for selinux setup to sandboxes based on external root-fs
-*   Test for apparmor support as alternative, add some helper tools to generate apparmor rules for sandboxes
-*   Add some restrictions for lua config files functionality if it is possible.
-    For now when using lua interpreter, it is possible to use all functionality that lua can provide: including disk access and using external modules. There should be some limitations for portable sandbox config files for good.
+* Improve session management utilities: use unix-sockets instead of pipes, add vsock support (for use with qemu guests), refactor and simplify code
 
-Copyright (c) 2016-2020 DarkCaster, see LICENSE for details.
+Copyright (c) 2016-2024 DarkCaster, see LICENSE for details.
