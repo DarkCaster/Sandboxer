@@ -2,11 +2,11 @@
 
 ## Deprecation notice
 
-This tool is no longer in active development due to time constraints. While maintenance will continue when possible, updates will be less frequent. I still using it for some daily tasks but cannot extensively test it across various Linux distributions. Package updates for different host Linux distributions have ceased, as this process relied heavily on the Travis service, which is no longer available. The only way to use the Sandboxer suite now is to build it manually from source.
+This tool is no longer in active development due to time constraints. While maintenance will continue when possible, updates will be less frequent. I still use it for some daily tasks but cannot extensively test it across various Linux distributions. Package updates for different host Linux distributions have ceased, as this process relied heavily on the Travis service, which is no longer available. The only way to use the Sandboxer suite now is to build it manually from source.
 
 Since its inception in 2012 and creation in 2016, the landscape of application isolation and containerization has evolved significantly, making it challenging to keep pace with these changes and compete with newer solutions.
 
-The suite was originally designed to run outdated and customized development tools on modern Linux distributions more conveniently than using virtualization or simple chroot. Desktop application support was added later but was never fully optimized. It currently runs X11 apps relatively well (even with hardware acceleration) but lacks proper support for pure Wayland host sessions. Audio integration also still working with PulseAudio in sandbox and PulseAudio/Pipewire on host.
+The suite was originally designed to run outdated and customized development tools on modern Linux distributions more conveniently than using virtualization or simple chroot. Desktop application support was added later but was never fully optimized. It currently runs X11 apps relatively well (even with hardware acceleration) but lacks proper support for pure Wayland host sessions. Audio integration also still works with PulseAudio in sandbox and PulseAudio/Pipewire on host.
 
 For those seeking alternatives:
 
