@@ -108,7 +108,7 @@ To use the utility, run:
 sandboxer-download-extra.sh [space separated targets list]
 ```
 
-If no targets are specified, it will download binaries for debian-i386, debian-amd64, and ubuntu-amd64 by default. The downloaded components will be placed in ~/.cache/sandboxer, which can be removed if no longer needed.
+If no targets are specified, it will download binaries for debian-i386, debian-amd64, ubuntu-amd64, and ubuntu-24.04-amd64 by default. The downloaded components will be placed in ~/.cache/sandboxer, which can be removed if no longer needed.
 
 ## Project status
 
