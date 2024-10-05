@@ -22,7 +22,7 @@ tmp_dir="$TMPDIR"
 [[ -z $tmp_dir || ! -d $tmp_dir ]] && tmp_dir="/tmp"
 
 targets="$1"
-[[ -z $targets ]] && targets=( debian-i386 debian-amd64 ubuntu-amd64 )
+[[ -z $targets ]] && targets=( debian-i386 debian-amd64 ubuntu-amd64 ubuntu-24.04-amd64 )
 
 download () {
   echo -n "*** trying $1 ..."
