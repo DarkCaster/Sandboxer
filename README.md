@@ -35,15 +35,15 @@ Each sandbox environment is set up using a configuration file. A unique sandbox 
 
 The sandbox config file must define at least two root-tables:
 
-* "sandbox" table: Describes general sandbox env setup, including mounts inside the sandbox, persistent user data location, isolation options, and commands used at the sandbox construction stage.
-* One or more "execution profiles": Describe applications that can be started inside the sandbox by the user, such as an interactive shell or desktop application. All exec profiles in a single config file will be executed in a sandbox shared between them, allowing interaction. Exec profiles also describe other options for the target application, like working directory, command-line parameters, pty allocation, and logging of stdout/stderr.
+- "sandbox" table: Describes general sandbox env setup, including mounts inside the sandbox, persistent user data location, isolation options, and commands used at the sandbox construction stage.
+- One or more "execution profiles": Describe applications that can be started inside the sandbox by the user, such as an interactive shell or desktop application. All exec profiles in a single config file will be executed in a sandbox shared between them, allowing interaction. Exec profiles also describe other options for the target application, like working directory, command-line parameters, pty allocation, and logging of stdout/stderr.
 
 ### Session management
 
 To launch multiple applications inside a bubblewrap-controlled sandbox, the Sandboxer suite includes its own session management utilities:
 
-* "executor" binary: Launched inside the bubblewrap-controlled sandbox to perform session management and basic communication with the outer world.
-* "commander" binary: Launched in the host environment for basic interactions with applications running inside the sandbox. It can forward or log stdio/stderr, securely forward terminal I/O from pty devices created inside the sandbox, and ask the session manager to terminate or launch applications.
+- "executor" binary: Launched inside the bubblewrap-controlled sandbox to perform session management and basic communication with the outer world.
+- "commander" binary: Launched in the host environment for basic interactions with applications running inside the sandbox. It can forward or log stdio/stderr, securely forward terminal I/O from pty devices created inside the sandbox, and ask the session manager to terminate or launch applications.
 
 These utilities are written in C for optimal portability and resource efficiency. They are not intended for direct use, as command-line parameters and internal logic may change in future releases without notice.
 
@@ -73,18 +73,18 @@ Execution must be performed from a regular user account. Running from root is no
 
 The Sandboxer suite requires:
 
-* x86_64 Linux distribution (may work with 32-bit x86 OS and non-x86 systems, but untested)
-* bubblewrap (`bwrap`) utility
-* For AppArmor-enabled systems: manual installation of extra AppArmor rules for bwrap (use the provided `bwrap-apparmor-rule` example)
-* Official standalone Lua interpreter (versions 5.1, 5.2, 5.3, and 5.4 supported)
-* Bash version 4.0 and up
-* Optional: POSIX-compliant shell/interpreter (tested with bash, dash) for reduced resource consumption
+- x86_64 Linux distribution (may work with 32-bit x86 OS and non-x86 systems, but untested)
+- bubblewrap (`bwrap`) utility
+- For AppArmor-enabled systems: manual installation of extra AppArmor rules for bwrap (use the provided `bwrap-apparmor-rule` example)
+- Official standalone Lua interpreter (versions 5.1, 5.2, 5.3, and 5.4 supported)
+- Bash version 4.0 and up
+- Optional: POSIX-compliant shell/interpreter (tested with bash, dash) for reduced resource consumption
 
 For building and installing:
 
-* Git VCS
-* GCC compiler and CMake
-* Autotools (for building FakeRoot-UserNS external helper utility)
+- Git VCS
+- GCC compiler and CMake
+- Autotools (for building FakeRoot-UserNS external helper utility)
 
 ### Building/installing bubblewrap utility
 
@@ -114,11 +114,11 @@ If no targets are specified, it will download binaries for debian-i386, debian-a
 
 ### Long term plans
 
-* Add host<->sandbox path conversion tools for better integration into the host system.
-* Create an xdg-open wrapper for improved integration, allowing the sandbox to execute xdg-open with files/protocols from the sandbox in the host system.
+- Add host<->sandbox path conversion tools for better integration into the host system.
+- Create an xdg-open wrapper for improved integration, allowing the sandbox to execute xdg-open with files/protocols from the sandbox in the host system.
 
 ### Very long term plans (potentially)
 
-* Improve session management utilities: use unix-sockets instead of pipes, add vsock support (for use with QEMU guests), refactor and simplify code.
+- Improve session management utilities: use unix-sockets instead of pipes, add vsock support (for use with QEMU guests), refactor and simplify code.
 
 Copyright (c) 2016-2024 DarkCaster, see LICENSE for details.
