@@ -2,7 +2,7 @@
 
 ## Deprecation notice
 
-This tool is no longer in active development due to time constraints. While maintenance will continue when possible, updates will be less frequent. I still use it for some daily tasks but cannot extensively test it across various Linux distributions. Package updates for different host Linux distributions have ceased, as this process relied heavily on the Travis service, which is no longer available. The only way to use the Sandboxer suite now is to build it manually from source.
+This tool is no longer in active development due to time constraints. While maintenance will continue when possible, updates will be less frequent. I still use it for some daily tasks but cannot extensively test it across various Linux distributions. Package updates for different host Linux distributions have ceased, as this process relied heavily on the Travis service and some other tools, which is no longer available. The only way to use the Sandboxer suite now is to build it manually from source.
 
 Since its inception in 2012 and creation in 2016, the landscape of application isolation and containerization has evolved significantly, making it challenging to keep pace with these changes and compete with newer solutions.
 
