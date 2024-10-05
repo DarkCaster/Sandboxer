@@ -10,7 +10,7 @@ This software may contain security bugs due to limited development resources. Us
 
 The environment constructed by your OS and used in your normal user-session is called the host environment (or simply "host"). It typically doesn't have tight security restrictions, allowing applications to interact with each other and read/write user data. Running malicious or broken apps in an unprotected host environment may damage, delete, or steal your data and/or affect other running applications.
 
-The Sandboxer suite runs applications inside a "sandbox" - a special environment isolated from the host that provides security against unexpected behavior of software running inside the sandbox. A single sandbox may run multiple applications that can interact with each other but not with host apps or apps from other sandboxes. To interact with sandboxed applications, there must be links connecting them to services running on the host, such as X11 service and PulseAudio. The Sandboxer suite configures and use these links. So it is possible to seamingly run desktop, 3D, multimedia or GPU-compute software inside sandbox.
+The Sandboxer suite runs applications inside a "sandbox" - a special environment isolated from the host that provides security against unexpected behavior of software running inside the sandbox. A single sandbox may run multiple applications that can interact with each other but not with host apps or apps from other sandboxes. To interact with sandboxed applications, there must be links connecting them to services running on the host, such as X11 service and PulseAudio. The Sandboxer suite configures and uses these links. So it is possible to seamlessly run desktop, 3D, multimedia or GPU-compute software inside sandbox.
 
 ### Sandbox configuration management
 
@@ -80,6 +80,18 @@ Run the build.sh script to download and build all external dependencies and bina
 ### Installing sandboxer suite
 
 Run install-to-home.sh after build.sh completes successfully. It will install the sandboxer suite and examples to "$HOME/sandboxer" and create a symlink to the main utility at "$HOME/bin/sandboxer". You can pass a custom target installation path as a parameter.
+
+### Downloading precompiled binaries (optional)
+
+The sandboxer-download-extra.sh utility is used to download precompiled binaries for running in sandboxes with older or newer Linux distributions. Host-compiled versions of these utilities may be incompatible with sandboxed Linux distributions of different versions (especially older ones). This utility checks, downloads, and verifies precompiled helper utilities for use with different types of external root-fs sandboxes.
+
+To use the utility, run:
+
+```sh
+sandboxer-download-extra.sh [space separated targets list]
+```
+
+If no targets are specified, it will download binaries for debian-i386, debian-amd64, and ubuntu-amd64 by default. The downloaded components will be placed in ~/.cache/sandboxer, which can be removed if no longer needed.
 
 ## Project status
 
