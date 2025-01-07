@@ -117,6 +117,38 @@ arduino_install={
 arduino_install_targz=arduino_install
 arduino_install_tarxz=arduino_install
 
+arduino2={
+  exec="/home/sandboxer/arduino-ide/arduino-ide",
+  path="/home/sandboxer/arduino-ide",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+  desktop={
+    name = "Arduino IDE v2",
+    comment = "Arduino IDE (IDE sandbox)",
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer/arduino-ide/resources/app/resources/icons/512x512.png"),
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;Electronics",
+  },
+}
+
+arduino_2_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  arduino_dir=\"$HOME/arduino-ide\"; \
+  cd $HOME; \
+  [ -d \"$arduino_dir\" ] && echo \"Removing directory $arduino_dir\" && rm -r \"$arduino_dir\"; \
+  img=`find ./installs -name \"arduino-*_Linux*.zip\"|sort -V|tail -n1` && unzip \"$img\" -d \"$arduino_dir\"; \
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 -- android sdk manager from https://developer.android.com/studio
 android_studio_install={
   exec="/bin/bash",
