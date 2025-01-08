@@ -149,6 +149,31 @@ arduino_2_install={
   exclusive=true,
 }
 
+arduino_cli_install={
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+  arduino_dir=\"$HOME/arduino-cli\"; \
+  cd $HOME; \
+  [ -d \"$arduino_dir\" ] && echo \"Removing directory $arduino_dir\" && rm -r \"$arduino_dir\"; \
+  img=`find \"$HOME/installs\" -name \"arduino-cli_*_Linux*.tar.gz\"|sort -V|tail -n1` && mkdir \"$arduino_dir\" && cd \"$arduino_dir\" && ( gunzip -c \"$img\" | tar xf - ); \
+  "},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
+arduino_cli={
+  exec="/home/sandboxer/arduino-cli/arduino-cli",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=true,
+  exclusive=false,
+}
+
 -- android sdk manager from https://developer.android.com/studio
 android_studio_install={
   exec="/bin/bash",
