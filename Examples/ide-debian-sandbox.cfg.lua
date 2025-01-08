@@ -391,6 +391,39 @@ vscode={
   },
 }
 
+vscode_system={
+  exec="/usr/share/code/code",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
+  attach=false,
+  pty=false,
+  env_set={{"GOROOT","/home/sandboxer/go_dist"}},
+  desktop={
+    name = "Visual Studio Code",
+    comment = "VSCode (IDE sandbox)",
+    icon = loader.path.combine(tunables.chrootdir,"/usr/share/pixmaps/vscode.png"),
+    field_code="%f",
+    terminal = false,
+    startupnotify = false,
+    categories="Development;IDE;",
+    mimetype = "text/x-vscode-workspace-sandbox",
+    mime =
+    {
+      vscode_workspace='<?xml version="1.0" encoding="UTF-8"?>\
+      <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">\
+      <mime-type type="text/x-vscode-workspace-sandbox">\
+      <comment>VSCode Workspace</comment>\
+      <icon name="text-x-source"/>\
+      <glob-deleteall/>\
+      <glob pattern="*.code-workspace"/>\
+      </mime-type>\
+      </mime-info>'
+    },
+  },
+}
+
 openscad={
   exec="/home/sandboxer/OpenSCAD/AppRun",
   path="/home/sandboxer/OpenSCAD",
