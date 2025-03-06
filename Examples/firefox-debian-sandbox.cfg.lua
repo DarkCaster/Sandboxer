@@ -92,3 +92,52 @@ firefox_home={
     categories="Network;WebBrowser;GTK;"
   },
 }
+
+librewolf={
+  exec="/usr/bin/librewolf",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+  desktop={
+    name = "LibreWolf (in sandbox)",
+    comment = "LibreWolf browser, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.chrootdir,"/usr/share/librewolf/browser/chrome/icons/default","default128.png"),
+    mimetype = "x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;",
+    field_code="%u",
+    terminal = false,
+    startupnotify = false,
+    categories="Network;WebBrowser;GTK;"
+  },
+}
+
+librewolf_home={
+  exec="/home/sandboxer/librewolf/librewolf",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+  desktop={
+    name = "LibreWolf (in sandbox)",
+    comment = "LibreWolf browser, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.datadir,"/home/sandboxer","librewolf/browser/chrome/icons/default","default128.png"),
+    mimetype = "x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;",
+    field_code="%u",
+    terminal = false,
+    startupnotify = false,
+    categories="Network;WebBrowser;GTK;"
+  },
+}
+
+librewolf_home_log={
+  exec="/home/sandboxer/librewolf/librewolf",
+  path="/home/sandboxer",
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true, -- for now it is needed for logging to work
+  log_stderr=loader.path.combine(loader.workdir,"librewolf.err.log"),
+  log_stdout=loader.path.combine(loader.workdir,"librewolf.out.log"),
+}
