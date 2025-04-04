@@ -1,0 +1,22 @@
+# apparmor rule for bwrap, that disable almost all protection for it. alternative variant, if others do not work.
+# may still silently deny some operations (without writing to audit log) - looks like apparmor bug.
+# example: cause OpenSCAD fail to save any files on Ubuntu 24.04 host + sandbox.
+# install this rule to /etc/apparmor.d/bwrap
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile bwrap /usr/bin/bwrap flags=(complain,attach_disconnected) {
+ # Allow all rules
+ capability,
+ network,
+ mount,
+ remount,
+ umount,
+ pivot_root,
+ ptrace,
+ signal,
+ dbus,
+ unix,
+ file,
+}

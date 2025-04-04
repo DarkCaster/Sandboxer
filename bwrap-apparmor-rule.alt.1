@@ -1,0 +1,10 @@
+# apparmor rule for bwrap, alternative variant that put bwrap and its' sub-processes into unconfined mode.
+# still need exclusive allowance for creating userns.
+# seem to be working with ubuntu 24.04, install it to /etc/apparmor.d/bwrap
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile bwrap /usr/bin/bwrap flags=(unconfined,attach_disconnected) {
+ userns,
+}
