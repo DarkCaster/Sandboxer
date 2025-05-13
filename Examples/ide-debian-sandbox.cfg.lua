@@ -12,10 +12,13 @@ defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
   -- redefine some parameters
   tunables.datadir=loader.path.combine(loader.workdir,"userdata-ide-"..config.uid)
+  -- tmp directory for /tmp mount, tmpfs may be too small sometimes
+  tunables.custom_tmp_path=loader.path.combine(tunables.datadir,"root_tmp")
   defaults.recalculate_orig()
 end
 
 defaults.recalculate()
+
 
 -- load base config
 dofile(loader.path.combine(loader.workdir,"debian-sandbox.cfg.lua"))
@@ -59,6 +62,11 @@ table.insert(sandbox.setup.mounts,{prio=99,"bind-try",loader.path.combine(loader
 table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
 -- "Trash" directory at /mnt/data mountpoint, you may want to install libglib2.0-bin package with "gio" binary to allow move files to trash in vscode
 table.insert(sandbox.setup.commands,{'[[ -e "/mnt/data/.Trash-${cfg[tunables.uid]}" && ! -L "${cfg[tunables.auto.user_path]}/.local/share/Trash" ]] && mkdir -p "${cfg[tunables.auto.user_path]}/.local/share" && rm -rf "${cfg[tunables.auto.user_path]}/.local/share/Trash" && ln -s "/mnt/data/.Trash-${cfg[tunables.uid]}" "${cfg[tunables.auto.user_path]}/.local/share/Trash"; true'})
+-- real /tmp directory for more space
+table.insert(sandbox.setup.commands,{'mkdir -p "${cfg[tunables.custom_tmp_path]}"'})
+table.insert(sandbox.setup.mounts,{prio=99,"bind",tunables.custom_tmp_path,"/tmp"})
+-- tmpfs /tmp mount, disabled
+-- table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
 -- mount host /dev into separate directory
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind","/dev","/dev_host"})
 -- symlinks to usb-uart converter devices for arduino IDE and other tools
@@ -68,8 +76,7 @@ table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/t
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/kvm","/dev/kvm"})
 -- make usb devices available for sandbox
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind-try","/dev/bus/usb","/dev/bus/usb"})
--- separate /tmp mount needed for QtCreator online installer to work
-table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
+
 
 -- try running android-stutio avd devices from tmpfs, especially needed for the latest android versions, it just unusable on HDD
 -- you will need a lot of ram, and also need to recreate avd device each time
