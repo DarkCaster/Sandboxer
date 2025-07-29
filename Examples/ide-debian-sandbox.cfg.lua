@@ -46,8 +46,9 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.resolvconf_mount)
 path_env="/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
 table.insert(sandbox.setup.env_set,{"PATH",path_env})
 
--- needed for flutter
-table.insert(sandbox.setup.env_set,{"CHROME_EXECUTABLE","/usr/bin/chromium"})
+-- needed for flutter, choose your chromium-based browser location
+-- table.insert(sandbox.setup.env_set,{"CHROME_EXECUTABLE","/usr/bin/chromium"})
+table.insert(sandbox.setup.env_set,{"CHROME_EXECUTABLE","/usr/bin/microsoft-edge"})
 
 -- remove unshare_ipc bwrap param
 loader.table.remove_value(sandbox.bwrap,defaults.bwrap.unshare_ipc)
@@ -76,7 +77,8 @@ table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/ttyUSB0","/dev/t
 table.insert(sandbox.setup.mounts,{prio=99,"symlink","/dev_host/kvm","/dev/kvm"})
 -- make usb devices available for sandbox
 table.insert(sandbox.setup.mounts,{prio=98,"dev-bind-try","/dev/bus/usb","/dev/bus/usb"})
-
+-- system dbus socket
+table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/run/dbus","/run/dbus"})
 
 -- try running android-stutio avd devices from tmpfs, especially needed for the latest android versions, it just unusable on HDD
 -- you will need a lot of ram, and also need to recreate avd device each time
@@ -199,7 +201,7 @@ android_studio_install={
 }
 
 android_studio={
-  exec="/home/sandboxer/android-studio/bin/studio.sh",
+  exec="/home/sandboxer/android-studio/bin/studio",
   path="/home/sandboxer",
   args=loader.args,
   term_signal=defaults.signals.SIGTERM,
