@@ -83,8 +83,8 @@ table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/run/dbus","/run/dbus"})
 -- try running android-stutio avd devices from tmpfs, especially needed for the latest android versions, it just unusable on HDD
 -- you will need a lot of ram, and also need to recreate avd device each time
 -- commend out following 2 lines if you have a fast SSD or if you want to have permanent avds
-table.insert(sandbox.setup.mounts,{prio=99,"dir","/home/sandboxer/.android/avd"})
-table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/home/sandboxer/.android/avd"})
+-- table.insert(sandbox.setup.mounts,{prio=99,"dir","/home/sandboxer/.android/avd"})
+-- table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/home/sandboxer/.android/avd"})
 
 -- profiles for IDEs and other helper tools supported with this sandbox
 
