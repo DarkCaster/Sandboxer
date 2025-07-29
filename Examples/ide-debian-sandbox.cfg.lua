@@ -64,7 +64,7 @@ table.insert(sandbox.setup.mounts,{prio=99,"bind-try","/mnt/data","/mnt/data"})
 -- "Trash" directory at /mnt/data mountpoint, you may want to install libglib2.0-bin package with "gio" binary to allow move files to trash in vscode
 table.insert(sandbox.setup.commands,{'[[ -e "/mnt/data/.Trash-${cfg[tunables.uid]}" && ! -L "${cfg[tunables.auto.user_path]}/.local/share/Trash" ]] && mkdir -p "${cfg[tunables.auto.user_path]}/.local/share" && rm -rf "${cfg[tunables.auto.user_path]}/.local/share/Trash" && ln -s "/mnt/data/.Trash-${cfg[tunables.uid]}" "${cfg[tunables.auto.user_path]}/.local/share/Trash"; true'})
 -- real /tmp directory for more space
-table.insert(sandbox.setup.commands,{'mkdir -p "${cfg[tunables.custom_tmp_path]}"'})
+table.insert(sandbox.setup.commands,{'mkdir -p "${cfg[tunables.custom_tmp_path]}" && rm -rf "${cfg[tunables.custom_tmp_path]}"/* ; true'})
 table.insert(sandbox.setup.mounts,{prio=99,"bind",tunables.custom_tmp_path,"/tmp"})
 -- tmpfs /tmp mount, disabled
 -- table.insert(sandbox.setup.mounts,{prio=99,"tmpfs","/tmp"})
