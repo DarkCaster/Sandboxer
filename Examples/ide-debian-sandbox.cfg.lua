@@ -36,7 +36,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sbin_ro_mount)
 -- loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.sys_mount)
 
 -- /dev/dri mount is needed for hw video acceleration to work
--- loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
+loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devdri_mount)
 
 -- enable resolvconf feature
 table.insert(sandbox.features,"resolvconf")
