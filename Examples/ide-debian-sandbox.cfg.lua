@@ -371,7 +371,9 @@ trim_caches = {
     echo \"removing flutter caches\"; \
     ( rm -rf .dart-tool && rm -rf .dartServer && rm -rf .flutter-devtools && rm -rf .pub-cache ) || exit 1; \
     echo \"cleaning flutter dist-repo\"; \
-    ( cd flutter && git reset --hard && git clean -dfx --force && git gc --aggressive --prune=now ) || exit 1; \
+    ( cd flutter && git reset --hard && git clean -dfx --force ) || exit 1; \
+    echo \"removing other caches\"; \
+    ( rm -rf .cache/vscode-cpptools ) || exit 1; \
     "},
   term_signal=defaults.signals.SIGTERM,
   term_orphans=true,
