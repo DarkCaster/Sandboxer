@@ -359,6 +359,27 @@ stlinkserver_install={
   exclusive=true,
 }
 
+trim_caches = {
+  exec="/bin/bash",
+  path="/home/sandboxer",
+  args={"-c", "\
+    cd \"$HOME\" \
+    echo \"removing go caches\"; \
+    ( rm -rf .cache/go && rm -rf .cache/go-build && rm -rf .cache/goimports && mkdir -p go && chmod a+rw -R go && rm -rf go ) || exit 1; \
+    echo \"removing android build caches\"; \
+    ( rm -rf .cache/Google && rm -rf .gradle && rm -rf .m2 ) || exit 1; \
+    echo \"removing flutter caches\"; \
+    ( rm -rf .dart-tool && rm -rf .dartServer && rm -rf .flutter-devtools && rm -rf .pub-cache ) || exit 1; \
+    echo \"cleaning flutter dist-repo\"; \
+    ( cd flutter && git reset --hard && git clean -dfx --force && git gc --aggressive --prune=now ) || exit 1; \
+    "},
+  term_signal=defaults.signals.SIGTERM,
+  term_orphans=true,
+  attach=true,
+  pty=false,
+  exclusive=true,
+}
+
 -- you may need to install and configure android studio into this sandbox by running:
 -- sandboxer ide-debian-sandbox.cfg.lua android_studio_install; sandboxer ide-debian-sandbox.cfg.lua android_studio
 flutter_install={
