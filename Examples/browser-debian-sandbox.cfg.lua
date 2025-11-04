@@ -142,3 +142,22 @@ librewolf_home_log={
   log_stdout=loader.path.combine(loader.workdir,"librewolf.out.log"),
 }
 
+-- install from official google repo (you can enable it with extrepo tool)
+chrome={
+  exec="/usr/bin/google-chrome",
+  path="/home/sandboxer",
+  args=loader.args,
+  term_signal=defaults.signals.SIGTERM,
+  attach=false,
+  pty=false,
+  desktop={
+    name = "Google Chrome (in sandbox)",
+    comment = "Google Chrome browser, sandbox uid "..config.sandbox_uid,
+    icon = loader.path.combine(tunables.chrootdir,"/opt/google/chrome","product_logo_256.png"),
+    mimetype = "x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;",
+    field_code="%u",
+    terminal = false,
+    startupnotify = false,
+    categories="Network;WebBrowser;GTK;"
+  },
+}
