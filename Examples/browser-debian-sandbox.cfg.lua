@@ -1,4 +1,4 @@
--- example config for firefox sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
+-- example config for browser sandbox, which is created on top of external debian chroot, prepared by debian-setup.cfg.lua
 -- using debian-sandbox.cfg.lua config file as base
 
 -- xpra x11-forwarding software (must be installed on host, v2.0 and up) may be used to isolate sanbox from host x11 service.
@@ -8,7 +8,7 @@
 defaults.recalculate_orig=defaults.recalculate
 function defaults.recalculate()
   -- redefine some parameters from "tunables" table that will affect some values from "defaults" table after running recalculate
-  tunables.datadir=loader.path.combine(loader.workdir,"userdata-firefox")
+  tunables.datadir=loader.path.combine(loader.workdir,"userdata-browser")
   tunables.features.pulse_env_alsa_config="auto"
   defaults.recalculate_orig()
 end
@@ -141,3 +141,4 @@ librewolf_home_log={
   log_stderr=loader.path.combine(loader.workdir,"librewolf.err.log"),
   log_stdout=loader.path.combine(loader.workdir,"librewolf.out.log"),
 }
+
