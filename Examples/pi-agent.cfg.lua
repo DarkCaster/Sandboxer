@@ -49,10 +49,12 @@ table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try",loader.path.combine(loa
 --  "bwrap"
 --}
 
-shell.term_orphans=true
 shell.env_unset={"MAIL"}
 shell.env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}}
 
+-- you may need to install fd-find and ripgrep packages into sandbox manaully
+
+-- install this if need to install node
 nvm_curl_install={
   exec="/bin/bash",
   path="/home/pi",
@@ -65,6 +67,7 @@ nvm_curl_install={
   exclusive=true,
 }
 
+-- install this to install node
 node24_nvm_install={
   exec="/bin/bash",
   path="/home/pi",
@@ -77,6 +80,7 @@ node24_nvm_install={
   exclusive=true,
 }
 
+-- install either this
 pi_npm_install={
   exec="/bin/bash",
   path="/home/pi",
@@ -89,6 +93,7 @@ pi_npm_install={
   exclusive=true,
 }
 
+-- or this
 pi_curl_install={
   exec="/bin/bash",
   path="/home/pi",
@@ -101,24 +106,24 @@ pi_curl_install={
   exclusive=true,
 }
 
--- may need to install fd-find and ripgrep packages
-pi={
+-- or this
+piweb_npm_install={
   exec="/bin/bash",
   path="/home/pi",
-  args={"-lic", "pi && clear"},
+  args={"-lic", "echo \"updating npm\" && npm install -g npm@latest && echo \"updating packages\" && npm update -g && echo \"installing piweb\" && npm install -g @agegr/pi-web"},
   env_unset={"MAIL"},
   env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
   exclusive=true,
-  term_orphans=true,
 }
 
-pi_resume={
+-- run profile for the piweb
+pi_web={
   exec="/bin/bash",
   path="/home/pi",
-  args={"-lic", "pi -r && clear"},
+  args={"-lic", "pi-web --hostname 0.0.0.0 --port 9090 --no-open"},
   env_unset={"MAIL"},
   env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
   term_signal=defaults.signals.SIGTERM,
