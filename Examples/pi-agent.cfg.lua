@@ -37,7 +37,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 table.insert(sandbox.bwrap,defaults.bwrap.hostname_sandbox)
 
 -- modify env
-table.insert(sandbox.setup.env_set,{"PATH","/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"})
+table.insert(sandbox.setup.env_set,{{"GOROOT","/home/pi/go_dist"},{"PATH","/home/pi/go_dist/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"}})
 -- table.insert(sandbox.setup.env_set,{"CHROME_EXECUTABLE","/usr/bin/microsoft-edge"})
 
 -- add mount for the ~/installs dir if present
@@ -51,6 +51,7 @@ table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try",loader.path.combine(loa
 
 shell.env_unset={"MAIL"}
 shell.env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}}
+shell.path="/home/pi/projects"
 
 -- you may need to install fd-find and ripgrep packages into sandbox manaully
 
@@ -131,4 +132,16 @@ pi_web={
   pty=true,
   exclusive=true,
   term_orphans=true,
+}
+
+-- external tools and SDKs
+
+go_install={
+  exec="/bin/bash",
+  path="/tmp",
+  args={"-c","rm -rf $HOME/go_dist && img=`find $HOME/installs -name \"go*linux-amd64.tar.gz\"|sort|tail -n1` && ( gunzip -c \"$img\" | tar xf - ) && mv /tmp/go $HOME/go_dist"},
+  term_signal=defaults.signals.SIGTERM,
+  attach=true,
+  pty=false,
+  exclusive=true,
 }
