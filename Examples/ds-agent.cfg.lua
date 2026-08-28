@@ -37,7 +37,7 @@ loader.table.remove_value(sandbox.setup.mounts,defaults.mounts.devshm_mount)
 table.insert(sandbox.bwrap,defaults.bwrap.hostname_sandbox)
 
 -- modify env
-table.insert(sandbox.setup.env_set,{{"GOROOT","/home/ds/go_dist"},{"PATH","/home/ds/go_dist/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"}})
+table.insert(sandbox.setup.env_set,{{"GOROOT","/home/ds/go_dist"},{"PATH","/home/ds/node_modules/.bin:/home/ds/go_dist/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"}})
 -- table.insert(sandbox.setup.env_set,{"CHROME_EXECUTABLE","/usr/bin/microsoft-edge"})
 
 -- add mount for the ~/installs dir if present
@@ -51,32 +51,24 @@ table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try",loader.path.combine(loa
 
 shell.env_unset={"MAIL"}
 shell.env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}}
--- shell.path="/home/ds/projects"
 
--- you may need to install fd-find and ripgrep packages into sandbox manaully
-
--- install this if need to install node
-nvm_curl_install={
-  exec="/bin/bash",
-  path="/home/ds",
-  args={"-lic", "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/install.sh | bash"},
-  env_unset={"MAIL"},
-  env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
-  term_signal=defaults.signals.SIGTERM,
-  attach=true,
-  pty=true,
-  exclusive=true,
-}
-
--- remove nvm + node + node_modules (including dhs), leave dhs configuration intact
-node_cleanup={
+-- remove nvm + node + node_modules, dhs (both from npm and git), leave dhs configuration intact
+cleanup={
   exec="/bin/bash",
   path="/home/ds",
   args={"-lic",
     "echo removing .npm && rm -rf ~/.npm; "..
     "echo removing .nvm && rm -rf ~/.nvm; "..
     "echo removing node_modules && rm -rf ~/node_modules; "..
-    "echo removing package info && rm -f ~/package-lock.json && rm -f ~/package.json",
+    "echo removing .node_modules && rm -rf ~/.node_modules; "..
+    "echo removing package info && rm -f ~/package-lock.json && rm -f ~/package.json; "..
+    "echo removing .cache/pnpm && rm -rf ~/.cache/pnpm; "..
+    "echo removing .local/share/pnpm && rm -rf ~/.local/share/pnpm; "..
+    "echo removing .local/state/pnpm && rm -rf ~/.local/state/pnpm; "..
+    "echo removing .dsh-src && rm -rf ~/.dsh-src; "..
+    "echo removing .dsh/profiles/node_modules && rm -rf ~/.dsh/profiles/node_modules; "..
+    "echo removing .dsh/profiles/web/node_modules && rm -rf ~/.dsh/profiles/web/node_modules; "..
+    "echo removing .dsh/profiles/web/.dsh-module-fallback && rm -rf ~/.dsh/profiles/web/.dsh-module-fallback; "
   },
   env_unset={"MAIL"},
   env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
@@ -87,24 +79,36 @@ node_cleanup={
 }
 
 -- install this to install node
-node24_nvm_install={
+node26_nvm_install={
   exec="/bin/bash",
   path="/home/ds",
-  args={"-lic", "nvm install 24"},
+  args={"-lic",
+  "(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/install.sh | bash) && "..
+  "export NVM_DIR=$HOME/.nvm && . $NVM_DIR/nvm.sh && "..
+  "nvm install 26 && echo updating npm && npm install -g npm@latest && echo installing pnpm && npm install -g get-pnpm@latest && npx get-pnpm next-12"},
   env_unset={"MAIL"},
-  env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=2048"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
   exclusive=true,
 }
 
-node26_nvm_install={
+ds_git_install={
   exec="/bin/bash",
   path="/home/ds",
-  args={"-lic", "nvm install 26"},
+  args={"-lic",
+    "echo installing ds && git clone --depth 1 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src; "..
+    "echo cleaning-up old node_modules && rm -rf ~/node_modules; "..
+    "cd .dsh-src; "..
+    "echo resetting git repo && git clean -dfx --force && git reset --hard && "..
+    "pnpm config set --location=project modulesDir $HOME/node_modules && "..
+    "pnpm config set --location=project nodeLinker hoisted && "..
+    "pnpm config set --location=project shamefullyHoist true && "..
+    "ln -s $HOME/node_modules node_modules && "..
+    "echo pnpm install && pnpm install && echo pnpm build && pnpm run build"},
   env_unset={"MAIL"},
-  env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=2048"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
@@ -114,12 +118,9 @@ node26_nvm_install={
 ds_npm_install={
   exec="/bin/bash",
   path="/home/ds",
-  args={"-lic",
-    "echo updating npm && npm install -g npm@latest && "..
-    "echo installing ds && npm cache clean --force && "..
-    "npm install @deepseek-ai/dsh@latest"},
+  args={"-lic", "echo installing ds && npm cache clean --force && npm install @deepseek-ai/dsh@latest"},
   env_unset={"MAIL"},
-  env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=4096"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=2048"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
@@ -132,7 +133,7 @@ ds_web={
   path="/home/ds",
   args={"-lic", "npx @deepseek-ai/dsh --profile web --port 3080 --host 127.0.0.1 --no-open"},
   env_unset={"MAIL"},
-  env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
