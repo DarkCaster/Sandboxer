@@ -98,7 +98,7 @@ ds_git_install={
   exec="/bin/bash",
   path="/home/ds",
   args={"-lic",
-    "echo installing ds && git clone --depth 1 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src; "..
+    "echo installing ds && git clone --depth 10 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src; "..
     "echo cleaning-up old node_modules && rm -rf ~/node_modules; "..
     "cd .dsh-src; "..
     "echo resetting git repo && git clean -dfx --force && git reset --hard && "..
