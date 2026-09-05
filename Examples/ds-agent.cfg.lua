@@ -133,7 +133,7 @@ ds_web={
   path="/home/ds",
   args={"-lic", "npx @deepseek-ai/dsh --profile web --port 3080 --host 127.0.0.1 --no-open"},
   env_unset={"MAIL"},
-  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=4096"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
