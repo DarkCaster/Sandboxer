@@ -87,7 +87,7 @@ node26_nvm_install={
   "export NVM_DIR=$HOME/.nvm && . $NVM_DIR/nvm.sh && "..
   "nvm install 26 && echo updating npm && npm install -g npm@latest && echo installing pnpm && npm install -g get-pnpm@latest && npx get-pnpm next-12"},
   env_unset={"MAIL"},
-  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=2048"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
@@ -98,17 +98,22 @@ ds_git_install={
   exec="/bin/bash",
   path="/home/ds",
   args={"-lic",
-    "echo installing ds && git clone --depth 50 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src; "..
+    "echo installing ds && mkdir -p .dsh-src/src && git clone --depth 50 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src/src; "..
     "echo cleaning-up old node_modules && rm -rf ~/node_modules; "..
-    "cd .dsh-src; "..
+    "cd .dsh-src/src; "..
+    "echo resetting git commit && git reset --hard 76fda729799fe9b3848dbe2c211d4b231032b81e && "..
     "echo resetting git repo && git clean -dfx --force && git reset --hard && "..
-    "pnpm config set --location=project modulesDir $HOME/node_modules && "..
+    "pnpm config set --location=project modulesDir $HOME/.dsh-src/node_modules && "..
+    "pnpm config set --location=project packageImportMethod copy && "..
     "pnpm config set --location=project nodeLinker hoisted && "..
     "pnpm config set --location=project shamefullyHoist true && "..
-    "ln -s $HOME/node_modules node_modules && "..
-    "echo pnpm install && pnpm install && echo pnpm build && pnpm run build"},
+    "echo creating node_modules src symlink && ln -s $HOME/.dsh-src/node_modules node_modules && "..
+    "echo pnpm install && pnpm install && echo pnpm build && pnpm run build && "..
+    "echo cleaning-up && rm -rf $HOME/.local/share/pnpm && rm -rf $HOME/.local/state/pnpm && rm -rf $HOME/.cache/pnpm && "..
+    "echo creating node_modules home symlink && ln -s $HOME/.dsh-src/node_modules $HOME/node_modules",
+  },
   env_unset={"MAIL"},
-  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=2048"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
@@ -120,7 +125,7 @@ ds_npm_install={
   path="/home/ds",
   args={"-lic", "echo installing ds && npm cache clean --force && npm install @deepseek-ai/dsh@latest"},
   env_unset={"MAIL"},
-  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=2048"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
@@ -133,7 +138,7 @@ ds_web={
   path="/home/ds",
   args={"-lic", "npx @deepseek-ai/dsh --profile web --port 3080 --host 127.0.0.1 --no-open"},
   env_unset={"MAIL"},
-  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=4096"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
