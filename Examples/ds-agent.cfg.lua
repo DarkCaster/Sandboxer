@@ -101,7 +101,7 @@ ds_git_install={
     "echo installing ds && mkdir -p .dsh-src/src && git clone --depth 50 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src/src; "..
     "echo cleaning-up old node_modules && rm -rf ~/node_modules; "..
     "cd .dsh-src/src; "..
-    "echo resetting git commit && git reset --hard 76fda729799fe9b3848dbe2c211d4b231032b81e && "..
+    -- "echo resetting git commit && git reset --hard 76fda729799fe9b3848dbe2c211d4b231032b81e && "..
     "echo resetting git repo && git clean -dfx --force && git reset --hard && "..
     "pnpm config set --location=project modulesDir $HOME/.dsh-src/node_modules && "..
     "pnpm config set --location=project packageImportMethod copy && "..
