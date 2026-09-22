@@ -42,6 +42,7 @@ table.insert(sandbox.setup.env_set,{{"GOROOT","/home/ds/go_dist"},{"PATH","/home
 
 -- add mount for the ~/installs dir if present
 table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try",loader.path.combine(loader.workdir,"installs"),"/home/ds/installs"})
+table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try","/mnt/data/Sources/DeepSeek-Harness","/home/ds/ds_dist"})
 
 --sandbox.bwrap_cmd={
 --  "netns-runner.sh",
@@ -98,7 +99,7 @@ ds_git_install={
   exec="/bin/bash",
   path="/home/ds",
   args={"-lic",
-    "echo installing ds && mkdir -p .dsh-src/src && git clone --depth 50 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src/src; "..
+    "echo installing ds && mkdir -p .dsh-src/src && git clone --depth 1 file:///home/ds/ds_dist/Tiny-DSH .dsh-src/src; "..
     "echo cleaning-up old node_modules && rm -rf ~/node_modules; "..
     "cd .dsh-src/src; "..
     -- "echo resetting git commit && git reset --hard 76fda729799fe9b3848dbe2c211d4b231032b81e && "..
@@ -112,18 +113,6 @@ ds_git_install={
     "echo cleaning-up && rm -rf $HOME/.local/share/pnpm && rm -rf $HOME/.local/state/pnpm && rm -rf $HOME/.cache/pnpm && "..
     "echo creating node_modules home symlink && ln -s $HOME/.dsh-src/node_modules $HOME/node_modules",
   },
-  env_unset={"MAIL"},
-  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"},{"DSH_TELEMETRY_DISABLED","1"}},
-  term_signal=defaults.signals.SIGTERM,
-  attach=true,
-  pty=true,
-  exclusive=true,
-}
-
-ds_npm_install={
-  exec="/bin/bash",
-  path="/home/ds",
-  args={"-lic", "echo installing ds && npm cache clean --force && npm install @deepseek-ai/dsh@latest"},
   env_unset={"MAIL"},
   env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"},{"DSH_TELEMETRY_DISABLED","1"}},
   term_signal=defaults.signals.SIGTERM,
