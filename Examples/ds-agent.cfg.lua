@@ -42,7 +42,6 @@ table.insert(sandbox.setup.env_set,{{"GOROOT","/home/ds/go_dist"},{"PATH","/home
 
 -- add mount for the ~/installs dir if present
 table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try",loader.path.combine(loader.workdir,"installs"),"/home/ds/installs"})
-table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try","/mnt/data/Sources/DeepSeek-Harness","/home/ds/ds_dist"})
 
 --sandbox.bwrap_cmd={
 --  "netns-runner.sh",
@@ -53,65 +52,56 @@ table.insert(sandbox.setup.mounts,{prio=99,"ro-bind-try","/mnt/data/Sources/Deep
 shell.env_unset={"MAIL"}
 shell.env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}}
 
--- remove nvm + node + node_modules, dhs (both from npm and git), leave dhs configuration intact
-cleanup={
+-- clean all pnpm and npm caches, reinstall nvm, node and pnpm
+-- you should rerun ds_git_install after that
+node_nvm_install={
   exec="/bin/bash",
   path="/home/ds",
   args={"-lic",
     "echo removing .npm && rm -rf ~/.npm; "..
-    "echo removing .nvm && rm -rf ~/.nvm; "..
-    "echo removing node_modules && rm -rf ~/node_modules; "..
-    "echo removing .node_modules && rm -rf ~/.node_modules; "..
-    "echo removing package info && rm -f ~/package-lock.json && rm -f ~/package.json; "..
     "echo removing .cache/pnpm && rm -rf ~/.cache/pnpm; "..
     "echo removing .local/share/pnpm && rm -rf ~/.local/share/pnpm; "..
     "echo removing .local/state/pnpm && rm -rf ~/.local/state/pnpm; "..
-    "echo removing .dsh-src && rm -rf ~/.dsh-src; "..
-    "echo removing .dsh/profiles/node_modules && rm -rf ~/.dsh/profiles/node_modules; "..
-    "echo removing .dsh/profiles/web/node_modules && rm -rf ~/.dsh/profiles/web/node_modules; "..
-    "echo removing .dsh/profiles/web/.dsh-module-fallback && rm -rf ~/.dsh/profiles/web/.dsh-module-fallback; "
+    "echo removing package info && rm -f ~/package-lock.json && rm -f ~/package.json; "..
+    "echo removing node_modules && rm -rf ~/node_modules; "..
+    "echo removing .nvm && rm -rf ~/.nvm; "..
+    "(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/install.sh | bash) && "..
+    "export NVM_DIR=$HOME/.nvm && . $NVM_DIR/nvm.sh && "..
+    "nvm install 26 && echo updating npm && npm install -g npm@latest && "..
+    "echo installing pnpm && npm install -g get-pnpm@latest && npx get-pnpm next-12; "
   },
   env_unset={"MAIL"},
-  env_set={{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"}},
+  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"},{"DSH_TELEMETRY_DISABLED","1"}},
   term_signal=defaults.signals.SIGTERM,
   attach=true,
   pty=true,
   exclusive=true,
 }
 
--- install this to install node
-node26_nvm_install={
-  exec="/bin/bash",
-  path="/home/ds",
-  args={"-lic",
-  "(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/install.sh | bash) && "..
-  "export NVM_DIR=$HOME/.nvm && . $NVM_DIR/nvm.sh && "..
-  "nvm install 26 && echo updating npm && npm install -g npm@latest && echo installing pnpm && npm install -g get-pnpm@latest && npx get-pnpm next-12"},
-  env_unset={"MAIL"},
-  env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"}},
-  term_signal=defaults.signals.SIGTERM,
-  attach=true,
-  pty=true,
-  exclusive=true,
-}
-
+-- install or upgrade source DSH installation
 ds_git_install={
   exec="/bin/bash",
   path="/home/ds",
   args={"-lic",
-    "echo installing ds && mkdir -p .dsh-src/src && git clone --depth 1 file:///home/ds/ds_dist/Tiny-DSH .dsh-src/src; "..
-    "echo cleaning-up old node_modules && rm -rf ~/node_modules; "..
+    "echo removing package info && rm -f ~/package-lock.json && rm -f ~/package.json; "..
+    "echo removing old node_modules; "..
+    "rm -rf ~/node_modules; "..
+    "rm -rf ~/.dsh/profiles/node_modules; "..
+    "rm -rf ~/.dsh/profiles/web/node_modules; "..
+    "rm -rf ~/.dsh/profiles/web/.dsh-module-fallback; "..
+    "rm -rf ~/.dsh-src/node_modules; "..
+    "if [[ -d ~/.dsh-src/src ]]; then ( echo updating && cd .dsh-src/src && git clean -dfx --force && git reset --hard && git pull ) || exit 1; fi; "..
+    "if [[ ! -d ~/.dsh-src/src ]]; then ( echo cloning && mkdir -p .dsh-src && git clone --depth 1 https://github.com/deepseek-ai/deepseek-harness.git .dsh-src/src ) || exit 1; fi; "..
     "cd .dsh-src/src; "..
-    -- "echo resetting git commit && git reset --hard 76fda729799fe9b3848dbe2c211d4b231032b81e && "..
-    "echo resetting git repo && git clean -dfx --force && git reset --hard && "..
     "pnpm config set --location=project modulesDir $HOME/.dsh-src/node_modules && "..
-    "pnpm config set --location=project packageImportMethod copy && "..
+    "pnpm config set --location=project packageImportMethod hardlink && "..
     "pnpm config set --location=project nodeLinker hoisted && "..
     "pnpm config set --location=project shamefullyHoist true && "..
     "echo creating node_modules src symlink && ln -s $HOME/.dsh-src/node_modules node_modules && "..
     "echo pnpm install && pnpm install && echo pnpm build && pnpm run build && "..
-    "echo cleaning-up && rm -rf $HOME/.local/share/pnpm && rm -rf $HOME/.local/state/pnpm && rm -rf $HOME/.cache/pnpm && "..
-    "echo creating node_modules home symlink && ln -s $HOME/.dsh-src/node_modules $HOME/node_modules",
+    "echo creating node_modules home symlink && ln -s $HOME/.dsh-src/node_modules $HOME/node_modules; "..
+    "[[ $? == 0 ]] || exit 1; " ..
+    "echo removing old web profile cordis patch && rm -fv ~/.dsh/profiles/web/cordis.patch.yml; "
   },
   env_unset={"MAIL"},
   env_set={{"SHELL","/bin/bash"},{"TERM",os.getenv("TERM")},{"LANG","en_US.UTF-8"},{"LC_ALL","en_US.UTF-8"},{"TZ","GMT+0"},{"NODE_OPTIONS","--max-old-space-size=3072"},{"DSH_TELEMETRY_DISABLED","1"}},
